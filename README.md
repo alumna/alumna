@@ -1,4 +1,4 @@
-# Altiva: Front-End Development for Humans
+# Altiva Framework: Development for Humans
 
 (Alpha version. Do not use it in production)
 
@@ -73,3 +73,15 @@ Create a folder `components` in the root of your project and create the file `He
 ```
 
 Then open your **`index.html`** in your browser!
+
+## Browser support
+
+Tested successfully in IE8+ and all modern browsers.
+
+## Mobile support
+
+Tested successfully in Android 2.3+. In progress with iOS and Windows Phone. Please test it and tell us your results in an issue!
+
+## License
+
+Copyright (c) 2015-16 Paulo Coghi and contributors. Released under an [MIT license](LICENSE.md).

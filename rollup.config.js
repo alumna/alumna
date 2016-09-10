@@ -3,23 +3,23 @@ import nodeResolve from 'rollup-plugin-node-resolve';
 import uglify from 'rollup-plugin-uglify';
 
 export default {
-  entry: 'src/main.js',
-  plugins: [
+	entry: 'src/main.js',
+	plugins: [
 
-  nodeResolve({
-		jsnext: true,
+	nodeResolve({
+		jsnext: false,
 		main: true,
 		browser: true,
 	}),
 
 	commonjs({
-		sourceMap: false,  // Default: true
-  }),
+sourceMap: false,  // Default: true
+}),
 
-  // uglify()
+	uglify()
 
-  ],
-  format: 'iife',
-  moduleName: 'Altiva',
-  dest: 'altiva.js'
+	],
+	format: 'iife',
+	moduleName: 'Altiva',
+	dest: 'altiva.min.js'
 };

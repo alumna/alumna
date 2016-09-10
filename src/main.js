@@ -1,7 +1,11 @@
 import Ractive from 'ractive';
+import rcu from 'rcu';
 import qwest from 'qwest';
 import page from 'page';
 import store from 'store';
+
+import tap from 'ractive-events-tap';
+import hover from 'ractive-events-hover';
 
 /*
 	Altiva.js v1.0.0-rc1
@@ -11,28 +15,6 @@ import store from 'store';
 
 	Released under the MIT License.
 */
-
-/* Default components folder */
-Ractive.load.baseUrl = '/components/';
-
-/* Ractive Dynamic component */
-Ractive.components.blank = Ractive.extend({ template: '' });
-
-Ractive.components.dynamic = Ractive.extend({
-	template: '<component/>',
-	components: {
-		component: function() {
-			return this.get('component');
-		}
-	},
-	oninit: function(){
-		this.observe('component', function(){
-			this.reset();
-		}, { init: false});
-	}
-});
-
-
 
 var Altiva = Ractive.extend({
 
@@ -47,17 +29,27 @@ var Altiva = Ractive.extend({
 		}
 	},
 
+	events: { tap: tap, hover: hover },
+
 	altiva: {
 		routes: [],
+		routeComponents: {},
 		template: '',
 		sessions: [],
+		subComponents: {},
 		routeFunctions: {},
 		blank: {},
+		load: {
+			loading: false,
+			rendering: false,
+			sessions: {},
+			session_components: {}
+		},
 
 		util: {
 			isEmpty: function ( obj ) {
-			    for(var prop in obj) {
-			        if(obj.hasOwnProperty(prop))
+			    for ( var prop in obj ) {
+			        if ( obj.hasOwnProperty( prop ) )
 			            return false;
 			    }
 			    return true;
@@ -105,6 +97,10 @@ var Altiva = Ractive.extend({
 
 	config: {},
 
+	checkRoute: function ( route ) {
+		return this.get( '_page' ) == route;
+	},
+
 	local: store,
 
 	middleware: {
@@ -126,7 +122,7 @@ var Altiva = Ractive.extend({
 	mobileSetup: function () {
 		this.config.path = window.location.pathname.replace( 'index.html', '' )
 
-		Ractive.load.baseUrl = this.config.path + 'components/';
+		Altiva.load.baseUrl = this.config.path + 'components/';
 	},
 
 	server: qwest,
@@ -147,45 +143,50 @@ var Altiva = Ractive.extend({
 		}
 	},
 
-	renderRoute: function ( sessions, session_components ) {
-		var render = true
+	renderRoute: function ( route ) {
+		var sessions           = this.altiva.load.sessions
+		var session_components = this.altiva.routeComponents[ route ]
+		var render             = true
 
 		for ( var prop in session_components )
 		{
 			var component = session_components[ prop ].replace( '/', '_' )
 
-			if ( Ractive.components[component] === undefined )
+			if ( Altiva.components[ component ] === undefined )
 				render = false
 		}
 
 		if ( render )
-			this.set( '_sessions', sessions )
-	},
-
-	loadComponent: function ( sessions, session_components, component, prop ) {
-		Ractive.load( session_components[ prop ] + '.html' ).then( function ( Component )
 		{
-			Ractive.components[ component ] = Component
-
-			this.renderRoute( sessions, session_components )
-		}.bind( this ));
-	},
-
-	cacheComponent: function ( componentPath ) {
-		var componentName = componentPath.replace( '/', '_' )
-
-		if ( Ractive.components[ componentName ] === undefined )
-		{
-			Ractive.load( componentPath + '.html' ).then( function ( Component )
+			this.altiva.load.loading = false
+			this.altiva.load.rendering = true
+			this.set( '_sessions', sessions ).then ( function ()
 			{
-				Ractive.components[ componentName ] = Component
-			}.bind( this ));
+				this.altiva.load.rendering = false
+			}.bind( this ))
 		}
 	},
 
-	loadRoute: function ( session_components ) {
-		var render       = false
-		var sessions     = JSON.parse( JSON.stringify( this.altiva.blank ) )
+	loadComponent: function ( route, component, prop ) {
+		var sessions           = this.altiva.load.sessions
+		var session_components = this.altiva.routeComponents[ route ]
+
+		Altiva.load( session_components[ prop ] + '.html', component, this, route ).then( function ( Component )
+		{
+			Altiva.components[ component ] = Component
+
+			this.renderRoute( route )
+		}.bind( this ));
+	},
+
+	loadRoute: function ( route ) {
+		var render             = false
+		var sessions           = JSON.parse( JSON.stringify( this.altiva.blank ) )
+		var session_components = this.altiva.routeComponents[ route ]
+
+		this.altiva.load.loading   = true
+		this.altiva.load.rendering = false
+		this.altiva.load.sessions  = sessions
 
 		for ( var prop in session_components )
 		{
@@ -196,13 +197,17 @@ var Altiva = Ractive.extend({
 			{
 				render = true
 
-				if ( Ractive.components[ component ] === undefined )
-					this.loadComponent( sessions, session_components, component, prop )
+				if ( Altiva.components[ component ] === undefined )
+					this.loadComponent( route, component, prop )
+				else
+				{
+					/* Pending: If this component has a refresh function,  refresh it */
+				}
 			}
 		}
 
 		if ( render )
-			this.renderRoute( sessions, session_components )
+			this.renderRoute( route )
 	},
 
 	sessions: function ( new_sessions ) {
@@ -222,20 +227,15 @@ var Altiva = Ractive.extend({
 		this.set( '_sessions', sessions_data )
 	},
 
-	route: function ( route, session_components, middlewares, cache_components  ) {
+	route: function ( route, session_components, middlewares  ) {
 		
-		if ( cache_components !== undefined )
-		{
-			for (var i = cache_components.length - 1; i >= 0; i--) {
-				this.cacheComponent( cache_components[i] )
-			};
-		}
-
 		/* If session_components is undefined, this is a page call. Else, register new route properly */
 		if ( session_components === undefined && middlewares === undefined )
 			page( route )
 		else
 		{
+			this.altiva.routeComponents[ route ] = session_components
+
 			var route_function = 'load' + (( route == '/' ) ? '__index' : route.replace( '/', '_' ))
 
 			var route_object = {}
@@ -255,14 +255,14 @@ var Altiva = Ractive.extend({
 							return page( middlewares[ key ] )	
 					}
 
-					this.loadRoute( session_components )
+					this.loadRoute( route )
 				}.bind( this );
 			}
 			else
 			{
 				this[ route_function ] = function ( ctx, next) {
 					this.set({ _page: ctx.pathname, _params: ctx.params })
-					this.loadRoute( session_components )
+					this.loadRoute( route )
 				}.bind( this );
 			}
 		}
@@ -329,6 +329,171 @@ var Altiva = Ractive.extend({
 		}
 	}
 
+});
+
+
+/*
+	Altiva Load
+	For dynamic and automatic component loading
+*/
+
+// Creating a reference
+Altiva.components = Ractive.components;
+
+// getComponent - utility to get component content from file
+Altiva.getComponent = function ( url ) {
+	return new Ractive.Promise( function ( fulfil, reject ) {
+		var xhr, onload, loaded;
+
+		xhr = new XMLHttpRequest();
+		xhr.open( 'GET', url );
+
+		onload = function () {
+			if ( ( xhr.readyState !== 4 ) || loaded ) {
+				return;
+			}
+
+			fulfil( xhr.responseText );
+			loaded = true;
+		};
+
+		xhr.onload = xhr.onreadystatechange = onload;
+		xhr.onerror = reject;
+		xhr.send();
+
+		if ( xhr.readyState === 4 ) {
+			onload();
+		}
+	});
+};
+
+// Test for XHR to see if we're in a browser...
+// if ( typeof XMLHttpRequest !== 'undefined' ) {
+// 	Altiva.getComponent = function ( url ) {
+// 		return new Ractive.Promise( function ( fulfil, reject ) {
+// 			var xhr, onload, loaded;
+
+// 			xhr = new XMLHttpRequest();
+// 			xhr.open( 'GET', url );
+
+// 			onload = function () {
+// 				if ( ( xhr.readyState !== 4 ) || loaded ) {
+// 					return;
+// 				}
+
+// 				fulfil( xhr.responseText );
+// 				loaded = true;
+// 			};
+
+// 			xhr.onload = xhr.onreadystatechange = onload;
+// 			xhr.onerror = reject;
+// 			xhr.send();
+
+// 			if ( xhr.readyState === 4 ) {
+// 				onload();
+// 			}
+// 		});
+// 	};
+// }
+// // ...or in node.js
+// else {
+// 	Altiva.getComponent = function ( url ) {
+// 		return new Ractive.Promise( function ( fulfil, reject ) {
+// 			require( 'fs' ).readFile( url, function ( err, result ) {
+// 				if ( err ) {
+// 					return reject( err );
+// 				}
+
+// 				fulfil( result.toString() );
+// 			});
+// 		});
+// 	};
+// }
+
+// cacheComponent - utility to cache components
+Altiva.cacheComponent = function ( componentPath, callback )
+{
+	var componentName = componentPath.replace( '/', '_' )
+
+	if ( Altiva.components[ componentName ] === undefined )
+	{
+		Altiva.load( componentPath + '.html' ).then( function ( Component )
+		{
+			Altiva.components[ componentName ] = Component
+			callback();
+
+		});
+	}
+	else
+		callback();
+};
+
+/* Load Single - Simplified */
+
+// Load a single component:
+//
+//     Altiva.load( 'path/to/foo' ).then( function ( Foo ) {
+//       var foo = new Foo(...);
+//     });
+
+/* Let the game begins */
+rcu.init ( Ractive );
+
+Altiva.load = function ( url )
+{
+	var promise, url = Altiva.load.baseUrl + url;
+
+	// if this component has already been requested, don't
+	// request it again
+	if ( !Altiva.load.promises[ url ] )
+	{
+		promise = Altiva.getComponent( url ).then( function ( template )
+		{
+			return new Ractive.Promise( function ( fulfil, reject )
+			{
+				rcu.make( template,
+				{
+					url: url,
+					loadImport: function ( name, path, parentUrl, callback )
+					{
+						/*
+							This component has a sub-component that must be cached before rendering
+						*/
+						Altiva.cacheComponent( path, callback )
+					},
+					require: ''
+
+				}, fulfil, reject )
+			});
+		});
+
+		Altiva.load.promises[ url ] = promise;
+	}
+
+	return Altiva.load.promises[ url ];
+}
+
+/* Default components folder */
+Altiva.load.baseUrl = '/components/';
+
+/* Components already loaded by url */
+Altiva.load.promises = {};
+
+/* Altiva Dynamic component */
+Altiva.components.blank = Ractive.extend({ template: '' });
+
+Altiva.components.dynamic = Ractive.extend({
+	template: '<component/>',
+	components: {
+		component: function() {
+			return this.get('component');
+		}
+	},
+	oninit: function(){
+		this.observe('component', function(){
+			this.reset();
+		}, { init: false});
+	}
 });
 
 export default Altiva;
