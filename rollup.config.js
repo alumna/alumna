@@ -1,13 +1,14 @@
 import commonjs from 'rollup-plugin-commonjs';
 import nodeResolve from 'rollup-plugin-node-resolve';
 import uglify from 'rollup-plugin-uglify';
+import { minify } from 'uglify-js';
 
 export default {
 	entry: 'src/main.js',
 	plugins: [
 
 	nodeResolve({
-		jsnext: false,
+		jsnext: true,
 		main: true,
 		browser: true,
 	}),
@@ -16,7 +17,7 @@ export default {
 		sourceMap: false,  // Default: true
 	}),
 
-	uglify()
+	uglify( {}, minify )
 
 	],
 	format: 'iife',

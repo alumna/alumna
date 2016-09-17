@@ -16,13 +16,15 @@
     "ractive": "ractivejs/ractive#build",
     "ractive-events-tap": "ractivejs/ractive-events-tap#master",
     "ractive-events-hover": "ractivejs/ractive-events-hover#master",
-    "rollup-plugin-commonjs": "^4.0.1",
+    "rollup-plugin-commonjs": "^5.0.1",
     "rollup-plugin-node-resolve": "^2.0.0",
     "rollup-plugin-uglify": "^1.0.1",
     "store": "^1.3.20",
-    "rcu": "^0.9.0-edge1"
+    "rcu": "^0.9.0-edge1",
+    "ractive-events-keys": "^0.2.1",
+    "uglify-js": "mishoo/UglifyJS2#harmony"
   },
   "dependencies": {
-    "ractive-events-keys": "^0.2.1"
+
   }
 }

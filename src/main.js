@@ -1,12 +1,15 @@
 import Ractive from 'ractive';
-import rcu from 'rcu';
+import * as rcu from 'rcu';
 import qwest from 'qwest';
 import page from 'page';
 import store from 'store';
 
 import tap from 'ractive-events-tap';
 import hover from 'ractive-events-hover';
-import keys from 'ractive-events-keys';
+import { escape } from 'ractive-events-keys';
+import { space } from 'ractive-events-keys';
+import { enter } from 'ractive-events-keys';
+import { tab } from 'ractive-events-keys';
 
 /*
 	Altiva.js v1.0.0-rc1
@@ -33,9 +36,10 @@ var Altiva = Ractive.extend({
 	events: {
 		tap: tap,
 		hover: hover,
-		escape: keys.escape,
-		space: keys.space,
-		enter: keys.enter
+		escape: escape,
+		space: space,
+		enter: enter,
+		tab: tab
 	},
 
 	altiva: {
