@@ -6,6 +6,7 @@ import store from 'store';
 
 import tap from 'ractive-events-tap';
 import hover from 'ractive-events-hover';
+import keys from 'ractive-events-keys';
 
 /*
 	Altiva.js v1.0.0-rc1
@@ -29,7 +30,7 @@ var Altiva = Ractive.extend({
 		}
 	},
 
-	events: { tap: tap, hover: hover },
+	events: { tap: tap, hover: hover, keys: keys },
 
 	altiva: {
 		routes: [],

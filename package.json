@@ -1,25 +1,28 @@
 {
-	"name": "altiva",
-	"description": "Development platform for humans",
-	"version": "0.9.0",
-	"homepage": "http://altiva.in",
-	"bugs": {
-		"url": "https://github.com/altiva/altiva/issues"
-	},
-	"license": "MIT",
-	"repository": "altiva/altiva",
-	"github": "https://github.com/altiva/altiva",
-	"main": "altiva.js",
-	"devDependencies": {
-		"page": "visionmedia/page.js#master",
-		"qwest": "pyrsmk/qwest#master",
-		"ractive": "ractivejs/ractive#build",
-		"ractive-events-tap": "ractivejs/ractive-events-tap#master",
-		"ractive-events-hover": "ractivejs/ractive-events-hover#master",
-		"rollup-plugin-commonjs": "^4.0.1",
-		"rollup-plugin-node-resolve": "^2.0.0",
-		"rollup-plugin-uglify": "^1.0.1",
-		"store": "^1.3.20",
-		"rcu": "^0.9.0-edge1"
-	}
+  "name": "altiva",
+  "description": "Development platform for humans",
+  "version": "0.9.0",
+  "homepage": "http://altiva.in",
+  "bugs": {
+    "url": "https://github.com/altiva/altiva/issues"
+  },
+  "license": "MIT",
+  "repository": "altiva/altiva",
+  "github": "https://github.com/altiva/altiva",
+  "main": "altiva.js",
+  "devDependencies": {
+    "page": "visionmedia/page.js#master",
+    "qwest": "pyrsmk/qwest#master",
+    "ractive": "ractivejs/ractive#build",
+    "ractive-events-tap": "ractivejs/ractive-events-tap#master",
+    "ractive-events-hover": "ractivejs/ractive-events-hover#master",
+    "rollup-plugin-commonjs": "^4.0.1",
+    "rollup-plugin-node-resolve": "^2.0.0",
+    "rollup-plugin-uglify": "^1.0.1",
+    "store": "^1.3.20",
+    "rcu": "^0.9.0-edge1"
+  },
+  "dependencies": {
+    "ractive-events-keys": "^0.2.1"
+  }
 }
