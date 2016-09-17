@@ -30,7 +30,13 @@ var Altiva = Ractive.extend({
 		}
 	},
 
-	events: { tap: tap, hover: hover, keys: keys },
+	events: {
+		tap: tap,
+		hover: hover,
+		escape: keys.escape,
+		space: keys.space,
+		enter: keys.enter
+	},
 
 	altiva: {
 		routes: [],

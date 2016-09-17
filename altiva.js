@@ -20049,7 +20049,13 @@ var Altiva = (function () {
     		}
     	},
 
-    	events: { tap: tap, hover: ractiveEventsHover_umd, keys: ractiveEventsKeys },
+    	events: {
+    		tap: tap,
+    		hover: ractiveEventsHover_umd,
+    		escape: ractiveEventsKeys.escape,
+    		space: ractiveEventsKeys.space,
+    		enter: ractiveEventsKeys.enter
+    	},
 
     	altiva: {
     		routes: [],
