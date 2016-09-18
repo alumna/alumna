@@ -17,10 +17,10 @@ export default {
 		sourceMap: false,  // Default: true
 	}),
 
-	uglify( {}, minify )
+	// uglify( {}, minify )
 
 	],
 	format: 'iife',
 	moduleName: 'Altiva',
-	dest: 'altiva.min.js'
+	dest: 'altiva.js'
 };

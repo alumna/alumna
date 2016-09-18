@@ -5,6 +5,7 @@ import page from 'page';
 import store from 'store';
 
 import tap from 'ractive-events-tap';
+import doubletap from './doubletap';
 import hover from 'ractive-events-hover';
 import { escape } from 'ractive-events-keys';
 import { space } from 'ractive-events-keys';
@@ -35,6 +36,7 @@ var Altiva = Ractive.extend({
 
 	events: {
 		tap: tap,
+		doubletap: doubletap,
 		hover: hover,
 		escape: escape,
 		space: space,
