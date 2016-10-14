@@ -321,7 +321,7 @@ import { tab } from 'ractive-events-keys';
 			};
 		},
 
-		start: function ( mode ) {
+		start: function ( ) {
 
 		// Prepare helper functions to root object context
 		this.prepareContext( [ 'middleware', 'error', 'auth' ] )
@@ -340,12 +340,14 @@ import { tab } from 'ractive-events-keys';
 		this.setRoutes()
 		this.checkToken()
 		
-		if( mode === undefined )
-			page()
-		else
+		if( this.config.mobile )
 		{
 			page( { dispatch: false } )
 			page( this.config.mobile )
+		}
+		else
+		{
+			page()
 		}
 	}
 
