@@ -20359,7 +20359,7 @@ const space = makeKeyDefinition( 32 );
 			}
 		},
 
-		start: function ( mode ) {
+		start: function ( ) {
 
 		// Prepare helper functions to root object context
 		this.prepareContext( [ 'middleware', 'error', 'auth' ] );
@@ -20378,12 +20378,14 @@ const space = makeKeyDefinition( 32 );
 		this.setRoutes();
 		this.checkToken();
 		
-		if( mode === undefined )
-			index();
-		else
+		if( this.config.mobile )
 		{
 			index( { dispatch: false } );
 			index( this.config.mobile );
+		}
+		else
+		{
+			index();
 		}
 	}
 

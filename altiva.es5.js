@@ -20333,7 +20333,7 @@ var hover$1 = hover;
 			}
 		},
 
-		start: function ( mode ) {
+		start: function ( ) {
 
 		// Prepare helper functions to root object context
 		this.prepareContext( [ 'middleware', 'error', 'auth' ] );
@@ -20352,12 +20352,14 @@ var hover$1 = hover;
 		this.setRoutes();
 		this.checkToken();
 		
-		if( mode === undefined )
-			index();
-		else
+		if( this.config.mobile )
 		{
 			index( { dispatch: false } );
 			index( this.config.mobile );
+		}
+		else
+		{
+			index();
 		}
 	}
 
