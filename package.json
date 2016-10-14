@@ -16,6 +16,7 @@
     "ractive": "ractivejs/ractive#build",
     "ractive-events-tap": "ractivejs/ractive-events-tap#master",
     "ractive-events-hover": "ractivejs/ractive-events-hover#master",
+    "ractive-decorators-minmaxwidth": "cfenzo/Ractive-decorators-minmaxwidth#master",
     "rollup-plugin-commonjs": "^5.0.1",
     "rollup-plugin-node-resolve": "^2.0.0",
     "rollup-plugin-uglify": "^1.0.1",

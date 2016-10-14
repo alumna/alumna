@@ -19,303 +19,310 @@ import { tab } from 'ractive-events-keys';
 	http://altiva.in
 
 	Released under the MIT License.
-*/
+	*/
 
-var Altiva = Ractive.extend({
+	var Altiva = Ractive.extend({
 
-	el: 'body',
+		el: 'body',
 
-	data: function () {
-		return {
-			_page: '',
-			_menu: '',
-			_sessions: {},
-			_params: {}
-		}
-	},
-
-	events: {
-		tap: tap,
-		doubletap: doubletap,
-		hover: hover,
-		escape: escape,
-		space: space,
-		enter: enter,
-		tab: tab
-	},
-
-	altiva: {
-		routes: [],
-		routeComponents: {},
-		template: '',
-		sessions: [],
-		subComponents: {},
-		routeFunctions: {},
-		blank: {},
-		load: {
-			loading: false,
-			rendering: false,
-			sessions: {},
-			session_components: {}
-		},
-
-		util: {
-			isEmpty: function ( obj ) {
-			    for ( var prop in obj ) {
-			        if ( obj.hasOwnProperty( prop ) )
-			            return false;
-			    }
-			    return true;
+		data: function () {
+			return {
+				_page: '',
+				_menu: '',
+				_sessions: {},
+				_params: {}
 			}
-		}
-	},
-
-	auth: {
-		attempt: function ( url, data ) {
-			return this.server.post( url, data )
 		},
 
-		check: function ( response ) {
-			if ( response.error === false && response.data.token !== undefined && response.data.user !== undefined )
-			{
-				this.local.set( 'token', response.data.token )
-				this.local.set( 'me', response.data.user )
-				this.setToken()
-
-				return true
-			}
-			else
-				return false
+		events: {
+			tap: tap,
+			doubletap: doubletap,
+			hover: hover,
+			escape: escape,
+			space: space,
+			enter: enter,
+			tab: tab
 		},
 
-		options: {}
-	},
+		altiva: {
+			routes: [],
+			routeComponents: {},
+			template: '',
+			sessions: [],
+			subComponents: {},
+			routeFunctions: {},
+			blank: {},
+			load: {
+				loading: false,
+				rendering: false,
+				sessions: {},
+				session_components: {}
+			},
 
-	error: {
-		check: function ( code ) {
-			if ( code && typeof this.error[code] === 'function' )
-				this.error[code]()
-		},
-
-		token_expired: function () {
-			this.middleware.logout()
-			this.route( this.config.login || '/' )
-		},
-
-		token_invalid: function () {
-			this.middleware.logout()
-			this.route( this.config.login || '/' )
-		}
-	},
-
-	config: {},
-
-	checkRoute: function ( route ) {
-		return this.get( '_page' ) == route;
-	},
-
-	local: store,
-
-	middleware: {
-		auth: function () {
-			return ( this.local.get('token') !== undefined )
-		},
-
-		guest: function () {
-			return ( this.local.get('token') === undefined )
-		},
-
-		logout: function () {
-			this.local.remove('token')
-			this.auth.options.headers = {}
-			return false
-		}
-	},
-
-	mobileSetup: function () {
-		this.config.path = window.location.pathname.replace( 'index.html', '' )
-
-		Altiva.load.baseUrl = this.config.path + 'components/';
-	},
-
-	server: qwest,
-
-	comp: {},
-
-	/* Be happy with short function names!  */
-	fun: {
-		register: function ( context, name, obj ) {
-			if ( this[context] === undefined )
-				this[context]  = {}
-			
-			this[context][name] = obj[name].bind(obj)
-		},
-
-		unregister: function ( context ) {
-			delete this[context]
-		}
-	},
-
-	renderRoute: function ( route ) {
-		var sessions           = this.altiva.load.sessions
-		var session_components = this.altiva.routeComponents[ route ]
-		var render             = true
-
-		for ( var prop in session_components )
-		{
-			var component = session_components[ prop ].replace( '/', '_' )
-
-			if ( Altiva.components[ component ] === undefined )
-				render = false
-		}
-
-		if ( render )
-		{
-			this.altiva.load.loading = false
-			this.altiva.load.rendering = true
-			this.set( '_sessions', sessions ).then ( function ()
-			{
-				this.altiva.load.rendering = false
-			}.bind( this ))
-		}
-	},
-
-	loadComponent: function ( route, component, prop ) {
-		var sessions           = this.altiva.load.sessions
-		var session_components = this.altiva.routeComponents[ route ]
-
-		Altiva.load( session_components[ prop ] + '.html', component, this, route ).then( function ( Component )
-		{
-			Altiva.components[ component ] = Component
-
-			this.renderRoute( route )
-		}.bind( this ));
-	},
-
-	loadRoute: function ( route ) {
-		var render             = false
-		var sessions           = JSON.parse( JSON.stringify( this.altiva.blank ) )
-		var session_components = this.altiva.routeComponents[ route ]
-
-		this.altiva.load.loading   = true
-		this.altiva.load.rendering = false
-		this.altiva.load.sessions  = sessions
-
-		for ( var prop in session_components )
-		{
-			var component    = session_components[ prop ].replace( '/', '_' )
-			sessions[ prop ] = component
-
-			if ( this.get( '_sessions.' + prop ) != component )
-			{
-				render = true
-
-				if ( Altiva.components[ component ] === undefined )
-					this.loadComponent( route, component, prop )
-				else
-				{
-					/* Pending: If this component has a refresh function,  refresh it */
+			util: {
+				isEmpty: function ( obj ) {
+					for ( var prop in obj ) {
+						if ( obj.hasOwnProperty( prop ) )
+							return false;
+					}
+					return true;
 				}
 			}
-		}
+		},
 
-		if ( render )
-			this.renderRoute( route )
-	},
+		auth: {
+			attempt: function ( url, data ) {
+				return this.server.post( url, data )
+			},
 
-	sessions: function ( new_sessions ) {
-		var sessions_data = {}
+			check: function ( response ) {
+				if ( response.error === false && response.data.token !== undefined && response.data.user !== undefined )
+				{
+					this.local.set( 'token', response.data.token )
+					this.local.set( 'me', response.data.user )
+					this.setToken()
 
-		this.altiva.sessions = new_sessions
+					return true
+				}
+				else
+					return false
+			},
 
-		for ( var i = 0; i < new_sessions.length; i++ )
-		{
-			sessions_data[ new_sessions[i] ] = 'blank'
+			options: {}
+		},
 
-			this.altiva.template += '<dynamic component="{{_sessions.' + new_sessions[i] + '}}"/>'
-		}
+		error: {
+			check: function ( code ) {
+				if ( code && typeof this.error[code] === 'function' )
+					this.error[code]()
+			},
 
-		this.altiva.blank = sessions_data
+			token_expired: function () {
+				this.middleware.logout()
+				this.route( this.config.login || '/' )
+			},
 
-		this.set( '_sessions', sessions_data )
-	},
-
-	route: function ( route, session_components, middlewares  ) {
-		
-		/* If session_components is undefined, this is a page call. Else, register new route properly */
-		if ( session_components === undefined && middlewares === undefined )
-			page( route )
-		else
-		{
-			this.altiva.routeComponents[ route ] = session_components
-
-			var route_function = 'load' + (( route == '/' ) ? '__index' : route.replace( '/', '_' ))
-
-			var route_object = {}
-			route_object[ route_function ] = route
-
-			this.altiva.routes.push( route_object )
-
-			if ( typeof middlewares === 'object' )
-			{
-				this[ route_function ] = function ( ctx, next ) {
-					
-					this.set({ _page: ctx.pathname, _params: ctx.params })
-
-					for ( var key in middlewares)
-					{
-						if ( !this.middleware[ key ]() )
-							return page( middlewares[ key ] )	
-					}
-
-					this.loadRoute( route )
-				}.bind( this );
+			token_invalid: function () {
+				this.middleware.logout()
+				this.route( this.config.login || '/' )
 			}
+		},
+
+		config: {},
+
+		checkRoute: function ( route ) {
+			return this.get( '_page' ) == route;
+		},
+
+		local: store,
+
+		middleware: {
+			auth: function () {
+				return ( this.local.get('token') !== undefined )
+			},
+
+			guest: function () {
+				return ( this.local.get('token') === undefined )
+			},
+
+			logout: function () {
+				this.local.remove('token')
+				this.auth.options.headers = {}
+				return false
+			}
+		},
+
+		mobileSetup: function () {
+			this.config.path = window.location.pathname.replace( 'index.html', '' )
+
+			Altiva.load.baseUrl = this.config.path + 'components/';
+		},
+
+		server: qwest,
+
+		comp: {},
+
+		/* Be happy with short function names!  */
+		fun: {
+			register: function ( context, name, obj ) {
+				if ( this[context] === undefined )
+					this[context]  = {}
+
+				this[context][name] = obj[name].bind(obj)
+			},
+
+			unregister: function ( context ) {
+				delete this[context]
+			}
+		},
+
+		renderRoute: function ( route ) {
+			var sessions           = this.altiva.load.sessions
+			var session_components = this.altiva.routeComponents[ route ]
+			var render             = true
+
+			for ( var prop in session_components )
+			{
+				var component = session_components[ prop ].replace( '/', '_' )
+
+				if ( Altiva.components[ component ] === undefined )
+					render = false
+			}
+
+			if ( render )
+			{
+				this.altiva.load.loading = false
+				this.altiva.load.rendering = true
+				this.set( '_sessions', sessions ).then ( function ()
+				{
+					this.altiva.load.rendering = false
+				}.bind( this ))
+			}
+		},
+
+		loadComponent: function ( route, component, prop ) {
+			var sessions           = this.altiva.load.sessions
+			var session_components = this.altiva.routeComponents[ route ]
+
+			Altiva.load( session_components[ prop ] + '.html', component, this, route ).then( function ( Component )
+			{
+				Altiva.components[ component ] = Component
+
+				this.renderRoute( route )
+			}.bind( this ));
+		},
+
+		loadRoute: function ( route ) {
+			var render             = false
+			var sessions           = JSON.parse( JSON.stringify( this.altiva.blank ) )
+			var session_components = this.altiva.routeComponents[ route ]
+
+			this.altiva.load.loading   = true
+			this.altiva.load.rendering = false
+			this.altiva.load.sessions  = sessions
+
+			for ( var prop in session_components )
+			{
+				var component    = session_components[ prop ].replace( '/', '_' )
+				sessions[ prop ] = component
+
+				if ( this.get( '_sessions.' + prop ) != component )
+				{
+					render = true
+
+					if ( Altiva.components[ component ] === undefined )
+						this.loadComponent( route, component, prop )
+					else
+					{
+						/* Pending: If this component has a refresh function,  refresh it */
+					}
+				}
+			}
+
+			if ( render )
+				this.renderRoute( route )
+		},
+
+		sessions: function ( new_sessions ) {
+			var sessions_data = {}
+
+			this.altiva.sessions = new_sessions
+
+			for ( var i = 0; i < new_sessions.length; i++ )
+			{
+				sessions_data[ new_sessions[i] ] = 'blank'
+
+				this.altiva.template += '<dynamic component="{{_sessions.' + new_sessions[i] + '}}"/>'
+			}
+
+			this.altiva.blank = sessions_data
+
+			this.set( '_sessions', sessions_data )
+		},
+
+		route: function ( route, session_components, middlewares  ) {
+
+			/* If session_components is undefined, this is a page call. Else, register new route properly */
+			if ( session_components === undefined && middlewares === undefined )
+				page( route );
 			else
 			{
-				this[ route_function ] = function ( ctx, next) {
-					this.set({ _page: ctx.pathname, _params: ctx.params })
-					this.loadRoute( route )
-				}.bind( this );
+				if ( typeof session_components === 'string' && middlewares === undefined )
+				{
+					page( route, session_components );
+				}
+				else
+				{
+					this.altiva.routeComponents[ route ] = session_components
+
+					var route_function = 'load' + (( route == '/' ) ? '__index' : route.replace( '/', '_' ))
+
+					var route_object = {}
+					route_object[ route_function ] = route
+
+					this.altiva.routes.push( route_object )
+
+					if ( typeof middlewares === 'object' )
+					{
+						this[ route_function ] = function ( ctx, next ) {
+
+							this.set({ _page: ctx.pathname, _params: ctx.params })
+
+							for ( var key in middlewares)
+							{
+								if ( !this.middleware[ key ]() )
+									return page( middlewares[ key ] )	
+							}
+
+							this.loadRoute( route )
+						}.bind( this );
+					}
+					else
+					{
+						this[ route_function ] = function ( ctx, next) {
+							this.set({ _page: ctx.pathname, _params: ctx.params })
+							this.loadRoute( route )
+						}.bind( this );
+					}
+				}
 			}
-		}
-	},
+		},
 
-	setRoutes: function () {
-		for ( var i = 0; i < this.altiva.routes.length; i++ )
-		{	
-			for ( var prop in this.altiva.routes[ i ] )
-				page( this.altiva.routes[ i ][ prop ], this[ prop ] )
-		}
-	},
-
-	checkToken: function () {
-		if ( this.local.get('token') !== undefined )
-			this.setToken()
-	},
-
-	setToken: function () {
-		this.auth.options.headers = { Authorization: 'Bearer ' + this.local.get('token') }
-
-		this.set( 'users.' + this.local.get( 'me' )._id, this.local.get( 'me' ) )
-		this.set( 'users.me', this.get( 'users.' + this.local.get( 'me' )._id ) )
-	},
-
-	prepareContext: function ( properties ) {
-		for (var i = properties.length - 1; i >= 0; i--) {
-			
-			var property = properties[i]
-
-			for ( var prop in this[property] )
-			{
-				if ( typeof this[property][prop] === 'function' )
-					this[property][prop] = this[property][prop].bind(this)
+		setRoutes: function () {
+			for ( var i = 0; i < this.altiva.routes.length; i++ )
+			{	
+				for ( var prop in this.altiva.routes[ i ] )
+					page( this.altiva.routes[ i ][ prop ], this[ prop ] );
 			}
-		};
-	},
+		},
 
-	start: function ( mode ) {
-		
+		checkToken: function () {
+			if ( this.local.get('token') !== undefined )
+				this.setToken()
+		},
+
+		setToken: function () {
+			this.auth.options.headers = { Authorization: 'Bearer ' + this.local.get('token') }
+
+			this.set( 'users.' + this.local.get( 'me' )._id, this.local.get( 'me' ) )
+			this.set( 'users.me', this.get( 'users.' + this.local.get( 'me' )._id ) )
+		},
+
+		prepareContext: function ( properties ) {
+			for (var i = properties.length - 1; i >= 0; i--) {
+
+				var property = properties[i]
+
+				for ( var prop in this[property] )
+				{
+					if ( typeof this[property][prop] === 'function' )
+						this[property][prop] = this[property][prop].bind(this)
+				}
+			};
+		},
+
+		start: function ( mode ) {
+
 		// Prepare helper functions to root object context
 		this.prepareContext( [ 'middleware', 'error', 'auth' ] )
 
@@ -348,7 +355,7 @@ var Altiva = Ractive.extend({
 /*
 	Altiva Load
 	For dynamic and automatic component loading
-*/
+	*/
 
 // Creating a reference
 Altiva.components = Ractive.components;
@@ -471,12 +478,12 @@ Altiva.load = function ( url )
 					{
 						/*
 							This component has a sub-component that must be cached before rendering
-						*/
-						Altiva.cacheComponent( path, callback )
-					},
-					require: ''
+							*/
+							Altiva.cacheComponent( path, callback )
+						},
+						require: ''
 
-				}, fulfil, reject )
+					}, fulfil, reject )
 			});
 		});
 
