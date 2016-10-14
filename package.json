@@ -10,22 +10,19 @@
   "repository": "altiva/altiva",
   "github": "https://github.com/altiva/altiva",
   "main": "altiva.js",
-  "devDependencies": {
-    "page": "visionmedia/page.js#master",
-    "qwest": "pyrsmk/qwest#master",
-    "ractive": "ractivejs/ractive#build",
-    "ractive-events-tap": "ractivejs/ractive-events-tap#master",
-    "ractive-events-hover": "ractivejs/ractive-events-hover#master",
-    "ractive-decorators-minmaxwidth": "cfenzo/Ractive-decorators-minmaxwidth#master",
-    "rollup-plugin-commonjs": "^5.0.1",
+  "devDependencies": {},
+  "dependencies": {
+    "page": "github:visionmedia/page.js#master",
+    "qwest": "github:pyrsmk/qwest#master",
+    "ractive": "github:ractivejs/ractive#build",
+    "ractive-events-hover": "github:ractivejs/ractive-events-hover#master",
+    "ractive-events-keys": "^0.2.1",
+    "ractive-events-tap": "github:ractivejs/ractive-events-tap#master",
+    "rcu": "^0.9.0-edge1",
+    "rollup-plugin-commonjs": "^5.0.5",
     "rollup-plugin-node-resolve": "^2.0.0",
     "rollup-plugin-uglify": "^1.0.1",
     "store": "^1.3.20",
-    "rcu": "^0.9.0-edge1",
-    "ractive-events-keys": "^0.2.1",
-    "uglify-js": "mishoo/UglifyJS2#harmony"
-  },
-  "dependencies": {
-
+    "uglify-js": "github:mishoo/UglifyJS2#harmony"
   }
 }

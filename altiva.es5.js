@@ -20019,36 +20019,10 @@ if (testDiv.onmouseenter !== undefined) {
 
 var hover$1 = hover;
 
-// TODO can we just declare the keydowhHandler once? using `this`?
-function makeKeyDefinition ( code ) {
-	return ( node, fire ) => {
-		function keydownHandler ( event ) {
-			var which = event.which || event.keyCode;
-
-			if ( which === code ) {
-				event.preventDefault();
-
-				fire({
-					node,
-					original: event
-				});
-			}
-		}
-
-		node.addEventListener( 'keydown', keydownHandler, false );
-
-		return {
-			teardown () {
-				node.removeEventListener( 'keydown', keydownHandler, false );
-			}
-		};
-	};
-}
-
-const enter = makeKeyDefinition( 13 );
-const tab = makeKeyDefinition( 9 );
-const escape = makeKeyDefinition( 27 );
-const space = makeKeyDefinition( 32 );
+// import { escape } from 'ractive-events-keys';
+// import { space } from 'ractive-events-keys';
+// import { enter } from 'ractive-events-keys';
+// import { tab } from 'ractive-events-keys';
 
 /*
 	Altiva.js v1.0.0-rc1
@@ -20076,10 +20050,10 @@ const space = makeKeyDefinition( 32 );
 			tap: tap,
 			doubletap: doubletap,
 			hover: hover$1,
-			escape: escape,
-			space: space,
-			enter: enter,
-			tab: tab
+			// escape: escape,
+			// space: space,
+			// enter: enter,
+			// tab: tab
 		},
 
 		altiva: {
