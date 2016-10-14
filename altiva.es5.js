@@ -20352,8 +20352,9 @@ var hover$1 = hover;
 		this.setRoutes();
 		this.checkToken();
 		
-		if( this.config.mobile )
+		if( window && ( window.cordova || window.location.protocol == 'file:' ) && this.config.mobile )
 		{
+			this.mobileSetup();
 			index( { dispatch: false } );
 			index( this.config.mobile );
 		}

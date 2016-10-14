@@ -340,8 +340,9 @@ import { tab } from 'ractive-events-keys';
 		this.setRoutes()
 		this.checkToken()
 		
-		if( this.config.mobile )
+		if( window && ( window.cordova || window.location.protocol == 'file:' ) && this.config.mobile )
 		{
+			this.mobileSetup()
 			page( { dispatch: false } )
 			page( this.config.mobile )
 		}
