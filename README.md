@@ -59,7 +59,7 @@ Altiva is open-source (MIT), written in Javascript and based on [Ractive.js](htt
 			content: 'HelloWorld'
 		});
 
-		ap.start();
+		app.start();
 
 		</script>
 	</body>
