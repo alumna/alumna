@@ -540,17 +540,6 @@ Altiva.components.dynamic = Ractive.extend({
 		{
 			init: false
 		});
-	},
-	onrender: function ()
-	{
-		var clickEvent = ( 'undefined' !== typeof document ) && document.ontouchstart ? 'touchstart' : 'click';
-
-		var svg_anchors = document.querySelectorAll( "svg a" );
-
-		for ( var i = svg_anchors.length - 1; i >= 0; i-- )
-		{
-			svg_anchors[ i ].addEventListener( clickEvent, function ( e ) { e.preventDefault(); }, false );
-		}
 	}
 });
 
