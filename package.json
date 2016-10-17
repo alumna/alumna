@@ -1,7 +1,7 @@
 {
   "name": "altiva",
   "description": "Development platform for humans",
-  "version": "0.9.0",
+  "version": "0.9.3",
   "homepage": "http://altiva.in",
   "bugs": {
     "url": "https://github.com/altiva/altiva/issues"
@@ -12,7 +12,7 @@
   "main": "altiva.js",
   "devDependencies": {},
   "dependencies": {
-    "page": "github:visionmedia/page.js#master",
+    "page": "github:altiva/page.js#master",
     "qwest": "github:pyrsmk/qwest#master",
     "ractive": "github:ractivejs/ractive#build",
     "ractive-events-hover": "github:ractivejs/ractive-events-hover#master",

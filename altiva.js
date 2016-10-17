@@ -14,7 +14,7 @@ function createCommonjsModule(fn, module) {
 var ractive = createCommonjsModule(function (module, exports) {
 /*
 	Ractive.js v0.8.1-edge
-	Fri Oct 14 2016 10:56:47 GMT+0000 (UTC) - commit 667c490c55505b208708a3112eedb890fed7c476
+	Sun Oct 16 2016 18:19:23 GMT+0000 (UTC) - commit a766516583baebddbfd4caf409054f27ed177724
 
 	http://ractivejs.org
 	http://twitter.com/RactiveJS
@@ -446,13 +446,13 @@ var ractive = createCommonjsModule(function (module, exports) {
   var welcome;
   if ( hasConsole ) {
   	var welcomeIntro = [
-  		("%cRactive.js %c0.8.1-edge-667c490c55505b208708a3112eedb890fed7c476 %cin debug mode, %cmore..."),
+  		("%cRactive.js %c0.8.1-edge-a766516583baebddbfd4caf409054f27ed177724 %cin debug mode, %cmore..."),
   		'color: rgb(114, 157, 52); font-weight: normal;',
   		'color: rgb(85, 85, 85); font-weight: normal;',
   		'color: rgb(85, 85, 85); font-weight: normal;',
   		'color: rgb(82, 140, 224); font-weight: normal; text-decoration: underline;'
   	];
-  	var welcomeMessage = "You're running Ractive 0.8.1-edge-667c490c55505b208708a3112eedb890fed7c476 in debug mode - messages will be printed to the console to help you fix problems and optimise your application.\n\nTo disable debug mode, add this line at the start of your app:\n  Ractive.DEBUG = false;\n\nTo disable debug mode when your app is minified, add this snippet:\n  Ractive.DEBUG = /unminified/.test(function(){/*unminified*/});\n\nGet help and support:\n  http://docs.ractivejs.org\n  http://stackoverflow.com/questions/tagged/ractivejs\n  http://groups.google.com/forum/#!forum/ractive-js\n  http://twitter.com/ractivejs\n\nFound a bug? Raise an issue:\n  https://github.com/ractivejs/ractive/issues\n\n";
+  	var welcomeMessage = "You're running Ractive 0.8.1-edge-a766516583baebddbfd4caf409054f27ed177724 in debug mode - messages will be printed to the console to help you fix problems and optimise your application.\n\nTo disable debug mode, add this line at the start of your app:\n  Ractive.DEBUG = false;\n\nTo disable debug mode when your app is minified, add this snippet:\n  Ractive.DEBUG = /unminified/.test(function(){/*unminified*/});\n\nGet help and support:\n  http://docs.ractivejs.org\n  http://stackoverflow.com/questions/tagged/ractivejs\n  http://groups.google.com/forum/#!forum/ractive-js\n  http://twitter.com/ractivejs\n\nFound a bug? Raise an issue:\n  https://github.com/ractivejs/ractive/issues\n\n";
 
   	welcome = function () {
   		var hasGroup = !!console.groupCollapsed;
@@ -2971,7 +2971,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   		// Exit early if no adaptors
   		if ( len === 0 ) return;
 
-  		var value = this.value;
+  		var value = this.wrapper ? ( 'newValue' in this.wrapper ? this.wrapper.newValue : this.wrapper.value ) : this.value;
 
   		// TODO remove this legacy nonsense
   		var ractive = this.root.ractive;
@@ -2979,7 +2979,7 @@ var ractive = createCommonjsModule(function (module, exports) {
 
   		// tear previous adaptor down if present
   		if ( this.wrapper ) {
-  			var shouldTeardown = !this.wrapper.reset || this.wrapper.reset( value ) === false;
+  			var shouldTeardown = this.wrapper.value === value ? false : !this.wrapper.reset || this.wrapper.reset( value ) === false;
 
   			if ( shouldTeardown ) {
   				this.wrapper.teardown();
@@ -2988,9 +2988,11 @@ var ractive = createCommonjsModule(function (module, exports) {
   				// don't branch for undefined values
   				if ( this.value !== undefined ) {
   					var parentValue = this.parent.value || this.parent.createBranch( this.key );
-  					if ( parentValue[ this.key ] !== this.value ) parentValue[ this.key ] = value;
+  					if ( parentValue[ this.key ] !== value ) parentValue[ this.key ] = value;
   				}
   			} else {
+  				delete this.wrapper.newValue;
+  				this.wrapper.value = value;
   				this.value = this.wrapper.get();
   				return;
   			}
@@ -3002,7 +3004,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   			var adaptor = adaptors[i];
   			if ( adaptor.filter( value, keypath, ractive ) ) {
   				this$1.wrapper = adaptor.wrap( ractive, value, keypath, getPrefixer( keypath ) );
-  				this$1.wrapper.value = this$1.value;
+  				this$1.wrapper.value = value;
   				this$1.wrapper.__model = this$1; // massive temporary hack to enable array adaptor
 
   				this$1.value = this$1.wrapper.get();
@@ -3052,9 +3054,10 @@ var ractive = createCommonjsModule(function (module, exports) {
   			this.parent.value = this.parent.wrapper.get();
 
   			this.value = this.parent.value[ this.key ];
+  			if ( this.wrapper ) this.wrapper.newValue = this.value;
   			this.adapt();
   		} else if ( this.wrapper ) {
-  			this.value = value;
+  			this.wrapper.newValue = value;
   			this.adapt();
   		} else {
   			var parentValue = this.parent.value || this.parent.createBranch( this.key );
@@ -3129,7 +3132,10 @@ var ractive = createCommonjsModule(function (module, exports) {
   			this.value = value;
 
   			// make sure the wrapper stays in sync
-  			if ( old !== value || this.rewrap ) this.adapt();
+  			if ( old !== value || this.rewrap ) {
+  				if ( this.wrapper ) this.wrapper.newValue = value;
+  				this.adapt();
+  			}
 
   			// keep track of array lengths
   			if ( isArray( value ) ) this.length = value.length;
@@ -3577,7 +3583,11 @@ var ractive = createCommonjsModule(function (module, exports) {
   var updateHook = new Hook( 'update' );
 
   function update$2 ( ractive, model ) {
-  	if ( model.parent && model.parent.wrapper ) return update$2( ractive, model.parent );
+  	// if the parent is wrapped, the adaptor will need to be updated before
+  	// updating on this keypath
+  	if ( model.parent && model.parent.wrapper ) {
+  		model.parent.adapt();
+  	}
 
   	var promise = runloop.start( ractive, true );
 
@@ -4011,7 +4021,10 @@ var ractive = createCommonjsModule(function (module, exports) {
   		Object.keys( map ).forEach( function ( keypath ) {
   			var callback = map[ keypath ];
 
-  			keypath.split( ' ' ).forEach( function ( keypath ) {
+  			var keypaths = keypath.split( ' ' );
+  			if ( keypaths.length > 1 ) keypaths = keypaths.filter( function ( k ) { return k; } );
+
+  			keypaths.forEach( function ( keypath ) {
   				observers.push( createObserver( this$1, keypath, callback, options ) );
   			});
   		});
@@ -4027,6 +4040,8 @@ var ractive = createCommonjsModule(function (module, exports) {
   		} else {
   			keypaths = keypath.split( ' ' );
   		}
+
+  		if ( keypaths.length > 1 ) keypaths = keypaths.filter( function ( k ) { return k; } );
 
   		keypaths.forEach( function ( keypath ) {
   			observers.push( createObserver( this$1, keypath, callback, options || {} ) );
@@ -8880,6 +8895,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   		if ( this.dirty ) {
   			this.dirty = false;
   			this.value = this.getValue();
+  			if ( this.wrapper ) this.wrapper.newValue = this.value;
   			this.adapt();
   		}
 
@@ -10592,6 +10608,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   		if ( this.dirty ) {
   			this.dirty = false;
   			this.value = this.getValue();
+  			if ( this.wrapper ) this.wrapper.newValue = this.value;
   			this.adapt();
   		}
 
@@ -10898,7 +10915,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   	};
 
   	RootModel.prototype.retrieve = function retrieve () {
-  		return this.value;
+  		return this.wrapper ? this.wrapper.get() : this.value;
   	};
 
   	RootModel.prototype.update = function update () {
@@ -16942,7 +16959,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   	magic:          { value: magicSupported },
 
   	// version
-  	VERSION:        { value: '0.8.1-edge-667c490c55505b208708a3112eedb890fed7c476' },
+  	VERSION:        { value: '0.8.1-edge-a766516583baebddbfd4caf409054f27ed177724' },
 
   	// plugins
   	adaptors:       { writable: true, value: {} },
@@ -19442,8 +19459,13 @@ index$1.tokensToRegExp = tokensToRegExp_1;
     // ensure link
     // use shadow dom when available
     var el = e.path ? e.path[0] : e.target;
-    while (el && 'A' !== el.nodeName) el = el.parentNode;
-    if (!el || 'A' !== el.nodeName) return;
+
+    // check if link is inside an svg | in this case, both href and target are always inside an object
+    var svg = ( typeof el.href === 'object' ) && el.href.constructor.name === 'SVGAnimatedString';
+
+    // continue ensure link | el.nodeName for svg links are 'a' instead of 'A' and fail when testing only in the latter
+    while (el && ( 'A' !== el.nodeName && 'a' !== el.nodeName ) ) el = el.parentNode;
+    if (!el || ( 'A' !== el.nodeName && 'a' !== el.nodeName ) ) return;
 
 
 
@@ -19462,15 +19484,20 @@ index$1.tokensToRegExp = tokensToRegExp_1;
     if (link && link.indexOf('mailto:') > -1) return;
 
     // check target
-    if (el.target) return;
+    // svg target is an object and its desired value is in .baseVal property
+    if ( svg ? el.target.baseVal : el.target ) return;
 
     // x-origin
-    if (!sameOrigin(el.href)) return;
+    // note: svg links that are not relative don't call click events (and skip page.js)
+    // consequently, all svg links tested inside page.js are relative and in the same origin
+    if ( !svg && !sameOrigin( el.href )) return;
 
 
 
     // rebuild path
-    var path = el.pathname + el.search + (el.hash || '');
+    // There aren't .pathname and .search properties in svg links, so we use href
+    // Also, svg href is an object and its desired value is in .baseVal property
+    var path = svg ? el.href.baseVal : ( el.pathname + el.search + (el.hash || '') );
 
     // strip leading "/[drive letter]:" on NW.js on Windows
     if (typeof process !== 'undefined' && path.match(/^\/[a-zA-Z]:\//)) {
