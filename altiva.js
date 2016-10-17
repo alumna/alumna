@@ -20292,7 +20292,7 @@ var Altiva = ractive.extend({
 		{
 			sessions_data[ new_sessions[i] ] = 'blank';
 
-			this.altiva.template += '<dynamic component="{{_sessions.' + new_sessions[i] + '}}"/>';
+			this.altiva.template += '<div><dynamic component="{{_sessions.' + new_sessions[i] + '}}"/></div>';
 		}
 
 		this.altiva.blank = sessions_data;
