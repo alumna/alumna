@@ -3,6 +3,7 @@ import * as rcu from 'rcu';
 import qwest from 'qwest';
 import page from 'page';
 import store from 'store';
+import Zousan from 'zousan';
 
 import tap from 'ractive-events-tap';
 import doubletap from './doubletap';
@@ -135,6 +136,8 @@ var Altiva = Ractive.extend({
 	},
 
 	server: qwest,
+
+	Promise: Zousan,
 
 	comp: {},
 

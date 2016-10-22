@@ -13,8 +13,8 @@ function createCommonjsModule(fn, module) {
 
 var ractive = createCommonjsModule(function (module, exports) {
 /*
-	Ractive.js v0.8.1-edge
-	Sun Oct 16 2016 18:19:23 GMT+0000 (UTC) - commit a766516583baebddbfd4caf409054f27ed177724
+	Ractive.js v0.8.2-edge
+	Fri Oct 21 2016 20:50:29 GMT+0000 (UTC) - commit 0f08133d00f706b458522bc482e0d3c752957cc1
 
 	http://ractivejs.org
 	http://twitter.com/RactiveJS
@@ -47,6 +47,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   	preserveWhitespace:     false,
   	sanitize:               false,
   	stripComments:          true,
+  	contextLines:           0,
 
   	// data & binding:
   	data:                   {},
@@ -446,18 +447,23 @@ var ractive = createCommonjsModule(function (module, exports) {
   var welcome;
   if ( hasConsole ) {
   	var welcomeIntro = [
-  		("%cRactive.js %c0.8.1-edge-a766516583baebddbfd4caf409054f27ed177724 %cin debug mode, %cmore..."),
+  		("%cRactive.js %c0.8.2-edge-0f08133d00f706b458522bc482e0d3c752957cc1 %cin debug mode, %cmore..."),
   		'color: rgb(114, 157, 52); font-weight: normal;',
   		'color: rgb(85, 85, 85); font-weight: normal;',
   		'color: rgb(85, 85, 85); font-weight: normal;',
   		'color: rgb(82, 140, 224); font-weight: normal; text-decoration: underline;'
   	];
-  	var welcomeMessage = "You're running Ractive 0.8.1-edge-a766516583baebddbfd4caf409054f27ed177724 in debug mode - messages will be printed to the console to help you fix problems and optimise your application.\n\nTo disable debug mode, add this line at the start of your app:\n  Ractive.DEBUG = false;\n\nTo disable debug mode when your app is minified, add this snippet:\n  Ractive.DEBUG = /unminified/.test(function(){/*unminified*/});\n\nGet help and support:\n  http://docs.ractivejs.org\n  http://stackoverflow.com/questions/tagged/ractivejs\n  http://groups.google.com/forum/#!forum/ractive-js\n  http://twitter.com/ractivejs\n\nFound a bug? Raise an issue:\n  https://github.com/ractivejs/ractive/issues\n\n";
+  	var welcomeMessage = "You're running Ractive 0.8.2-edge-0f08133d00f706b458522bc482e0d3c752957cc1 in debug mode - messages will be printed to the console to help you fix problems and optimise your application.\n\nTo disable debug mode, add this line at the start of your app:\n  Ractive.DEBUG = false;\n\nTo disable debug mode when your app is minified, add this snippet:\n  Ractive.DEBUG = /unminified/.test(function(){/*unminified*/});\n\nGet help and support:\n  http://docs.ractivejs.org\n  http://stackoverflow.com/questions/tagged/ractivejs\n  http://groups.google.com/forum/#!forum/ractive-js\n  http://twitter.com/ractivejs\n\nFound a bug? Raise an issue:\n  https://github.com/ractivejs/ractive/issues\n\n";
 
   	welcome = function () {
+  		if ( Ractive.WELCOME_MESSAGE === false ) {
+  			welcome = noop;
+  			return;
+  		}
+  		var message = 'WELCOME_MESSAGE' in Ractive ? Ractive.WELCOME_MESSAGE : welcomeMessage;
   		var hasGroup = !!console.groupCollapsed;
-  		console[ hasGroup ? 'groupCollapsed' : 'log' ].apply( console, welcomeIntro );
-  		console.log( welcomeMessage );
+  		if ( hasGroup ) console.groupCollapsed.apply( console, welcomeIntro );
+  		console.log( message );
   		if ( hasGroup ) {
   			console.groupEnd( welcomeIntro );
   		}
@@ -1291,7 +1297,9 @@ var ractive = createCommonjsModule(function (module, exports) {
 
   		// TODO deprecate this. It's annoying and serves no useful function
   		var ractive = fragment.ractive;
-  		changeHook.fire( ractive, ractive.viewmodel.changes );
+  		if ( Object.keys( ractive.viewmodel.changes ).length ) {
+  			changeHook.fire( ractive, ractive.viewmodel.changes );
+  		}
   		ractive.viewmodel.changes = {};
   		removeFromArray( ractives, ractive );
 
@@ -1321,7 +1329,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   	// If updating the view caused some model blowback - e.g. a triple
   	// containing <option> elements caused the binding on the <select>
   	// to update - then we start over
-  	if ( batch.fragments.length || batch.immediateObservers.length || batch.deferredObservers.length || batch.ractives.length ) return flushChanges();
+  	if ( batch.fragments.length || batch.immediateObservers.length || batch.deferredObservers.length || batch.ractives.length || batch.tasks.length ) return flushChanges();
   }
 
   var refPattern = /\[\s*(\*|[0-9]|[1-9][0-9]+)\s*\]/g;
@@ -1922,7 +1930,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   	subscribers = subscribers.slice();
 
   	for ( var i = 0, len = subscribers.length; i < len; i += 1 ) {
-  		if ( subscribers[ i ].apply( ractive, args ) === false ) {
+  		if ( !subscribers[ i ].off && subscribers[ i ].apply( ractive, args ) === false ) {
   			stopEvent = true;
   		}
   	}
@@ -2700,12 +2708,17 @@ var ractive = createCommonjsModule(function (module, exports) {
   	};
 
   	LinkModel.prototype.shuffle = function shuffle ( newIndices ) {
-  		// let the real model handle firing off shuffles
+  		// watch for extra shuffles caused by a shuffle in a downstream link
   		var this$1 = this;
 
+  		if ( this.shuffling ) return;
+
+  		// let the real model handle firing off shuffles
   		if ( !this.target.shuffling ) {
   			this.target.shuffle( newIndices );
   		} else {
+  			this.shuffling = true;
+
   			var i = newIndices.length;
   			while ( i-- ) {
   				var idx = newIndices[ i ];
@@ -2737,7 +2750,10 @@ var ractive = createCommonjsModule(function (module, exports) {
   			this.marked();
 
   			if ( upstream ) this.notifyUpstream();
+
+  			this.shuffling = false;
   		}
+
   	};
 
   	LinkModel.prototype.source = function source () {
@@ -2940,8 +2956,6 @@ var ractive = createCommonjsModule(function (module, exports) {
   var Model = (function (ModelBase) {
   	function Model ( parent, key ) {
   		ModelBase.call( this, parent );
-
-  		this.value = undefined;
 
   		this.ticker = null;
 
@@ -4471,6 +4485,9 @@ var ractive = createCommonjsModule(function (module, exports) {
   			if ( subscribers ) {
   				// ...if a callback was specified, only remove that
   				if ( callback ) {
+  					// flag this callback as off so that any in-flight firings don't call
+  					// a cancelled handler - this is _slightly_ hacky
+  					callback.off = true;
   					var index = subscribers.indexOf( callback );
   					if ( index !== -1 ) {
   						subscribers.splice( index, 1 );
@@ -5024,6 +5041,40 @@ var ractive = createCommonjsModule(function (module, exports) {
   		return null;
   	},
 
+  	getContextMessage: function ( pos, message ) {
+  		var ref = this.getLinePos( pos ), lineNum = ref[0], columnNum = ref[1];
+  		if ( this.options.contextLines === -1 ) {
+  			return [ lineNum, columnNum, ("" + message + " at line " + lineNum + " character " + columnNum) ];
+  		}
+
+  		var line = this.lines[ lineNum - 1 ];
+
+  		var contextUp = '';
+  		var contextDown = '';
+  		if ( this.options.contextLines ) {
+  			var start = lineNum - 1 - this.options.contextLines < 0 ? 0 : lineNum - 1 - this.options.contextLines;
+  			contextUp = this.lines.slice( start, lineNum - 1 - start ).join( '\n' ).replace( /\t/g, '  ' );
+  			contextDown = this.lines.slice( lineNum, lineNum + this.options.contextLines ).join( '\n' ).replace( /\t/g, '  ' );
+  			if ( contextUp ) {
+  				contextUp += '\n';
+  			}
+  			if ( contextDown ) {
+  				contextDown = '\n' + contextDown;
+  			}
+  		}
+
+  		var numTabs = 0;
+  		var annotation = contextUp + line.replace( /\t/g, function ( match, char ) {
+  			if ( char < columnNum ) {
+  				numTabs += 1;
+  			}
+
+  			return '  ';
+  		}) + '\n' + new Array( columnNum + numTabs ).join( ' ' ) + '^----' + contextDown;
+
+  		return [ lineNum, columnNum, ("" + message + " at line " + lineNum + " character " + columnNum + ":\n" + annotation) ];
+  	},
+
   	getLinePos: function ( char ) {
   		var this$1 = this;
 
@@ -5039,24 +5090,12 @@ var ractive = createCommonjsModule(function (module, exports) {
   	},
 
   	error: function ( message ) {
-  		var pos = this.getLinePos( this.pos );
-  		var lineNum = pos[0];
-  		var columnNum = pos[1];
+  		var ref = this.getContextMessage( this.pos, message ), lineNum = ref[0], columnNum = ref[1], msg = ref[2];
 
-  		var line = this.lines[ pos[0] - 1 ];
-  		var numTabs = 0;
-  		var annotation = line.replace( /\t/g, function ( match, char ) {
-  			if ( char < pos[1] ) {
-  				numTabs += 1;
-  			}
+  		var error = new ParseError( msg );
 
-  			return '  ';
-  		}) + '\n' + new Array( pos[1] + numTabs ).join( ' ' ) + '^----';
-
-  		var error = new ParseError( ("" + message + " at line " + lineNum + " character " + columnNum + ":\n" + annotation) );
-
-  		error.line = pos[0];
-  		error.character = pos[1];
+  		error.line = lineNum;
+  		error.character = columnNum;
   		error.shortMessage = message;
 
   		throw error;
@@ -6327,13 +6366,14 @@ var ractive = createCommonjsModule(function (module, exports) {
   		parsed;
 
   	if ( typeof tokens === 'string' ) {
+  		var pos = parentParser.pos - tokens.length;
   		if ( type === DECORATOR || type === TRANSITION ) {
   			var parser = new ExpressionParser( ("[" + tokens + "]") );
   			return { a: flattenExpression( parser.result[0] ) };
   		}
 
   		if ( type === EVENT && ( match = methodCallPattern.exec( tokens ) ) ) {
-  			warnOnceIfDebug( ("Unqualified method events are deprecated. Prefix methods with '@this.' to call methods on the current Ractive instance.") );
+  			warnIfDebug( parentParser.getContextMessage( pos, ("Unqualified method events are deprecated. Prefix methods with '@this.' to call methods on the current Ractive instance.") )[2] );
   			tokens = "@this." + (match[1]) + "" + (tokens.substr(match[1].length));
   		}
 
@@ -6341,12 +6381,14 @@ var ractive = createCommonjsModule(function (module, exports) {
   			var parser$1 = new ExpressionParser( '[' + tokens + ']' );
   			if ( parser$1.result && parser$1.result[0] ) {
   				if ( parser$1.remaining().length ) {
+  					parentParser.pos = pos + tokens.length - parser$1.remaining().length;
   					parentParser.error( ("Invalid input after event expression '" + (parser$1.remaining()) + "'") );
   				}
   				return { x: flattenExpression( parser$1.result[0] ) };
   			}
 
   			if ( tokens.indexOf( ':' ) > tokens.indexOf( '(' ) || !~tokens.indexOf( ':' ) ) {
+  				parentParser.pos = pos;
   				parentParser.error( ("Invalid input in event expression '" + tokens + "'") );
   			}
 
@@ -6418,8 +6460,8 @@ var ractive = createCommonjsModule(function (module, exports) {
   		result = directiveName;
   	}
 
-  	if ( directiveArgs.length ) {
-  		warnOnceIfDebug( ("Proxy events with arguments are deprecated. You can fire events with arguments using \"@this.fire('eventName', arg1, arg2, ...)\".") );
+  	if ( directiveArgs.length && type ) {
+  		warnIfDebug( parentParser.getContextMessage( parentParser.pos, ("Proxy events with arguments are deprecated. You can fire events with arguments using \"@this.fire('eventName', arg1, arg2, ...)\".") )[2] );
   	}
 
   	return result;
@@ -7261,9 +7303,12 @@ var ractive = createCommonjsModule(function (module, exports) {
 
   	conditions = [];
 
+  	var pos;
   	do {
+  		pos = parser.pos;
   		if ( child = readClosing( parser, tag ) ) {
   			if ( expectedClose && child.r !== expectedClose ) {
+  				parser.pos = pos;
   				parser.error( ("Expected " + (tag.open) + "/" + expectedClose + "" + (tag.close)) );
   			}
 
@@ -8117,6 +8162,8 @@ var ractive = createCommonjsModule(function (module, exports) {
   			{ isStatic: true,  isTriple: true,  open: staticTripleDelimiters[0],  close: staticTripleDelimiters[1],  readers: TRIPLE_READERS }
   		];
 
+  		this.contextLines = options.contextLines || 0;
+
   		this.sortMustacheTags();
 
   		this.sectionDepth = 0;
@@ -8188,7 +8235,8 @@ var ractive = createCommonjsModule(function (module, exports) {
   	'interpolate',
   	'preserveWhitespace',
   	'sanitize',
-  	'stripComments'
+  	'stripComments',
+  	'contextLines'
   ];
 
   var TEMPLATE_INSTRUCTIONS = "Either preparse or use a ractive runtime source that includes the parser. ";
@@ -10640,6 +10688,12 @@ var ractive = createCommonjsModule(function (module, exports) {
   		var dependencies = stopCapturing();
   		this.setDependencies( dependencies );
 
+  		// if not the first computation and the value is not the same,
+  		// register the change for change events
+  		if ( 'value' in this && result !== this.value ) {
+  			this.registerChange( this.getKeypath(), result );
+  		}
+
   		return result;
   	};
 
@@ -10679,6 +10733,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   		}
 
   		this.signature.setter( value );
+  		this.mark();
   	};
 
   	Computation.prototype.setDependencies = function setDependencies ( dependencies ) {
@@ -13071,11 +13126,13 @@ var ractive = createCommonjsModule(function (module, exports) {
   			}
   		});
 
-  		this.attributes.push( new ConditionalAttribute({
-  			owner: this,
-  			parentFragment: this.parentFragment,
-  			template: leftovers
-  		}) );
+  		if ( leftovers.length ) {
+  			this.attributes.push( new ConditionalAttribute({
+  				owner: this,
+  				parentFragment: this.parentFragment,
+  				template: leftovers
+  			}) );
+  		}
 
   		var i = this.attributes.length;
   		while ( i-- ) {
@@ -16290,11 +16347,13 @@ var ractive = createCommonjsModule(function (module, exports) {
   	// search for the next node going forward
   	var this$1 = this;
 
+  		if ( item ) {
   		for ( var i = item.index + 1; i < this$1.items.length; i++ ) {
-  		if ( !this$1.items[ i ] ) continue;
+  			if ( !this$1.items[ i ] ) continue;
 
-  		var node = this$1.items[ i ].firstNode( true );
-  		if ( node ) return node;
+  			var node = this$1.items[ i ].firstNode( true );
+  			if ( node ) return node;
+  		}
   	}
 
   	// if this is the root fragment, and there are no more items,
@@ -16309,7 +16368,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   		return null;
   	}
 
-  	return this.owner.findNextNode( this ); // the argument is in case the parent is a RepeatedFragment
+  	if ( this.parent ) return this.owner.findNextNode( this ); // the argument is in case the parent is a RepeatedFragment
   };
 
   Fragment.prototype.findParentNode = function findParentNode () {
@@ -16409,7 +16468,7 @@ var ractive = createCommonjsModule(function (module, exports) {
 
   		if ( wasRendered ) {
   			var parentNode = this.findParentNode();
-  			var anchor = this.parent ? this.parent.findNextNode( this.owner ) : null;
+  			var anchor = this.findNextNode();
 
   			if ( anchor ) {
   				var docFrag = createDocumentFragment();
@@ -16598,6 +16657,10 @@ var ractive = createCommonjsModule(function (module, exports) {
   	return this.fragment.toString( true );
   }
 
+  function toText () {
+  	return this.fragment.toString( false );
+  }
+
   function Ractive$transition ( name, node, params ) {
 
   	if ( node instanceof HTMLElement ) {
@@ -16723,6 +16786,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   	toCss: Ractive$toCSS,
   	toHTML: Ractive$toHTML,
   	toHtml: Ractive$toHTML,
+  	toText: toText,
   	transition: Ractive$transition,
   	unlink: unlink$1,
   	unrender: Ractive$unrender,
@@ -16959,7 +17023,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   	magic:          { value: magicSupported },
 
   	// version
-  	VERSION:        { value: '0.8.1-edge-a766516583baebddbfd4caf409054f27ed177724' },
+  	VERSION:        { value: '0.8.2-edge-0f08133d00f706b458522bc482e0d3c752957cc1' },
 
   	// plugins
   	adaptors:       { writable: true, value: {} },
@@ -19733,6 +19797,10 @@ var store = createCommonjsModule(function (module, exports) {
 }));
 });
 
+var zousanMin = createCommonjsModule(function (module) {
+!function(t){"use strict";function e(t){if(t){var e=this;t(function(t){e.resolve(t);},function(t){e.reject(t);});}}function n(t,e){if("function"==typeof t.y)try{var n=t.y.call(i,e);t.p.resolve(n);}catch(o){t.p.reject(o);}else t.p.resolve(e);}function o(t,e){if("function"==typeof t.n)try{var n=t.n.call(i,e);t.p.resolve(n);}catch(o){t.p.reject(o);}else t.p.reject(e);}var r,i,c="fulfilled",u="rejected",f="undefined",s=function(){function t(){for(;e.length-n;)e[n](),e[n++]=i,n==o&&(e.splice(0,o),n=0);}var e=[],n=0,o=1024,r=function(){if(typeof MutationObserver!==f){var e=document.createElement("div"),n=new MutationObserver(t);return n.observe(e,{attributes:!0}),function(){e.setAttribute("a",0);}}return typeof setImmediate!==f?function(){setImmediate(t);}:function(){setTimeout(t,0);}}();return function(t){e.push(t),e.length-n==1&&r();}}();e.prototype={resolve:function(t){if(this.state===r){if(t===this)return this.reject(new TypeError("Attempt to resolve promise with self"));var e=this;if(t&&("function"==typeof t||"object"==typeof t))try{var o=!0,i=t.then;if("function"==typeof i)return void i.call(t,function(t){o&&(o=!1,e.resolve(t));},function(t){o&&(o=!1,e.reject(t));})}catch(u){return void(o&&this.reject(u))}this.state=c,this.v=t,e.c&&s(function(){for(var o=0,r=e.c.length;r>o;o++)n(e.c[o],t);});}},reject:function(t){if(this.state===r){this.state=u,this.v=t;var n=this.c;n?s(function(){for(var e=0,r=n.length;r>e;e++)o(n[e],t);}):e.suppressUncaughtRejectionError||console.log("You upset Zousan. Please catch rejections: ",t,t.stack);}},then:function(t,i){var u=new e,f={y:t,n:i,p:u};if(this.state===r)this.c?this.c.push(f):this.c=[f];else{var l=this.state,a=this.v;s(function(){l===c?n(f,a):o(f,a);});}return u},"catch":function(t){return this.then(null,t)},"finally":function(t){return this.then(t,t)},timeout:function(t,n){n=n||"Timeout";var o=this;return new e(function(e,r){setTimeout(function(){r(Error(n));},t),o.then(function(t){e(t);},function(t){r(t);});})}},e.resolve=function(t){var n=new e;return n.resolve(t),n},e.reject=function(t){var n=new e;return n.reject(t),n},e.all=function(t){function n(n,c){n&&"function"==typeof n.then||(n=e.resolve(n)),n.then(function(e){o[c]=e,r++,r==t.length&&i.resolve(o);},function(t){i.reject(t);});}for(var o=[],r=0,i=new e,c=0;c<t.length;c++)n(t[c],c);return t.length||i.resolve(o),i},typeof module!=f&&module.exports&&(module.exports=e),t.define&&t.define.amd&&t.define([],function(){return e}),t.Zousan=e,e.soon=s;}("undefined"!=typeof commonjsGlobal?commonjsGlobal:commonjsGlobal);
+});
+
 var DISTANCE_THRESHOLD = 5; // maximum pixels pointer can move before cancel
 var TIME_THRESHOLD = 400;   // maximum milliseconds between down and up before cancel
 
@@ -20199,6 +20267,8 @@ var Altiva = ractive.extend({
 	},
 
 	server: qwest,
+
+	Promise: zousanMin,
 
 	comp: {},
 
