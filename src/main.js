@@ -3,6 +3,7 @@ import * as rcu from 'rcu';
 import qwest from 'qwest';
 import page from 'page';
 import store from 'store';
+import localforage from 'localforage';
 import Zousan from 'zousan';
 
 import tap from 'ractive-events-tap';
@@ -135,9 +136,11 @@ var Altiva = Ractive.extend({
 		}
 	},
 
+	Promise: Zousan,
+
 	server: qwest,
 
-	Promise: Zousan,
+	storage: localforage,
 
 	comp: {},
 
@@ -231,7 +234,7 @@ var Altiva = Ractive.extend({
 		{
 			sessions_data[ new_sessions[i] ] = 'blank'
 
-			this.altiva.template += '<div><dynamic component="{{_sessions.' + new_sessions[i] + '}}"/></div>'
+			this.altiva.template += '<dynamic component="{{_sessions.' + new_sessions[i] + '}}"/>'
 		}
 
 		this.altiva.blank = sessions_data

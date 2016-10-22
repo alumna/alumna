@@ -12,6 +12,7 @@
   "main": "altiva.js",
   "devDependencies": {},
   "dependencies": {
+    "localforage": "^1.4.3",
     "page": "github:altiva/page.js#master",
     "qwest": "github:pyrsmk/qwest#master",
     "ractive": "github:ractivejs/ractive#build",
