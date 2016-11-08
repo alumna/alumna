@@ -15,8 +15,8 @@ function createCommonjsModule(fn, module) {
 
 var ractive = createCommonjsModule(function (module, exports) {
 /*
-	Ractive.js v0.8.2-edge
-	Fri Oct 21 2016 20:50:29 GMT+0000 (UTC) - commit 0f08133d00f706b458522bc482e0d3c752957cc1
+	Ractive.js v0.8.4
+	Fri Nov 04 2016 00:26:26 GMT-0400 (EDT) - commit c71fa46dd2aa33cd96030b9b440d71a26a64cd8b
 
 	http://ractivejs.org
 	http://twitter.com/RactiveJS
@@ -449,13 +449,13 @@ var ractive = createCommonjsModule(function (module, exports) {
   var welcome;
   if ( hasConsole ) {
   	var welcomeIntro = [
-  		("%cRactive.js %c0.8.2-edge-0f08133d00f706b458522bc482e0d3c752957cc1 %cin debug mode, %cmore..."),
+  		("%cRactive.js %c0.8.4 %cin debug mode, %cmore..."),
   		'color: rgb(114, 157, 52); font-weight: normal;',
   		'color: rgb(85, 85, 85); font-weight: normal;',
   		'color: rgb(85, 85, 85); font-weight: normal;',
   		'color: rgb(82, 140, 224); font-weight: normal; text-decoration: underline;'
   	];
-  	var welcomeMessage = "You're running Ractive 0.8.2-edge-0f08133d00f706b458522bc482e0d3c752957cc1 in debug mode - messages will be printed to the console to help you fix problems and optimise your application.\n\nTo disable debug mode, add this line at the start of your app:\n  Ractive.DEBUG = false;\n\nTo disable debug mode when your app is minified, add this snippet:\n  Ractive.DEBUG = /unminified/.test(function(){/*unminified*/});\n\nGet help and support:\n  http://docs.ractivejs.org\n  http://stackoverflow.com/questions/tagged/ractivejs\n  http://groups.google.com/forum/#!forum/ractive-js\n  http://twitter.com/ractivejs\n\nFound a bug? Raise an issue:\n  https://github.com/ractivejs/ractive/issues\n\n";
+  	var welcomeMessage = "You're running Ractive 0.8.4 in debug mode - messages will be printed to the console to help you fix problems and optimise your application.\n\nTo disable debug mode, add this line at the start of your app:\n  Ractive.DEBUG = false;\n\nTo disable debug mode when your app is minified, add this snippet:\n  Ractive.DEBUG = /unminified/.test(function(){/*unminified*/});\n\nGet help and support:\n  http://docs.ractivejs.org\n  http://stackoverflow.com/questions/tagged/ractivejs\n  http://groups.google.com/forum/#!forum/ractive-js\n  http://twitter.com/ractivejs\n\nFound a bug? Raise an issue:\n  https://github.com/ractivejs/ractive/issues\n\n";
 
   	welcome = function () {
   		if ( Ractive.WELCOME_MESSAGE === false ) {
@@ -2987,7 +2987,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   		// Exit early if no adaptors
   		if ( len === 0 ) return;
 
-  		var value = this.wrapper ? ( 'newValue' in this.wrapper ? this.wrapper.newValue : this.wrapper.value ) : this.value;
+  		var value = this.wrapper ? ( 'newWrapperValue' in this ? this.newWrapperValue : this.wrapperValue ) : this.value;
 
   		// TODO remove this legacy nonsense
   		var ractive = this.root.ractive;
@@ -2995,7 +2995,7 @@ var ractive = createCommonjsModule(function (module, exports) {
 
   		// tear previous adaptor down if present
   		if ( this.wrapper ) {
-  			var shouldTeardown = this.wrapper.value === value ? false : !this.wrapper.reset || this.wrapper.reset( value ) === false;
+  			var shouldTeardown = this.wrapperValue === value ? false : !this.wrapper.reset || this.wrapper.reset( value ) === false;
 
   			if ( shouldTeardown ) {
   				this.wrapper.teardown();
@@ -3007,8 +3007,8 @@ var ractive = createCommonjsModule(function (module, exports) {
   					if ( parentValue[ this.key ] !== value ) parentValue[ this.key ] = value;
   				}
   			} else {
-  				delete this.wrapper.newValue;
-  				this.wrapper.value = value;
+  				delete this.newWrapperValue;
+  				this.wrapperValue = value;
   				this.value = this.wrapper.get();
   				return;
   			}
@@ -3020,7 +3020,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   			var adaptor = adaptors[i];
   			if ( adaptor.filter( value, keypath, ractive ) ) {
   				this$1.wrapper = adaptor.wrap( ractive, value, keypath, getPrefixer( keypath ) );
-  				this$1.wrapper.value = value;
+  				this$1.wrapperValue = value;
   				this$1.wrapper.__model = this$1; // massive temporary hack to enable array adaptor
 
   				this$1.value = this$1.wrapper.get();
@@ -3070,10 +3070,10 @@ var ractive = createCommonjsModule(function (module, exports) {
   			this.parent.value = this.parent.wrapper.get();
 
   			this.value = this.parent.value[ this.key ];
-  			if ( this.wrapper ) this.wrapper.newValue = this.value;
+  			if ( this.wrapper ) this.newWrapperValue = this.value;
   			this.adapt();
   		} else if ( this.wrapper ) {
-  			this.wrapper.newValue = value;
+  			this.newWrapperValue = value;
   			this.adapt();
   		} else {
   			var parentValue = this.parent.value || this.parent.createBranch( this.key );
@@ -3111,7 +3111,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   		if ( shouldCapture ) capture( this );
   		// if capturing, this value needs to be unwrapped because it's for external use
   		if ( opts && opts.virtual ) return this.getVirtual( false );
-  		return ( shouldCapture || ( opts && opts.unwrap ) ) && this.wrapper ? this.wrapper.value : this.value;
+  		return ( shouldCapture || ( opts && opts.unwrap ) ) && this.wrapper ? this.wrapperValue : this.value;
   	};
 
   	Model.prototype.getKeypathModel = function getKeypathModel ( ractive ) {
@@ -3149,7 +3149,7 @@ var ractive = createCommonjsModule(function (module, exports) {
 
   			// make sure the wrapper stays in sync
   			if ( old !== value || this.rewrap ) {
-  				if ( this.wrapper ) this.wrapper.newValue = value;
+  				if ( this.wrapper ) this.newWrapperValue = value;
   				this.adapt();
   			}
 
@@ -8814,7 +8814,9 @@ var ractive = createCommonjsModule(function (module, exports) {
   	}
   };
 
-  Item.prototype.destroyed = function destroyed () {};
+  Item.prototype.destroyed = function destroyed () {
+  	if ( this.fragment ) this.fragment.destroyed();
+  };
 
   Item.prototype.find = function find () {
   	return null;
@@ -8862,6 +8864,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   	ComputationChild.prototype.handleChange = function handleChange$1 () {
   		this.dirty = true;
 
+  		this.links.forEach( marked );
   		this.deps.forEach( handleChange );
   		this.children.forEach( handleChange );
   		this.clearUnresolveds(); // TODO is this necessary?
@@ -8945,11 +8948,11 @@ var ractive = createCommonjsModule(function (module, exports) {
   		if ( this.dirty ) {
   			this.dirty = false;
   			this.value = this.getValue();
-  			if ( this.wrapper ) this.wrapper.newValue = this.value;
+  			if ( this.wrapper ) this.newWrapperValue = this.value;
   			this.adapt();
   		}
 
-  		return shouldCapture && this.wrapper ? this.wrapper.value : this.value;
+  		return shouldCapture && this.wrapper ? this.wrapperValue : this.value;
   	};
 
   	ExpressionProxy.prototype.getKeypath = function getKeypath () {
@@ -9984,6 +9987,16 @@ var ractive = createCommonjsModule(function (module, exports) {
   			return;
   		}
 
+  		if ( !this.rendered && this.owner === this.element && ( !this.name.indexOf( 'style-' ) || !this.name.indexOf( 'class-' ) ) ) {
+  			if ( !this.name.indexOf( 'style-' ) ) {
+  				this.styleName = camelize( this.name.substr( 6 ) );
+  			} else {
+  				this.inlineClass = this.name.substr( 6 );
+  			}
+
+  			return;
+  		}
+
   		if ( booleanAttributes.test( this.name ) ) return value ? this.name : '';
   		if ( value == null ) return '';
 
@@ -10283,7 +10296,8 @@ var ractive = createCommonjsModule(function (module, exports) {
   	};
 
   	defineProperty( patchedArrayProto, methodName, {
-  		value: method
+  		value: method,
+  		configurable: true
   	});
   });
 
@@ -10658,12 +10672,12 @@ var ractive = createCommonjsModule(function (module, exports) {
   		if ( this.dirty ) {
   			this.dirty = false;
   			this.value = this.getValue();
-  			if ( this.wrapper ) this.wrapper.newValue = this.value;
+  			if ( this.wrapper ) this.newWrapperValue = this.value;
   			this.adapt();
   		}
 
   		// if capturing, this value needs to be unwrapped because it's for external use
-  		return shouldCapture && this.wrapper ? this.wrapper.value : this.value;
+  		return shouldCapture && this.wrapper ? this.wrapperValue : this.value;
   	};
 
   	Computation.prototype.getValue = function getValue () {
@@ -11078,24 +11092,30 @@ var ractive = createCommonjsModule(function (module, exports) {
   	}
   }
 
-  function combine$2 ( a, b ) {
-  	var c = a.slice();
-  	var i = b.length;
+  function combine$2 ( arrays ) {
+  	var res = [];
+  	var args = res.concat.apply( res, arrays );
 
+  	var i = args.length;
   	while ( i-- ) {
-  		if ( !~c.indexOf( b[i] ) ) {
-  			c.push( b[i] );
+  		if ( !~res.indexOf( args[i] ) ) {
+  			res.unshift( args[i] );
   		}
   	}
 
-  	return c;
+  	return res;
   }
 
   function getAdaptors ( ractive, protoAdapt, options ) {
   	protoAdapt = protoAdapt.map( lookup );
   	var adapt = ensureArray( options.adapt ).map( lookup );
 
-  	adapt = combine$2( protoAdapt, adapt );
+  	var builtins = [];
+  	var srcs = [ protoAdapt, adapt ];
+  	if ( ractive.parent && !ractive.isolated ) {
+  		srcs.push( ractive.parent.viewmodel.adaptors );
+  	}
+  	srcs.push( builtins );
 
   	var magic = 'magic' in options ? options.magic : ractive.magic;
   	var modifyArrays = 'modifyArrays' in options ? options.modifyArrays : ractive.modifyArrays;
@@ -11106,17 +11126,17 @@ var ractive = createCommonjsModule(function (module, exports) {
   		}
 
   		if ( modifyArrays ) {
-  			adapt.push( magicArrayAdaptor );
+  			builtins.push( magicArrayAdaptor );
   		}
 
-  		adapt.push( magicAdaptor$1 );
+  		builtins.push( magicAdaptor$1 );
   	}
 
   	if ( modifyArrays ) {
-  		adapt.push( arrayAdaptor );
+  		builtins.push( arrayAdaptor );
   	}
 
-  	return adapt;
+  	return combine$2( srcs );
 
 
   	function lookup ( adaptor ) {
@@ -11502,7 +11522,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   				}
 
   				if ( model.wrapper ) {
-  					return values.push( model.wrapper.value );
+  					return values.push( model.wrapperValue );
   				}
 
   				values.push( model.get() );
@@ -11517,10 +11537,14 @@ var ractive = createCommonjsModule(function (module, exports) {
   		var result = this.fn.apply( ractive, values ).pop();
 
   		// Auto prevent and stop if return is explicitly false
-  		var original;
-  		if ( result === false && ( original = event.original ) ) {
-  			original.preventDefault && original.preventDefault();
-  			original.stopPropagation && original.stopPropagation();
+  		if ( result === false ) {
+  			var original = event ? event.original : undefined;
+  			if ( original ) {
+  				original.preventDefault && original.preventDefault();
+  				original.stopPropagation && original.stopPropagation();
+  			} else {
+  				warnOnceIfDebug( ("handler '" + (this.template.n) + "' returned false, but there is no event available to cancel") );
+  			}
   		}
 
   		ractive.event = oldEvent;
@@ -12620,6 +12644,34 @@ var ractive = createCommonjsModule(function (module, exports) {
   	return GenericBinding;
   }(Binding));
 
+  var FileBinding = (function (GenericBinding) {
+  	function FileBinding () {
+  		GenericBinding.apply(this, arguments);
+  	}
+
+  	FileBinding.prototype = Object.create( GenericBinding && GenericBinding.prototype );
+  	FileBinding.prototype.constructor = FileBinding;
+
+  	FileBinding.prototype.getInitialValue = function getInitialValue () {
+  		return undefined;
+  	};
+
+  	FileBinding.prototype.getValue = function getValue () {
+  		return this.node.files;
+  	};
+
+  	FileBinding.prototype.render = function render () {
+  		this.element.lazy = false;
+  		GenericBinding.prototype.render.call(this);
+  	};
+
+  	FileBinding.prototype.setFromNode = function setFromNode( node ) {
+  		this.model.set( node.files );
+  	};
+
+  	return FileBinding;
+  }(GenericBinding));
+
   function getSelectedOptions ( select ) {
       return select.selectedOptions
   		? toArray( select.selectedOptions )
@@ -13056,7 +13108,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   		}
 
   		if ( type === 'file' && isBindable( attributes.value ) ) {
-  			return Binding;
+  			return FileBinding;
   		}
 
   		if ( isBindable( attributes.value ) ) {
@@ -13866,7 +13918,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   	Option.prototype.bubble = function bubble () {
   		// if we're using content as value, may need to update here
   		var value = this.getAttribute( 'value' );
-  		if ( this.node.value !== value ) {
+  		if ( this.node && this.node.value !== value ) {
   			this.node._ractive.value = value;
   		}
   		Element.prototype.bubble.call(this);
@@ -14054,10 +14106,6 @@ var ractive = createCommonjsModule(function (module, exports) {
   			owner: this,
   			template: this.partialTemplate
   		}).bind();
-  	};
-
-  	Partial.prototype.destroyed = function destroyed () {
-  		this.fragment.destroyed();
   	};
 
   	Partial.prototype.detach = function detach () {
@@ -14681,10 +14729,6 @@ var ractive = createCommonjsModule(function (module, exports) {
   		}
   	};
 
-  	Section.prototype.destroyed = function destroyed () {
-  		if ( this.fragment ) this.fragment.destroyed();
-  	};
-
   	Section.prototype.detach = function detach () {
   		return this.fragment ? this.fragment.detach() : createDocumentFragment();
   	};
@@ -14720,7 +14764,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   	Section.prototype.isTruthy = function isTruthy () {
   		if ( this.subordinate && this.sibling.isTruthy() ) return true;
   		var value = !this.model ? undefined : this.model.isRoot ? this.model.value : this.model.get();
-  		return !!value && !isEmpty( value );
+  		return !!value && ( this.templateSectionType === SECTION_IF_WITH || !isEmpty( value ) );
   	};
 
   	Section.prototype.rebinding = function rebinding ( next, previous, safe ) {
@@ -14783,69 +14827,35 @@ var ractive = createCommonjsModule(function (module, exports) {
 
   		var newFragment;
 
-  		if ( this.sectionType === SECTION_EACH ) {
+  		var fragmentShouldExist = this.sectionType === SECTION_EACH || // each always gets a fragment, which may have no iterations
+  		                            this.sectionType === SECTION_WITH || // with (partial context) always gets a fragment
+  		                            ( siblingFalsey && ( this.sectionType === SECTION_UNLESS ? !this.isTruthy() : this.isTruthy() ) ); // if, unless, and if-with depend on siblings and the condition
+
+  		if ( fragmentShouldExist ) {
   			if ( this.fragment ) {
   				this.fragment.update();
   			} else {
-  				// TODO can this happen?
-  				newFragment = new RepeatedFragment({
-  					owner: this,
-  					template: this.template.f,
-  					indexRef: this.template.i
-  				}).bind( this.model );
-  			}
-  		}
-
-  		// WITH is now IF_WITH; WITH is only used for {{>partial context}}
-  		else if ( this.sectionType === SECTION_WITH ) {
-  			if ( this.fragment ) {
-  				this.fragment.update();
-  			} else {
-  				newFragment = new Fragment({
-  					owner: this,
-  					template: this.template.f
-  				}).bind( this.model );
-  			}
-  		}
-
-  		else if ( this.sectionType === SECTION_IF_WITH ) {
-  			if ( this.fragment ) {
-  				if ( isEmpty( value ) ) {
-  					if ( this.rendered ) {
-  						this.fragment.unbind().unrender( true );
-  					}
-
-  					this.fragment = null;
+  				if ( this.sectionType === SECTION_EACH ) {
+  					newFragment = new RepeatedFragment({
+  						owner: this,
+  						template: this.template.f,
+  						indexRef: this.template.i
+  					}).bind( this.model );
   				} else {
-  					this.fragment.update();
+  	 				// only with and if-with provide context - if and unless do not
+  					var context = this.sectionType !== SECTION_IF && this.sectionType !== SECTION_UNLESS ? this.model : null;
+  					newFragment = new Fragment({
+  						owner: this,
+  						template: this.template.f
+  					}).bind( context );
   				}
-  			} else if ( !isEmpty( value ) ) {
-  				newFragment = new Fragment({
-  					owner: this,
-  					template: this.template.f
-  				}).bind( this.model );
   			}
-  		}
-
-  		else {
-  			var fragmentShouldExist = siblingFalsey && ( this.sectionType === SECTION_UNLESS ? isEmpty( value ) : !!value && !isEmpty( value ) );
-
-  			if ( this.fragment ) {
-  				if ( fragmentShouldExist ) {
-  					this.fragment.update();
-  				} else {
-  					if ( this.rendered ) {
-  						this.fragment.unbind().unrender( true );
-  					}
-
-  					this.fragment = null;
-  				}
-  			} else if ( fragmentShouldExist ) {
-  				newFragment = new Fragment({
-  					owner: this,
-  					template: this.template.f
-  				}).bind( null );
+  		} else {
+  			if ( this.fragment && this.rendered ) {
+  				this.fragment.unbind().unrender( true );
   			}
+
+  			this.fragment = null;
   		}
 
   		if ( newFragment ) {
@@ -15952,6 +15962,9 @@ var ractive = createCommonjsModule(function (module, exports) {
   			var anchor = this.parentFragment.findNextNode( this );
 
   			parentNode.insertBefore( docFrag, anchor );
+  		} else {
+  			// make sure to reset the dirty flag even if not rendered
+  			this.dirty = false;
   		}
   	};
 
@@ -16015,7 +16028,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   	};
 
   	Yielder.prototype.findAll = function findAll ( selector, queryResult ) {
-  		this.fragment.find( selector, queryResult );
+  		this.fragment.findAll( selector, queryResult );
   	};
 
   	Yielder.prototype.findComponent = function findComponent ( name ) {
@@ -16188,7 +16201,7 @@ var ractive = createCommonjsModule(function (module, exports) {
 
   		values[ placeholderId ] = model ?
   			model.wrapper ?
-  				model.wrapper.value :
+  				model.wrapperValue :
   				model.get() :
   			undefined;
 
@@ -17025,7 +17038,7 @@ var ractive = createCommonjsModule(function (module, exports) {
   	magic:          { value: magicSupported },
 
   	// version
-  	VERSION:        { value: '0.8.2-edge-0f08133d00f706b458522bc482e0d3c752957cc1' },
+  	VERSION:        { value: '0.8.4' },
 
   	// plugins
   	adaptors:       { writable: true, value: {} },
@@ -17377,12 +17390,14 @@ function getLocation ( source, charIndex ) {
 var keywords = /(case|default|delete|do|else|in|instanceof|new|return|throw|typeof|void)\s*$/;
 var punctuators = /(^|\{|\(|\[\.|;|,|<|>|<=|>=|==|!=|===|!==|\+|-|\*\%|<<|>>|>>>|&|\||\^|!|~|&&|\|\||\?|:|=|\+=|-=|\*=|%=|<<=|>>=|>>>=|&=|\|=|\^=|\/=|\/)\s*$/;
 var ambiguous = /(\}|\)|\+\+|--)\s*$/;
+var beforeJsx = /^$|[=:;,\(\{\}\[|&+]\s*$/;
 
 function find$1 ( str ) {
 	var quote;
 	var escapedFrom;
 	var regexEnabled = true;
 	var pfixOp = false;
+	var jsxTagDepth = 0;
 	var stack = [];
 
 	var start;
@@ -17401,7 +17416,7 @@ function find$1 ( str ) {
 			return start = i, slash;
 		}
 
-		if ( char === '"' || char === "'" ) return start = i, quote = char, string;
+		if ( char === '"' || char === "'" ) return start = i, quote = char, stack.push( base ), string;
 		if ( char === '`' ) return start = i, templateString;
 
 		if ( char === '{' ) return stack.push( base ), base;
@@ -17409,6 +17424,12 @@ function find$1 ( str ) {
 
 		if ( !( pfixOp && /\W/.test( char ) ) ) {
 			pfixOp = ( char === '+' && str[ i - 1 ] === '+' ) || ( char === '-' && str[ i - 1 ] === '-' );
+		}
+
+		if ( char === '<' ) {
+			var substr$1 = str.substr( 0, i );
+			substr$1 = _erase( substr$1, found ).trim();
+			if ( beforeJsx.test( substr$1 ) ) return stack.push( base ), jsxTagStart;
 		}
 
 		return base;
@@ -17453,7 +17474,7 @@ function find$1 ( str ) {
 
 			found.push({ start: start, end: end, inner: inner, outer: outer, type: 'string' });
 
-			return base;
+			return stack.pop();
 		}
 
 		return string;
@@ -17492,6 +17513,43 @@ function find$1 ( str ) {
 			return base;
 		}
 		return templateString( char, i );
+	}
+
+	// JSX is an XML-like extension to ECMAScript
+	// https://facebook.github.io/jsx/
+
+	function jsxTagStart ( char ) {
+		if ( char === '/' ) return jsxTagDepth--, jsxTag;
+		return jsxTagDepth++, jsxTag;
+	}
+
+	function jsxTag ( char, i ) {
+		if ( char === '"' || char === "'" ) return start = i, quote = char, stack.push( jsxTag ), string;
+		if ( char === '{' ) return stack.push( jsxTag ), base;
+		if ( char === '>' ) {
+			if ( jsxTagDepth <= 0 ) return base;
+			return jsx;
+		}
+		if ( char === '/' ) return jsxTagSelfClosing;
+
+		return jsxTag;
+	}
+
+	function jsxTagSelfClosing ( char ) {
+		if ( char === '>' ) {
+			jsxTagDepth--;
+			if ( jsxTagDepth <= 0 ) return base;
+			return jsx;
+		}
+
+		return jsxTag;
+	}
+
+	function jsx ( char ) {
+		if ( char === '{' ) return stack.push( jsx ), base;
+		if ( char === '<' ) return jsxTagStart;
+
+		return jsx;
 	}
 
 	function lineComment ( char, end ) {
@@ -17534,7 +17592,7 @@ function find$1 ( str ) {
 			var after = str.slice( i );
 			var afterLine = /.+(\n|$)/.exec( after )[0];
 
-			var snippet = "" + beforeLine + afterLine + "\n" + (Array( beforeLine.length + 1 ).join( ' ' )) + "^";
+			var snippet = "" + beforeLine + "" + afterLine + "\n" + (Array( beforeLine.length + 1 ).join( ' ' )) + "^";
 
 			throw new Error( ("Unexpected character (" + line + ":" + column + "). If this is valid JavaScript, it's probably a bug in tippex. Please raise an issue at https://github.com/Rich-Harris/tippex/issues – thanks!\n\n" + snippet) );
 		}
@@ -22670,7 +22728,7 @@ var Altiva = ractive.extend({
 		{
 			sessions_data[ new_sessions[i] ] = 'blank';
 
-			this.altiva.template += '<div><dynamic component="{{_sessions.' + new_sessions[i] + '}}"/></div>';
+			this.altiva.template += '<dynamic component="{{_sessions.' + new_sessions[i] + '}}"/>';
 		}
 
 		this.altiva.blank = sessions_data;

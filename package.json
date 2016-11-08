@@ -15,7 +15,7 @@
     "localforage": "^1.4.3",
     "page": "github:altiva/page.js#master",
     "qwest": "github:pyrsmk/qwest#master",
-    "ractive": "github:ractivejs/ractive#build",
+    "ractive": "^0.8.4",
     "ractive-events-hover": "github:ractivejs/ractive-events-hover#master",
     "ractive-events-keys": "^0.2.1",
     "ractive-events-tap": "github:ractivejs/ractive-events-tap#master",

@@ -54,6 +54,6 @@ function eventHandler(name, node, fire) {
 			}, 300);
 		}
 	}
-};
+}
 
 export default doubletap;
