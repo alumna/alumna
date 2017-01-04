@@ -2,8 +2,6 @@
 
 [![Join the chat at https://gitter.im/Altiva/altiva](https://badges.gitter.im/Altiva/altiva.svg)](https://gitter.im/Altiva/altiva?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-(Alpha version. Do not use it in production)
-
 Altiva is a **front-end framework** and its goal is to make universal app development as **human-friendly** as possible. Nevertheless, besides the easiness, we also consider high performance and safety.
 
 
