@@ -15,8 +15,8 @@ import { enter } from 'ractive-events-keys';
 import { tab } from 'ractive-events-keys';
 
 /*
-	Altiva.js v1.0.0-rc1
-	Sun Dec 13 2015 14:27:00 GMT-0300 (UTC)
+	Altiva.js v1.0.0-rc2
+	Qui Abr 06 2017 08:27:00 GMT-0300 (UTC)
 
 	http://altiva.in
 
@@ -132,6 +132,7 @@ var Altiva = Ractive.extend({
 		logout: function () {
 			this.local.remove('token')
 			this.auth.options.headers = {}
+			this.server.setDefaultOptions( {} )
 			return false
 		}
 	},
@@ -305,6 +306,8 @@ var Altiva = Ractive.extend({
 
 	setToken: function () {
 		this.auth.options.headers = { Authorization: 'Bearer ' + this.local.get('token') }
+
+		this.server.setDefaultOptions( this.auth.options )
 
 		this.set( 'users.' + this.local.get( 'me' )._id, this.local.get( 'me' ) )
 		this.set( 'users.me', this.get( 'users.' + this.local.get( 'me' )._id ) )
