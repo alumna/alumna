@@ -1,0 +1,6 @@
+# Altiva build and dev files
+build
+dev
+
+# dotenv environment variables file
+.env
