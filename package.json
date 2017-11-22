@@ -25,13 +25,13 @@
 		"glob": "^7.1.2",
 		"minimist": "^1.2.0",
 		"page": "github:altiva/page.js#master",
-		"rollup": "^0.51.5",
+		"rollup": "^0.51.8",
 		"rollup-plugin-commonjs": "^8.2.6",
 		"rollup-plugin-node-resolve": "^3.0.0",
 		"rollup-plugin-uglify": "^2.0.1",
 		"rsyncwrapper": "^2.0.1",
-		"svelte": "^1.41.3",
-		"uglify-es": "^3.1.9",
+		"svelte": "^1.42.0",
+		"uglify-es": "^3.1.10",
 		"zousan": "^2.3.3"
 	},
 	"dependencies": {
