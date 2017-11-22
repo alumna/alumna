@@ -43,9 +43,7 @@ jspm_packages/
 # Typescript v1 declaration files
 typings/
 
-# Optional npm cache directory and package-lock.json
-.npm
-package-lock.json
+# Optional npm cache directory
 
 # Optional eslint cache
 .eslintcache

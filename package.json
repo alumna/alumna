@@ -1,5 +1,5 @@
 {
-	"name": "Altiva",
+	"name": "@altiva/altiva",
 	"version": "2.0.0",
 	"description": "Altiva Framework: Development for Humans",
 	"main": "altiva.js",
