@@ -26,7 +26,7 @@ Altiva is open-source (MIT), written in Javascript and based on [Svelte](https:/
 [Install Node.js](https://nodejs.org/en/download/) and then install Altiva 2.0 globally:
 
 ```shell
-npm install altiva -g
+npm install @altiva/altiva -g
 ```
 
 ### Step 2
