@@ -1,6 +1,6 @@
 {
 	"name": "@altiva/altiva",
-	"version": "2.0.1",
+	"version": "2.0.2",
 	"description": "Altiva Framework: Development for Humans",
 	"repository": {
 		"type": "git",
@@ -11,7 +11,7 @@
 		"altiva": "cli.js"
 	},
 	"scripts": {
-		"build": "rollup --config rollup.config.altiva.js && rollup --config rollup.config.cli.js",
+		"build": "rollup --config rollup/shared.js && rollup --config rollup/cli.js",
 		"prepare": "npm run build"
 	},
 	"author": "Paulo Coghi",
@@ -21,21 +21,24 @@
 	},
 	"devDependencies": {
 		"connect-history-api-fallback": "^1.4.0",
-		"fs-extra": "^4.0.2",
+		"fs-extra": "^4.0.3",
 		"glob": "^7.1.2",
-		"minimist": "^1.2.0",
+		"hjson": "^3.1.0",
+		"mri": "^1.1.0",
 		"page": "github:altiva/page.js#master",
-		"rollup": "^0.51.8",
+		"rollup": "^0.52.2",
 		"rollup-plugin-commonjs": "^8.2.6",
+		"rollup-plugin-json": "^2.3.0",
 		"rollup-plugin-node-resolve": "^3.0.0",
+		"rollup-plugin-string": "^2.0.2",
 		"rollup-plugin-uglify": "^2.0.1",
 		"rsyncwrapper": "^2.0.1",
-		"svelte": "^1.42.0",
-		"uglify-es": "^3.1.10",
+		"uglify-es": "^3.2.2",
 		"zousan": "^2.3.3"
 	},
 	"dependencies": {
 		"browser-sync": "^2.18.13",
-		"chokidar": "^1.7.0"
+		"chokidar": "^1.7.0",
+		"svelte": "^1.49.1"
 	}
 }

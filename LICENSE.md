@@ -1,4 +1,4 @@
-Copyright (c) 2015-16 Paulo Coghi and contributors
+Copyright (c) 2015-17 Paulo Coghi and contributors
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation

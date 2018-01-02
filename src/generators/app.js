@@ -1,7 +1,16 @@
 import { EOL } 	from 'os';
+import fs 		from 'fs-extra';
+import svelte 	from 'svelte';
+import vm 		from 'vm';
 import Zousan 	from "zousan";
 
-var AltivaGenerator = function ( appStructure, componentsMap ) {
+// Altiva modules - generators
+import subcomponents	from './../generators/subcomponents.js';
+
+// Altiva modules - utils
+import translateModules	from './../utils/translateModules.js';
+
+const MapToCode = function ( appStructure, componentsMap ) {
 
 	this.errors 	= [];
 	this.areas 		= [];
@@ -20,9 +29,9 @@ var AltivaGenerator = function ( appStructure, componentsMap ) {
 
 			let local_errors = 0;
 
-			for ( let area_key in areas_array ) {
+			for ( const area_key in areas_array ) {
 				
-				let area = areas_array[ area_key ]
+				const area = areas_array[ area_key ];
 
 				if ( typeof area != 'string' || !area.length ) {
 					
@@ -43,7 +52,7 @@ var AltivaGenerator = function ( appStructure, componentsMap ) {
 			this.errors.push( 'Error: You need to define an array to "app.areas" with one or more strings as the areas\' names.' );
 		}
 
-	}
+	};
 
 	this.validate_route = function ( path, area_map ) {
 
@@ -53,7 +62,7 @@ var AltivaGenerator = function ( appStructure, componentsMap ) {
 
 				let local_errors = 0;
 
-				for ( let area in area_map ) {
+				for ( const area in area_map ) {
 					
 					if ( !this.areas.includes( area ) ) {
 
@@ -72,11 +81,11 @@ var AltivaGenerator = function ( appStructure, componentsMap ) {
 
 		}
 
-	}
+	};
 
 	this.generate_html = function ( ) {
 
-		return new Zousan( ( resolve, reject ) => {
+		return new Zousan( ( resolve ) => {
 
 			/*
 			 * Organize conditional rules based on area first.
@@ -91,19 +100,19 @@ var AltivaGenerator = function ( appStructure, componentsMap ) {
 			 * untouched.
 			 */
 
-			let organizer = {}
+			const organizer = {};
 
-			for ( let path in this.routes ) {
+			for ( const path in this.routes ) {
 
-				for ( let area in this.routes[ path ] ) {
+				for ( const area in this.routes[ path ] ) {
 
-					let component = this.routes[ path ][ area ]
+					const component = this.routes[ path ][ area ];
 
-					if ( !organizer[ area ] ) organizer[ area ] = {}
+					if ( !organizer[ area ] ) organizer[ area ] = {};
 
-					if ( !organizer[ area ][ component ] ) organizer[ area ][ component ] = []
+					if ( !organizer[ area ][ component ] ) organizer[ area ][ component ] = [];
 
-					organizer[ area ][ component ].push( path )
+					organizer[ area ][ component ].push( path );
 				}
 			}
 
@@ -119,23 +128,23 @@ var AltivaGenerator = function ( appStructure, componentsMap ) {
 
 			let iteration = 0;
 
-			for ( let area_key in this.areas ) {
+			for ( const area_key in this.areas ) {
 
-				let area = this.areas[ area_key ]
-				let same_area = 0
+				const area = this.areas[ area_key ];
+				let same_area = 0;
 
-				for ( let component in organizer[ area ] ) {
+				for ( const component in organizer[ area ] ) {
 
-					let component_tag = component.replace(/\//g, '_');
+					const component_tag = component.replace( /\//g, '_' );
 
 					this.firstLevelComponents[ component_tag ] = component;
 
-					let if_statement     	= ''
-					let additional_paths 	= 0
+					let if_statement     	= '';
+					let additional_paths 	= 0;
 
-					for ( let path_key in organizer[ area ][ component ] ) {
+					for ( const path_key in organizer[ area ][ component ] ) {
 
-						let path = organizer[ area ][ component ][ path_key ]
+						const path = organizer[ area ][ component ][ path_key ];
 
 						if_statement += ( additional_paths ? '|| ' : ' ' ) + '_route == \'' + path + '\' ';
 						
@@ -163,23 +172,23 @@ var AltivaGenerator = function ( appStructure, componentsMap ) {
 
 			resolve( true );
 
-		});
+		} );
 
-	}
+	};
 
 	this.get_dependencies = function ( component_name ) {
 
-		let dependencies = {}
+		const dependencies = {};
 
-		for ( let subcomponent in this.componentsMap[ component_name ] ) {
+		for ( const subcomponent in this.componentsMap[ component_name ] ) {
 
 			dependencies[ subcomponent ] = true;
 
 			if ( this.componentsMap[ subcomponent ] ) {
 
-				let deep_dependencies = this.get_dependencies( subcomponent )
+				const deep_dependencies = this.get_dependencies( subcomponent );
 
-				for ( let deep_subcomponent in deep_dependencies ) {
+				for ( const deep_subcomponent in deep_dependencies ) {
 
 					dependencies[ deep_subcomponent ] = true;
 				}
@@ -187,31 +196,31 @@ var AltivaGenerator = function ( appStructure, componentsMap ) {
 		}
 
 		return dependencies;
-	}
+	};
 
 	this.generate_route_functions = function ( ) {
 
 		return new Zousan( ( resolve, reject ) => {
 
-			for ( let route in this.routes ) {
+			for ( const route in this.routes ) {
 
 				this.route_functions += 'Altiva.routes[ \'' + route + '\' ] = Altiva.Promise.all( [ ';
 
 				let components_passed = 0;
 
 				// Add a loader function to each component used in the specified route
-				for ( let area in this.routes[ route ] ) {
+				for ( const area in this.routes[ route ] ) {
 
-					let area_component = this.routes[ route ][ area ];
+					const area_component = this.routes[ route ][ area ];
 
 					this.route_functions += ( components_passed ? ', ' : '' ) + 'Altiva.load( \'' + area_component + '\' )';
 
 					components_passed++;
 
 					// Also add a loader function to each subcomponent used by the selected components
-					let dependencies = this.get_dependencies( area_component )
+					const dependencies = this.get_dependencies( area_component );
 
-					for ( let subcomponent in dependencies ) {
+					for ( const subcomponent in dependencies ) {
 
 						this.route_functions += ( components_passed ? ', ' : '' ) + 'Altiva.load( \'' + subcomponent + '\' )';
 
@@ -224,19 +233,19 @@ var AltivaGenerator = function ( appStructure, componentsMap ) {
 
 			resolve( true );
 
-		});
-	}
+		} );
+	};
 
 	this.generate_javascript = function ( ) {
 
-		return new Zousan( ( resolve, reject ) => {
+		return new Zousan( ( resolve ) => {
 
 			this.script 	= '<script>'
 							+ 	'export default {'
 
 							+ 		'components: {';
 
-			for ( let component in this.firstLevelComponents ) {
+			for ( const component in this.firstLevelComponents ) {
 
 				this.script += 			component +': Altiva.component[ \'' + this.firstLevelComponents[ component ] + '\' ],';
 
@@ -250,19 +259,19 @@ var AltivaGenerator = function ( appStructure, componentsMap ) {
 
 			resolve( true );
 
-		});
+		} );
 
-	}
+	};
 
 	this.display_errors = function ( ) {
 
-		for ( let key in this.errors ) {
+		for ( const key in this.errors ) {
 
-			console.error( EOL + this.errors[ key ] )
+			console.error( EOL + this.errors[ key ] );
 		}
 
-		console.log( '' )
-	}
+		console.log( '' );
+	};
 
 	this.compile = function ( ) {
 
@@ -270,7 +279,7 @@ var AltivaGenerator = function ( appStructure, componentsMap ) {
 		this.validate_areas( this.appStructure.areas );
 
 		/* Validate the paths  */
-		for ( let path in this.appStructure.route )
+		for ( const path in this.appStructure.route )
 			this.validate_route( path, this.appStructure.route[ path ] );
 
 		/* Check for errors */
@@ -280,8 +289,93 @@ var AltivaGenerator = function ( appStructure, componentsMap ) {
 
 		else
 			return display_errors();
-	}
+	};
 
-}
+};
 
-export default AltivaGenerator;
+/** Generate the main app, saving the code in the file defined in options.app.filename ('app.js' by default) **/
+const appGenerator = function ( mode, options, componentsMap ) {
+
+	return new Zousan( ( resolve ) => {
+
+		const sandbox = {
+			app: {
+				areas: [],
+				route: {}
+			}
+		};
+
+		fs.readFile( './src/' + options.app.filename, 'utf8', ( err, user_code ) => {
+			
+			/* Here we expose a limited sandbox with the "app" var to ensure security with untrusted code */
+			vm.runInNewContext( user_code, sandbox );
+
+			/* Then, we rigidly validate the data contained in the variable "app" exposed, and ignore everything else */
+			const app = new MapToCode( sandbox.app, componentsMap );
+
+			app.compile()
+				.then( ( ( ) => {
+
+					// 'eval' for 'dev' mode, 'es' for 'build' mode
+					const format = ( mode == 'dev' ) ? 'iife' : 'es';
+
+					// default false for 'dev' mode
+					let shared = false;
+
+					// default true for 'build mode'
+					if ( mode == 'build' )
+						shared = options.build.smallComponents == undefined ? true : options.build.smallComponents;
+
+					const main_code = app.html + EOL + app.script;
+
+					const result = svelte.compile( main_code, {
+
+						format,
+						name: 'App',
+						shared,
+					
+						onwarn: warning => console.warn( warning.message ),
+						onerror: err => console.error( err.message )
+
+					} );
+
+					// Do the subcomponents replacement
+					subcomponents( result.code ).then( ( { code, subcomponentsList } ) => {
+
+						fs.readFile( __dirname + '/shared.js', 'utf8', ( err, shared_functions ) => {
+
+							const globalVar = options.app.globalVar ? options.app.globalVar : '';
+
+							const autoStart = options.app.autoStart ? EOL + 'Altiva.start( \'' + globalVar + '\' );' : '';
+
+							
+							// Dev mode code
+							if ( mode == 'dev' ) {
+								
+								const final_code = shared_functions + EOL + app.route_functions + EOL + code + EOL + autoStart;
+
+								fs.outputFile( 'dev/' + options.app.filename, final_code ).then( () => resolve( true ) );
+							}
+
+							// Build mode code
+							if ( mode == 'build' ) {
+								translateModules( code, 'App' ).then( translatedCode => {
+									
+									const final_code = shared_functions + EOL + app.route_functions + EOL + 'var App = ' + translatedCode + EOL + autoStart;
+
+									fs.outputFile( 'build/' + options.app.filename , final_code ).then( () => resolve( true ) );
+								} );
+							}
+
+						} );
+					} );
+
+				} ).bind( app ) );
+
+		} );
+
+	} );
+
+};
+
+export default appGenerator;

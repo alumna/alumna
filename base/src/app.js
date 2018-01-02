@@ -1,6 +1,6 @@
-app.areas = [ 'content' ]
+app.areas = [ 'content' ];
 
 app.route[ '/' ] = {
 	
 	content: 'HelloAltiva'
-}
+};
