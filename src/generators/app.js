@@ -311,9 +311,11 @@ const appGenerator = function ( mode, options, componentsMap ) {
 			try	{
 				vm.runInNewContext( user_code, sandbox );
 			} catch ( e ) {
+				
+				let lineNumber = e.stack.split( EOL )[ 0 ].split( ':' )[ 1 ];
+
 				reject( {
-					message: 'Wrong sintax in app.js',
-					error: e
+					message: e.message + 'in src/' + options.app.filename + ', line: ' + lineNumber
 				} );
 			}
 			
