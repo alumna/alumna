@@ -66,4 +66,4 @@ It will be compiled and saved in `build` folder, with additional minification an
 
 ## License
 
-Copyright (c) 2015-2017 Paulo Coghi and contributors. Released under an [MIT license](LICENSE.md).
+Copyright (c) 2015-2018 Paulo Coghi and contributors. Released under an [MIT license](LICENSE.md).

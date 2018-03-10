@@ -45,8 +45,9 @@ const compile = function ( mode, path, options ) {
 				name,
 				shared,
 
-				onwarn: warning => console.log( warning.message ),
-				onerror: err => console.log( err.message )
+				onwarn: warning => console.log( warning.name + ' in ' + path + ', line ' + warning.loc.line + ', column ' + warning.loc.column + ': ' + warning.message ),
+
+				onerror: err => console.log( err.name + ' in ' + path + ', line ' + err.loc.line + ', column ' + err.loc.column + ': ' + err.message )
 
 			} );
 
@@ -57,19 +58,29 @@ const compile = function ( mode, path, options ) {
 			path = path.replace( 'src', mode );
 			path = path.replace( '.html', '.js' );
 
-			subcomponents( result.code, component ).then( ( { code, subcomponentsList } ) => {
+			// If there are no erros in compiling process
+			if ( result && result.code ) {
 
-				if ( subcomponentsList ) componentsMap[ component ] = subcomponentsList;
+				subcomponents( result.code, component ).then( ( { code, subcomponentsList } ) => {
 
-				if ( mode == 'dev' )
-					fs.outputFile( path , code ).then( () => resolve( true ) );
+					if ( subcomponentsList ) componentsMap[ component ] = subcomponentsList;
 
-				if ( mode == 'build' ) {
-					translateModules( code, name ).then( translatedCode => {
-						fs.outputFile( path , translatedCode ).then( () => resolve( true ) );
-					} );
-				}
-			} );
+					if ( mode == 'dev' )
+						fs.outputFile( path , code ).then( () => resolve( true ) );
+
+					if ( mode == 'build' ) {
+						translateModules( code, name ).then( translatedCode => {
+							fs.outputFile( path , translatedCode ).then( () => resolve( true ) );
+						} );
+					}
+				} );
+
+			} else {
+
+				resolve( true );
+			}
+
+			
 
 		} );
 

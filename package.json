@@ -1,6 +1,6 @@
 {
 	"name": "@altiva/altiva",
-	"version": "2.0.3",
+	"version": "2.0.4",
 	"description": "Altiva Framework: Development for Humans",
 	"repository": {
 		"type": "git",
@@ -21,24 +21,24 @@
 	},
 	"devDependencies": {
 		"connect-history-api-fallback": "^1.4.0",
-		"fs-extra": "^4.0.3",
+		"fs-extra": "^5.0.0",
 		"glob": "^7.1.2",
-		"hjson": "^3.1.0",
+		"hjson": "^3.1.1",
 		"mri": "^1.1.0",
 		"page": "github:altiva/page.js#master",
-		"rollup": "^0.52.2",
-		"rollup-plugin-commonjs": "^8.2.6",
+		"rollup": "^0.56.5",
+		"rollup-plugin-commonjs": "^9.0.0",
 		"rollup-plugin-json": "^2.3.0",
-		"rollup-plugin-node-resolve": "^3.0.0",
+		"rollup-plugin-node-resolve": "^3.2.0",
 		"rollup-plugin-string": "^2.0.2",
-		"rollup-plugin-uglify": "^2.0.1",
+		"rollup-plugin-uglify": "^3.0.0",
 		"rsyncwrapper": "^2.0.1",
-		"uglify-es": "^3.2.2",
+		"uglify-es": "^3.3.9",
 		"zousan": "^2.3.3"
 	},
 	"dependencies": {
-		"browser-sync": "^2.18.13",
-		"chokidar": "^1.7.0",
-		"svelte": "^1.49.1"
+		"browser-sync": "^2.23.6",
+		"chokidar": "^2.0.2",
+		"svelte": "^1.57.1"
 	}
 }

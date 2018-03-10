@@ -296,7 +296,7 @@ const MapToCode = function ( appStructure, componentsMap ) {
 /** Generate the main app, saving the code in the file defined in options.app.filename ('app.js' by default) **/
 const appGenerator = function ( mode, options, componentsMap ) {
 
-	return new Zousan( ( resolve ) => {
+	return new Zousan( ( resolve, reject ) => {
 
 		const sandbox = {
 			app: {
@@ -308,7 +308,15 @@ const appGenerator = function ( mode, options, componentsMap ) {
 		fs.readFile( './src/' + options.app.filename, 'utf8', ( err, user_code ) => {
 			
 			/* Here we expose a limited sandbox with the "app" var to ensure security with untrusted code */
-			vm.runInNewContext( user_code, sandbox );
+			try	{
+				vm.runInNewContext( user_code, sandbox );
+			} catch ( e ) {
+				reject( {
+					message: 'Wrong sintax in app.js',
+					error: e
+				} );
+			}
+			
 
 			/* Then, we rigidly validate the data contained in the variable "app" exposed, and ignore everything else */
 			const app = new MapToCode( sandbox.app, componentsMap );

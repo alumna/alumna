@@ -40,7 +40,18 @@ const watchSrc = function ( options ) {
 
 			compile( 'dev', path ).then( componentsMap => {
 
-				equalComponentList( current, componentsMap[ component ] ) ? browserSync.reload() : appGenerator( options, componentsMap );
+				if ( equalComponentList( current, componentsMap[ component ] ) )
+					
+					browserSync.reload()
+
+				else {
+
+					appGenerator( 'dev', options, componentsMap ).catch( error => {
+
+						console.log( error.message );
+
+					});
+				} 
 			} );
 
 		} else {
@@ -51,7 +62,11 @@ const watchSrc = function ( options ) {
 
 				if ( path == 'src/' + options.app.filename ) {
 
-					appGenerator( options, componentsMap );
+					appGenerator( 'dev', options, componentsMap ).catch( error => {
+
+						console.log( error.message );
+
+					});	
 
 				} else {
 
@@ -147,11 +162,17 @@ const dev = function ( options ) {
 		 
 		compileAll( 'dev', options ).then( componentsMap => {
 
-			appGenerator( 'dev', options, componentsMap ).then( () => {
+			appGenerator( 'dev', options, componentsMap )
+				.then( () => {
 
-				watchDev( options );
-				watchSrc( options );
-			} );
+					watchDev( options );
+					watchSrc( options );
+				})
+				.catch( error => {
+
+					console.log( error.message );
+
+				});
 		} );
 
 	} );
