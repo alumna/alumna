@@ -10,7 +10,7 @@ import subcomponents	from './../generators/subcomponents.js';
 // Altiva modules - utils
 import translateModules	from './../utils/translateModules.js';
 
-const MapToCode = function ( appStructure, componentsMap ) {
+const MapToCode = function ( appStructure, componentsMap, appFileName ) {
 
 	this.errors 	= [];
 	this.areas 		= [];
@@ -18,6 +18,7 @@ const MapToCode = function ( appStructure, componentsMap ) {
 	this.html 		= '';
 	this.script 	= '';
 
+	this.appFileName			= appFileName;
 	this.route_functions 		= '';
 	this.appStructure 			= appStructure;
 	this.componentsMap			= componentsMap;
@@ -35,7 +36,7 @@ const MapToCode = function ( appStructure, componentsMap ) {
 
 				if ( typeof area != 'string' || !area.length ) {
 					
-					this.errors.push( 'Error: The area ' + area + ' is not a string, and only strings can be used as names of areas.' );
+					this.errors.push( 'Error in src/' + this.appFileName + ': The area ' + area + ' is not a string, and only strings can be used as names of areas.' );
 					
 					local_errors = 1;
 					
@@ -49,7 +50,7 @@ const MapToCode = function ( appStructure, componentsMap ) {
 
 		} else {
 
-			this.errors.push( 'Error: You need to define an array to "app.areas" with one or more strings as the areas\' names.' );
+			this.errors.push( 'Error in src/' + this.appFileName + ': You need to define an array to "app.areas" with one or more strings as the areas\' names.' );
 		}
 
 	};
@@ -66,7 +67,7 @@ const MapToCode = function ( appStructure, componentsMap ) {
 					
 					if ( !this.areas.includes( area ) ) {
 
-						this.errors.push( 'Error: In the route \'' + path + '\' you are refering to the area \'' + area + '\' that was not defined in app.areas array.' );
+						this.errors.push( 'Error in src/' + this.appFileName + ': In the route \'' + path + '\' you are refering to the area \'' + area + '\' that was not defined in app.areas array.' );
 
 						local_errors = 1;
 					}
@@ -76,7 +77,7 @@ const MapToCode = function ( appStructure, componentsMap ) {
 
 			} else {
 
-				this.errors.push( 'Error: Before defining the route \'' + path + '\' you need to define the app areas first in app.areas variable.' );
+				this.errors.push( 'Error in src/' + this.appFileName + ': Before defining the route \'' + path + '\' you need to define the app areas first in app.areas variable.' );
 			}
 
 		}
@@ -263,14 +264,19 @@ const MapToCode = function ( appStructure, componentsMap ) {
 
 	};
 
-	this.display_errors = function ( ) {
+	this.return_errors = function ( ) {
+
+		let mergedErrors = '';
+		let count 		 = 0;
 
 		for ( const key in this.errors ) {
 
-			console.error( EOL + this.errors[ key ] );
+			mergedErrors +=  ( count ? EOL : '' ) + this.errors[ key ];
+
+			count++;
 		}
 
-		console.log( '' );
+		return mergedErrors;
 	};
 
 	this.compile = function ( ) {
@@ -288,7 +294,7 @@ const MapToCode = function ( appStructure, componentsMap ) {
 			return Zousan.all( [ this.generate_html(), this.generate_javascript(), this.generate_route_functions() ] );
 
 		else
-			return display_errors();
+			return false;
 	};
 
 };
@@ -321,10 +327,13 @@ const appGenerator = function ( mode, options, componentsMap ) {
 			
 
 			/* Then, we rigidly validate the data contained in the variable "app" exposed, and ignore everything else */
-			const app = new MapToCode( sandbox.app, componentsMap );
+			const app = new MapToCode( sandbox.app, componentsMap, options.app.filename );
 
-			app.compile()
-				.then( ( ( ) => {
+			let compiledApp = app.compile();
+
+			if ( !app.errors.length ) {
+				
+				compiledApp.then( ( ( ) => {
 
 					// 'eval' for 'dev' mode, 'es' for 'build' mode
 					const format = ( mode == 'dev' ) ? 'iife' : 'es';
@@ -344,43 +353,59 @@ const appGenerator = function ( mode, options, componentsMap ) {
 						name: 'App',
 						shared,
 					
-						onwarn: warning => console.warn( warning.message ),
-						onerror: err => console.error( err.message )
+						onwarn: warning => console.log( '[Altiva generated code error] ' + warning.name + ' in ' + path + ', line ' + warning.loc.line + ', column ' + warning.loc.column + ': ' + warning.message ),
+
+						onerror: err => console.log( '[Altiva generated code error] ' + err.name + ' in ' + path + ', line ' + err.loc.line + ', column ' + err.loc.column + ': ' + err.message )
 
 					} );
 
-					// Do the subcomponents replacement
-					subcomponents( result.code ).then( ( { code, subcomponentsList } ) => {
+					// If there are no erros in compiling process
+					if ( result && result.code ) {
 
-						fs.readFile( __dirname + '/shared.js', 'utf8', ( err, shared_functions ) => {
+						// Do the subcomponents replacement
+						subcomponents( result.code ).then( ( { code, subcomponentsList } ) => {
 
-							const globalVar = options.app.globalVar ? options.app.globalVar : '';
+							fs.readFile( __dirname + '/shared.js', 'utf8', ( err, shared_functions ) => {
 
-							const autoStart = options.app.autoStart ? EOL + 'Altiva.start( \'' + globalVar + '\' );' : '';
+								const globalVar = options.app.globalVar ? options.app.globalVar : '';
 
-							
-							// Dev mode code
-							if ( mode == 'dev' ) {
+								const autoStart = options.app.autoStart ? EOL + 'Altiva.start( \'' + globalVar + '\' );' : '';
+
 								
-								const final_code = shared_functions + EOL + app.route_functions + EOL + code + EOL + autoStart;
-
-								fs.outputFile( 'dev/' + options.app.filename, final_code ).then( () => resolve( true ) );
-							}
-
-							// Build mode code
-							if ( mode == 'build' ) {
-								translateModules( code, 'App' ).then( translatedCode => {
+								// Dev mode code
+								if ( mode == 'dev' ) {
 									
-									const final_code = shared_functions + EOL + app.route_functions + EOL + 'var App = ' + translatedCode + EOL + autoStart;
+									const final_code = shared_functions + EOL + app.route_functions + EOL + code + EOL + autoStart;
 
-									fs.outputFile( 'build/' + options.app.filename , final_code ).then( () => resolve( true ) );
-								} );
-							}
+									fs.outputFile( 'dev/' + options.app.filename, final_code ).then( () => resolve( true ) );
+								}
 
+								// Build mode code
+								if ( mode == 'build' ) {
+									translateModules( code, 'App' ).then( translatedCode => {
+										
+										const final_code = shared_functions + EOL + app.route_functions + EOL + 'var App = ' + translatedCode + EOL + autoStart;
+
+										fs.outputFile( 'build/' + options.app.filename , final_code ).then( () => resolve( true ) );
+									} );
+								}
+
+							} );
 						} );
-					} );
+
+					} else {
+
+						resolve( true );
+					}
 
 				} ).bind( app ) );
+
+			} else {
+
+				reject( {
+					message: app.return_errors()
+				} );
+			}
 
 		} );
 

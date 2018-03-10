@@ -51,15 +51,15 @@ const compile = function ( mode, path, options ) {
 
 			} );
 
-			// Runtime name
-			const component = path.replace( 'src/components/', '' ).replace( '.html', '' );
-
-			// Replace "src" with "dev"
-			path = path.replace( 'src', mode );
-			path = path.replace( '.html', '.js' );
-
 			// If there are no erros in compiling process
 			if ( result && result.code ) {
+
+				// Runtime name
+				const component = path.replace( 'src/components/', '' ).replace( '.html', '' );
+
+				// Replace "src" with "dev"
+				path = path.replace( 'src', mode );
+				path = path.replace( '.html', '.js' );
 
 				subcomponents( result.code, component ).then( ( { code, subcomponentsList } ) => {
 
