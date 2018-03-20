@@ -1,8 +1,11 @@
-import page 		from 'page';
-import Zousan 		from "zousan";
+import page 				from 'page';
+import Zousan 				from "zousan";
 
 // Svelte Shared Helpers
 import * as svelteShared 	from 'svelte/shared';
+
+// Svelte Store Library
+import { Store } 			from 'svelte/store.js';
 
 const Altiva = {
 
@@ -50,9 +53,20 @@ const Altiva = {
 
 	component: {},
 
+	defaults: {
+		storeData: {}
+	},
+
 	fileOrMobile ( ) {
 
 		return ( window && ( window.cordova || window.location.protocol == 'file:' ) );
+	},
+
+	instances: {},
+
+	libraries: {
+		// Svelte Store Library
+		Store: Store,
 	},
 
 	load ( url ) {
@@ -128,10 +142,7 @@ const Altiva = {
 	// Shared helpers from Svelte
 	shared: svelteShared,
 
-	startInstance ( name, options ) {
-
-		if ( !name )
-			name = 'app';
+	startInstance ( options ) {
 
 		if ( !options )
 			options = { target: document.body };
@@ -141,22 +152,28 @@ const Altiva = {
 				options.target = document.body;
 		}
 
+		if ( this.defaults.useStore ) {
+
+			this.instances.store = new this.libraries.Store( this.defaults.storeData );
+
+			options.store = this.instances.store;
+		}
+
 		Altiva.root = new App( options );
 
-		window[ name ] = Altiva.root;
+		window[ this.defaults.globalVar ] = Altiva.root;
 	},
 
 	/*
-	 * name: the name of global variable that will host the main application
 	 * options: the svelte array passed in the instantiation of the app
 	 */
-	start ( name, options ) {
+	start ( options ) {
 
 		Altiva.configBaseUrl();
 
 		Altiva.preloadComponents().then( () => {
 
-			Altiva.startInstance( name, options );
+			Altiva.startInstance( options );
 
 			Altiva.configPageJs();
 

@@ -38,7 +38,7 @@ const watchSrc = function ( options ) {
 			const component = path.replace( 'src/components/', '' ).replace( '.html', '' );
 			const current 	= Object.assign( {}, componentsMap[ component ] );
 
-			compile( 'dev', path ).then( componentsMap => {
+			compile( 'dev', path, options ).then( componentsMap => {
 
 				if ( equalComponentList( current, componentsMap[ component ] ) )
 					

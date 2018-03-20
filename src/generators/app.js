@@ -10,6 +10,9 @@ import subcomponents	from './../generators/subcomponents.js';
 // Altiva modules - utils
 import translateModules	from './../utils/translateModules.js';
 
+// Svelte store module
+import { Store } from 'svelte/store.js';
+
 const MapToCode = function ( appStructure, componentsMap, appFileName ) {
 
 	this.errors 	= [];
@@ -307,7 +310,8 @@ const appGenerator = function ( mode, options, componentsMap ) {
 		const sandbox = {
 			app: {
 				areas: [],
-				route: {}
+				route: {},
+				store: null
 			}
 		};
 
@@ -352,12 +356,13 @@ const appGenerator = function ( mode, options, componentsMap ) {
 						format,
 						name: 'App',
 						shared,
+						store: options.app.useStore,
 					
 						onwarn: warning => console.log( '[Altiva generated code error] ' + warning.name + ' in ' + path + ', line ' + warning.loc.line + ', column ' + warning.loc.column + ': ' + warning.message ),
 
 						onerror: err => console.log( '[Altiva generated code error] ' + err.name + ' in ' + path + ', line ' + err.loc.line + ', column ' + err.loc.column + ': ' + err.message )
 
-					} );
+					});
 
 					// If there are no erros in compiling process
 					if ( result && result.code ) {
@@ -367,27 +372,28 @@ const appGenerator = function ( mode, options, componentsMap ) {
 
 							fs.readFile( __dirname + '/shared.js', 'utf8', ( err, shared_functions ) => {
 
-								const globalVar = options.app.globalVar ? options.app.globalVar : '';
+								let appDefaults = 'Altiva.defaults.globalVar = \'' + options.app.globalVar + '\';' + EOL;
+								    appDefaults += 'Altiva.defaults.useStore = ' + options.app.useStore  + ';' + EOL;
 
-								const autoStart = options.app.autoStart ? EOL + 'Altiva.start( \'' + globalVar + '\' );' : '';
+								const autoStart  = options.app.autoStart ? EOL + 'Altiva.start();' : '';
 
-								
 								// Dev mode code
 								if ( mode == 'dev' ) {
 									
-									const final_code = shared_functions + EOL + app.route_functions + EOL + code + EOL + autoStart;
+									const final_code = shared_functions + EOL + appDefaults + EOL + app.route_functions + EOL + code + EOL + autoStart;
 
 									fs.outputFile( 'dev/' + options.app.filename, final_code ).then( () => resolve( true ) );
 								}
 
 								// Build mode code
 								if ( mode == 'build' ) {
+									
 									translateModules( code, 'App' ).then( translatedCode => {
 										
-										const final_code = shared_functions + EOL + app.route_functions + EOL + 'var App = ' + translatedCode + EOL + autoStart;
+										const final_code = shared_functions + EOL + appDefaults + EOL + app.route_functions + EOL + 'var App = ' + translatedCode + EOL + autoStart;
 
 										fs.outputFile( 'build/' + options.app.filename , final_code ).then( () => resolve( true ) );
-									} );
+									});
 								}
 
 							} );

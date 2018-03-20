@@ -1,5 +1,4 @@
 import fs 			from 'fs';
-import hjson		from 'hjson';
 import mri			from 'mri';
 
 // Altiva Library
@@ -68,11 +67,11 @@ const command = mri( process.argv.slice( 2 ), {
 
 if ( command.help || ( process.argv.length <= 2 && process.stdin.isTTY ) ) {
 
-	console.error( '\n' + help.replace( '__VERSION__', version ) + '\n' );
+	console.log( '\n' + help.replace( '__VERSION__', version ) + '\n' );
 
 } else if ( command.version ) {
 
-	console.error( 'altiva version ' + version );
+	console.log( 'altiva version ' + version );
 
 } else {
 
@@ -90,9 +89,7 @@ if ( command.help || ( process.argv.length <= 2 && process.stdin.isTTY ) ) {
 				if ( !err ) {
 
 					// Getting config data
-					const options = hjson.parse( data );
-
-					altiva[ task ]( options, command );
+					altiva.update( data ).then( options => altiva[ task ]( options, command ) );
 
 				} else {
 					

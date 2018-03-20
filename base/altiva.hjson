@@ -1,28 +1,31 @@
 {
-	"app": {
+	app: {
 		// Decide if the application starts automatically or if you will use Altiva.start( 'app', {...} )
-		"autoStart": true,
+		autoStart: true,
 
 		// When changing this, erase the old file in dev/
-		"filename": "app.js",
+		filename: "app.js",
 
 		// This global variable will be registered and pointed to your app, when it runs in the browser
-		"globalVar": "app"
+		globalVar: "app",
+
+		// Enable global store of data (referenced with $) that is accessible on all components
+		useStore: true
 	},
 
-	"build": {
+	build: {
 		// Component versioning
 		componentVersioning: false,
 
 		// Delete removed components in build/components/ that doesn't exist anymore in src/components/
-		"deleteComponents": true,
+		deleteComponents: true,
 		
 		// Delete removed files in build/ that doesn't exist anymore in src/
-		"deleteFiles": false,
+		deleteFiles: false,
 
 		// Components' helpers will be saved in the main app file, greatly reducing the sizes of each
 		// component and of the project.
 		// The downside is that each component is not independent and not standalone.
-		"smallComponents": true
+		smallComponents: true
 	}
 }

@@ -37,17 +37,18 @@ const compile = function ( mode, path, options ) {
 			// default true for 'build mode'
 			if ( mode == 'build' )
 				shared = options.build.smallComponents == undefined ? true : options.build.smallComponents;
-			
+
 			// Compiling
 			const result = svelte.compile( data, {
 
 				format,
 				name,
 				shared,
+				store: options.app.useStore,
 
-				onwarn: warning => console.log( warning.name + ' in ' + path + ', line ' + warning.loc.line + ', column ' + warning.loc.column + ': ' + warning.message ),
+				onwarn: warning => console.log( ( warning.name ? warning.name : 'Warning' ) + ' in ' + path + ', line ' + warning.loc.line + ', column ' + warning.loc.column + ': ' + warning.message ),
 
-				onerror: err => console.log( err.name + ' in ' + path + ', line ' + err.loc.line + ', column ' + err.loc.column + ': ' + err.message )
+				onerror: err => console.log( ( err.name ? err.name : 'Error' ) + ' in ' + path + ', line ' + err.loc.line + ', column ' + err.loc.column + ': ' + err.message )
 
 			} );
 
