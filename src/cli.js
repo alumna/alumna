@@ -61,6 +61,7 @@ const command = mri( process.argv.slice( 2 ), {
 	alias: {
 		h: 'help',
 		p: 'preview',
+		u: 'uncompressed',
 		v: 'version'
 	}
 } );

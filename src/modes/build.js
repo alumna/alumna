@@ -63,9 +63,9 @@ const build = function ( options, command ) {
 		 * its subcomponents
 		 */
 		 
-		compileAll( 'build', options ).then( componentsMap => {
+		compileAll( 'build', options, command ).then( componentsMap => {
 
-			appGenerator( 'build', options, componentsMap ).then( () => {
+			appGenerator( 'build', options, componentsMap, command ).then( () => {
 
 				console.log( 'Build completed.' );
 

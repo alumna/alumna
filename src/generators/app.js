@@ -1,14 +1,16 @@
-import { EOL } 	from 'os';
-import fs 		from 'fs-extra';
-import svelte 	from 'svelte';
-import vm 		from 'vm';
-import Zousan 	from "zousan";
+import { EOL } 			from 'os';
+import fs 				from 'fs-extra';
+import svelte 			from 'svelte';
+import vm 				from 'vm';
+import Zousan 			from "zousan";
+import UglifyJS 		from 'uglify-es';
 
 // Altiva modules - generators
 import subcomponents	from './../generators/subcomponents.js';
 
 // Altiva modules - utils
 import translateModules	from './../utils/translateModules.js';
+import uglifyOptions	from './../utils/uglifyOptions.js';
 
 // Svelte store module
 import { Store } from 'svelte/store.js';
@@ -303,7 +305,7 @@ const MapToCode = function ( appStructure, componentsMap, appFileName ) {
 };
 
 /** Generate the main app, saving the code in the file defined in options.app.filename ('app.js' by default) **/
-const appGenerator = function ( mode, options, componentsMap ) {
+const appGenerator = function ( mode, options, componentsMap, command ) {
 
 	return new Zousan( ( resolve, reject ) => {
 
@@ -390,7 +392,10 @@ const appGenerator = function ( mode, options, componentsMap ) {
 									
 									translateModules( code, 'App' ).then( translatedCode => {
 										
-										const final_code = shared_functions + EOL + appDefaults + EOL + app.route_functions + EOL + 'var App = ' + translatedCode + EOL + autoStart;
+										let final_code = shared_functions + EOL + appDefaults + EOL + app.route_functions + EOL + 'var App = ' + translatedCode + EOL + autoStart;
+
+										// Minify the generated code, unless disabled by the -u/--uncompressed flag
+										if ( !command.uncompressed ) final_code = UglifyJS.minify( final_code, uglifyOptions ).code;
 
 										fs.outputFile( 'build/' + options.app.filename , final_code ).then( () => resolve( true ) );
 									});

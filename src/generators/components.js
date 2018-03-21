@@ -1,13 +1,15 @@
-import fs 			from 'fs-extra';
-import glob			from 'glob';
-import svelte 		from 'svelte';
-import Zousan 		from "zousan";
+import fs 				from 'fs-extra';
+import glob				from 'glob';
+import svelte 			from 'svelte';
+import Zousan 			from "zousan";
+import UglifyJS 		from 'uglify-es';
 
 // Altiva modules - generators
 import subcomponents	from './../generators/subcomponents.js';
 
 // Altiva modules - utils
 import translateModules	from './../utils/translateModules.js';
+import uglifyOptions	from './../utils/uglifyOptions.js';
 
 
 /* Subcomponents map */
@@ -19,7 +21,7 @@ const getMap = function ( ) {
 };
 
 /** Compile generating a Svelte component **/
-const compile = function ( mode, path, options ) {
+const compile = function ( mode, path, options, command ) {
 
 	return new Zousan( ( resolve ) => {
 
@@ -71,6 +73,10 @@ const compile = function ( mode, path, options ) {
 
 					if ( mode == 'build' ) {
 						translateModules( code, name ).then( translatedCode => {
+							
+							// Minify the generated code, unless disabled by the -u/--uncompressed flag
+							if ( !command.uncompressed ) translatedCode = UglifyJS.minify( translatedCode, uglifyOptions ).code;
+
 							fs.outputFile( path , translatedCode ).then( () => resolve( true ) );
 						} );
 					}
@@ -90,13 +96,13 @@ const compile = function ( mode, path, options ) {
 };
 
 /** Compile all components returning a promise **/
-const compileAll = function ( mode, options ) {
+const compileAll = function ( mode, options, command ) {
 
 	return new Zousan( ( resolve, reject ) => {
 
 		/* Recompile the 'scr' to 'dev' or 'build' */
 		glob( 'src/components/**/*.html', ( err, files ) => {
-			err ? reject( err ) : Zousan.all( files.map( path => compile( mode, path, options ) ) ).then( () => resolve( componentsMap ) );
+			err ? reject( err ) : Zousan.all( files.map( path => compile( mode, path, options, command ) ) ).then( () => resolve( componentsMap ) );
 		} );
 
 	} );

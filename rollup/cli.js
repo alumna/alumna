@@ -20,6 +20,7 @@ export default {
 		'path',
 		'stream',
 		'svelte',
+		'uglify-es',
 		'url',
 		'util',
 		'vm'
