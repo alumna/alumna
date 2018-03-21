@@ -8,38 +8,40 @@ const newProject = function ( project_name ) {
 
 		fs.copy( __dirname + '/base', path, err => {
 
-			if ( !err )
-				console.log( 'Done! Now enter your directory with "cd ' + project_name + '" and start developing with "altiva dev" !' );
+			if ( !err ) {
+				
+				let message = path === '.' ? 'Done! Now start developing with "altiva dev" !' : 'Done! Now enter your directory with "cd ' + project_name + '" and start developing with "altiva dev" !';
+
+				console.log( message );
+			}
 			else
-				console.log( 'Cannot copy the project files (20kB). Not enough space?' );
+				console.log( 'Cannot copy the project files (11kB). Not enough space?' );
 
 		} );
 	};
 
 	// Check if the name of directory is valid
-	if ( /^[a-z0-9_-]+$/gi.test( project_name ) || project_name === '.' ) {
-
-		const path = ( project_name === '.' ? '/' : './' ) + project_name;
+	if ( /^[a-z0-9_.-]+$/gi.test( project_name ) || project_name === '.' ) {
 
 		// If directory already exists, check if it's empty ( mandatory )
-		fs.exists( path, ( exists ) => {
+		fs.exists( project_name, ( exists ) => {
 
 			if ( exists ) {
-				fs.readdir( path, ( err, files ) => {
+				fs.readdir( project_name, ( err, files ) => {
 
 					// It's empty. Bring the sports cars
 					if ( !err && !files.length )
-						copyBase( path );
+						copyBase( project_name );
 					else
 						console.log( 'The directory \'' + project_name + '\' isn\'t empty.' );
 				} );
 
 			} else {
 
-				fs.ensureDir( path, err => {
+				fs.ensureDir( project_name, err => {
 
 					if ( !err )
-						copyBase( path );
+						copyBase( project_name );
 					else
 						console.log( 'Cannot create the directory. Missing permissions?' );
 				} );
@@ -47,7 +49,7 @@ const newProject = function ( project_name ) {
 		} );
 
 	} else
-		console.log( 'You can use just letters, numbers, \'-\' and \'_\' for your project name. Or \'.\' to use the current directory (that must be empty).' );
+		console.log( 'You can use just letters, numbers, \'-\', \'_\' and \'.\' for your project name. Or \'.\' to use the current directory (that must be empty).' );
 
 };
 
