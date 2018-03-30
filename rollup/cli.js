@@ -18,6 +18,7 @@ export default {
 		'fs',
 		'os',
 		'path',
+		'rsyncwrapper',
 		'stream',
 		'svelte',
 		'uglify-es',
