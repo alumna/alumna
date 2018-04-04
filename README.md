@@ -1,6 +1,6 @@
 # Altiva Framework: Development for Humans
 
-[![Join the chat at https://gitter.im/Altiva/altiva](https://badges.gitter.im/Altiva/altiva.svg)](https://gitter.im/Altiva/altiva?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/Altiva/altiva](https://badges.gitter.im/Altiva/altiva.svg)](https://gitter.im/Altiva/altiva?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/Altiva/altiva.svg?branch=2.0)](https://travis-ci.org/Altiva/altiva)
 
 Altiva is a **front-end framework** and its goal is to make universal app development as **human-friendly** as possible. Nevertheless, besides the easiness, we also consider high performance and safety.
 
