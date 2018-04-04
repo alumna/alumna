@@ -3,7 +3,7 @@ import hjson	from 'hjson';
 import Zousan 	from 'zousan';
 
 // Merge Deep util
-import { mergeDeep } from './mergeDeep';
+import mergeDeep from './mergeDeep';
 
 const update = function ( projectOptions ) {
 
