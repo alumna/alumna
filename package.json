@@ -26,8 +26,11 @@
 		"collectCoverageFrom": [
 			"**/src/utils/*.js",
 			"**/src/generators/*.js",
+			"!**/src/utils/uglifyOptions.js",
+			"!**/src/utils/updateOptions.js",
 			"!**/node_modules/**"
-		]
+		],
+		"verbose": true
 	},
 	"devDependencies": {
 		"babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",

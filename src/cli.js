@@ -4,6 +4,9 @@ import mri			from 'mri';
 // Altiva Library
 import altiva		from './altiva.js';
 
+// Util to update the user's altiva.hjson, used in all modes
+import update		from './utils/updateOptions.js';
+
 // Command line help info
 import help 		from './help.md';
 import { version } 	from '../package.json';
@@ -90,7 +93,7 @@ if ( command.help || ( process.argv.length <= 2 && process.stdin.isTTY ) ) {
 				if ( !err ) {
 
 					// Getting config data
-					altiva.update( data ).then( options => altiva[ task ]( options, command ) );
+					update( data ).then( options => altiva[ task ]( options, command ) );
 
 				} else {
 					
