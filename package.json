@@ -12,7 +12,8 @@
 	},
 	"scripts": {
 		"build": "rollup --config rollup/shared.js && rollup --config rollup/cli.js",
-		"prepare": "npm run build"
+		"prepare": "npm run build",
+		"test": "jest"
 	},
 	"author": "Paulo Coghi",
 	"license": "MIT",
@@ -20,6 +21,7 @@
 		"url": "https://github.com/altiva/altiva/issues"
 	},
 	"devDependencies": {
+		"babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
 		"connect-history-api-fallback": "^1.4.0",
 		"fs-extra": "^5.0.0",
 		"glob": "^7.1.2",
