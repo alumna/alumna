@@ -1,15 +1,15 @@
-import fs 				from 'fs-extra';
-import glob				from 'glob';
-import svelte 			from 'svelte';
-import Zousan 			from "zousan";
-import UglifyJS 		from 'uglify-es';
+import fs 						from 'fs-extra';
+import glob						from 'glob';
+import svelte 					from 'svelte';
+import Zousan 					from "zousan";
+import UglifyJS 				from 'uglify-es';
 
 // Altiva modules - generators
-import subcomponents	from './../generators/subcomponents.js';
+import subcomponents			from './../generators/subcomponents.js';
 
 // Altiva modules - utils
-import translateModules	from './../utils/translateModules.js';
-import uglifyOptions	from './../utils/uglifyOptions.js';
+import translate				from './../utils/translateSvelteShared.js';
+import uglifyOptions			from './../utils/uglifyOptions.js';
 
 
 /* Subcomponents map */
@@ -72,7 +72,7 @@ const compile = function ( mode, path, options, command ) {
 						fs.outputFile( path , code ).then( () => resolve( true ) );
 
 					if ( mode == 'build' ) {
-						translateModules( code, name ).then( translatedCode => {
+						translate( code, name ).then( translatedCode => {
 							
 							// Minify the generated code, unless disabled by the -u/--uncompressed flag
 							if ( !command.uncompressed ) translatedCode = UglifyJS.minify( translatedCode, uglifyOptions ).code;

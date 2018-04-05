@@ -26,6 +26,7 @@
 		"collectCoverageFrom": [
 			"**/src/utils/*.js",
 			"**/src/generators/*.js",
+			"!**/src/utils/rsyncAssets.js",
 			"!**/src/utils/uglifyOptions.js",
 			"!**/src/utils/updateOptions.js",
 			"!**/node_modules/**"
