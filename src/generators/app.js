@@ -1,19 +1,19 @@
-import { EOL } 			from 'os';
-import fs 				from 'fs-extra';
-import svelte 			from 'svelte';
-import vm 				from 'vm';
-import Zousan 			from "zousan";
-import UglifyJS 		from 'uglify-es';
+import { EOL } 					from 'os';
+import fs 						from 'fs-extra';
+import svelte 					from 'svelte';
+import vm 						from 'vm';
+import Zousan 					from "zousan";
+import UglifyJS 				from 'uglify-es';
 
 // Altiva modules - generators
-import subcomponents	from './../generators/subcomponents.js';
+import subcomponents			from './../generators/subcomponents.js';
 
 // Altiva modules - utils
-import translateModules	from './../utils/translateModules.js';
-import uglifyOptions	from './../utils/uglifyOptions.js';
+import translate				from './../utils/translateSvelteShared.js';
+import uglifyOptions			from './../utils/uglifyOptions.js';
 
 // Svelte store module
-import { Store } from 'svelte/store.js';
+import { Store } 				from 'svelte/store.js';
 
 const MapToCode = function ( appStructure, componentsMap, appFileName ) {
 
@@ -339,7 +339,7 @@ const appGenerator = function ( mode, options, componentsMap, command ) {
 
 			if ( !app.errors.length ) {
 				
-				compiledApp.then( ( ( ) => {
+				compiledApp.then( ( ) => {
 
 					// 'eval' for 'dev' mode, 'es' for 'build' mode
 					const format = ( mode == 'dev' ) ? 'iife' : 'es';
@@ -390,7 +390,7 @@ const appGenerator = function ( mode, options, componentsMap, command ) {
 								// Build mode code
 								if ( mode == 'build' ) {
 									
-									translateModules( code, 'App' ).then( translatedCode => {
+									translate( code, 'App' ).then( translatedCode => {
 										
 										let final_code = shared_functions + EOL + appDefaults + EOL + app.route_functions + EOL + 'var App = ' + translatedCode + EOL + autoStart;
 
@@ -409,7 +409,7 @@ const appGenerator = function ( mode, options, componentsMap, command ) {
 						resolve( true );
 					}
 
-				} ).bind( app ) );
+				} );
 
 			} else {
 

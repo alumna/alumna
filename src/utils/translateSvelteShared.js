@@ -1,7 +1,8 @@
 import { EOL } 	from 'os';
+import Zousan 	from "zousan";
 
 // Translate svelte helpers import statements
-const translateModules = function ( code, name ) {
+const translate = function ( code, name ) {
 	
 	return new Zousan( ( resolve ) => {
 
@@ -12,7 +13,7 @@ const translateModules = function ( code, name ) {
 		let replaceCode		= '';
 
 		// Get the shared modules used in this component and point them to Altiva global var
-		if ( startIndex ) {
+		if ( startIndex !== -1 ) {
 
 			const modulesString = code.substring( startIndex + start.length, code.indexOf( finish, startIndex + start.length ) ).replace( /["']/g , '' ).trim();
 
@@ -20,7 +21,7 @@ const translateModules = function ( code, name ) {
 
 			for ( const key in modulesArray ) {
 
-				replaceCode += 'var ' + modulesArray[ key ] + ' = Altiva.shared.' + modulesArray[ key ] + ' ;' + EOL;
+				replaceCode += 'var ' + modulesArray[ key ] + ' = Altiva.shared.' + modulesArray[ key ] + ';' + EOL;
 			}
 
 			// Replace the import statement with the "replaceCode" content
@@ -37,4 +38,4 @@ const translateModules = function ( code, name ) {
 	} );
 };
 
-export default translateModules;
+export default translate;
