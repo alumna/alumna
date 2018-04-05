@@ -132,9 +132,9 @@ const watchDev = function ( options ) {
 		},
 		port: 3030,
 		ui: false,
-		ui: {
-			port: 3031
-		},
+		//ui: {
+		//	port: 3031
+		//},
 		ghostMode: false,
 		logLevel: "silent",
 		logPrefix: "Altiva Dev"

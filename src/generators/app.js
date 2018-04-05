@@ -12,8 +12,6 @@ import subcomponents			from './../generators/subcomponents.js';
 import translate				from './../utils/translateSvelteShared.js';
 import uglifyOptions			from './../utils/uglifyOptions.js';
 
-// Svelte store module
-import { Store } 				from 'svelte/store.js';
 
 const MapToCode = function ( appStructure, componentsMap, appFileName ) {
 

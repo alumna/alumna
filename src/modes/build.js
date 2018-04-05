@@ -36,9 +36,9 @@ const previewBuild = function ( options ) {
 		},
 		port: 4040,
 		ui: false,
-		ui: {
-			port: 4041
-		},
+		// ui: {
+		// 	port: 4041
+		// },
 		ghostMode: false,
 		logLevel: "silent",
 		logPrefix: "Altiva Build - Preview"
