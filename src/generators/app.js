@@ -339,7 +339,7 @@ const appGenerator = function ( mode, options, componentsMap, command ) {
 
 			if ( !app.errors.length ) {
 				
-				compiledApp.then( ( ( ) => {
+				compiledApp.then( ( ) => {
 
 					// 'eval' for 'dev' mode, 'es' for 'build' mode
 					const format = ( mode == 'dev' ) ? 'iife' : 'es';
@@ -409,7 +409,7 @@ const appGenerator = function ( mode, options, componentsMap, command ) {
 						resolve( true );
 					}
 
-				} ).bind( app ) );
+				} );
 
 			} else {
 
