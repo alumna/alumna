@@ -5,7 +5,7 @@
 Altiva is a **front-end framework** and its goal is to make universal app development as **human-friendly** as possible. Nevertheless, besides the easiness, we also consider high performance and safety.
 
 
-# ![altiva](media/altiva.png)
+# ![altiva](other/media/altiva.png)
 
 Altiva is open-source (MIT), written in Javascript and based on [Svelte](https://svelte.technology/).
 

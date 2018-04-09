@@ -1,4 +1,4 @@
-import equalComponentList from './../../src/utils/equalComponentList';
+import equalComponentList from './../../src/modes/dev/equalComponentList';
 
 /* Original list */
 const list1 = { a: true, b: true }

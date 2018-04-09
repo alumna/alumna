@@ -1,10 +1,9 @@
 import { EOL } 	from 'os';
-import Zousan 	from "zousan";
 
 // Translate svelte helpers import statements
 const translate = function ( code, name ) {
 	
-	return new Zousan( ( resolve ) => {
+	return new Promise( ( resolve ) => {
 
 		const start 		= 'import { ';
 		const finish 		= ' } from "svelte/shared.js";';

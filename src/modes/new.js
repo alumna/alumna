@@ -6,7 +6,7 @@ const newProject = function ( project_name ) {
 	// Copy the "base"
 	const copyBase = function ( path ) {
 
-		fs.copy( __dirname + '/base', path, err => {
+		fs.copy( __dirname + '/other/base', path, err => {
 
 			if ( !err ) {
 				

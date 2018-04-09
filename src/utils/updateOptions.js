@@ -1,16 +1,15 @@
 import fs 		from 'fs-extra';
 import hjson	from 'hjson';
-import Zousan 	from 'zousan';
 
 // Merge Deep util
 import mergeDeep from './mergeDeep';
 
 const update = function ( projectOptions ) {
 
-	return new Zousan( ( resolve ) => {
+	return new Promise( ( resolve ) => {
 
 		// Get latest altiva.hjson file from project
-		fs.readFile( __dirname + '/base/altiva.hjson', 'utf8', ( err, latestOptions ) => {
+		fs.readFile( __dirname + '/other/base/altiva.hjson', 'utf8', ( err, latestOptions ) => {
 
 			// Parse the project's current defined options
 			let parsedProjectOptions = hjson.parse( projectOptions )

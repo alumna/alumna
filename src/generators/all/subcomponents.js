@@ -1,10 +1,9 @@
 import { EOL } 	from 'os';
-import Zousan 	from "zousan";
 
 /** List every subcomponent of it's parent **/
 const subcomponents = function ( code, component ) {
 
-	return new Zousan( ( resolve ) => {
+	return new Promise( ( resolve ) => {
 
 		const start  			= 'Altiva.component[';
 		const finish 			= ']';
@@ -20,37 +19,34 @@ const subcomponents = function ( code, component ) {
 
 			const startIndex = value.lastIndexOf( start );
 
+			// Here, we are checking if a subComponent definition was founded
 			if ( startIndex === -1 ) return;
 
 			const subComponent = value.substring( startIndex + start.length, value.indexOf( finish, startIndex + start.length ) ).replace( /["']/g , '' ).trim();
 
-			// Here, we are checking if a subComponent definition was founded
-			if ( subComponent ) {
+			toBeRemoved.push( value );
 
-				toBeRemoved.push( value );
+			subcomponents[ subComponent ] = true;
+			found = true;
 
-				subcomponents[ subComponent ] = true;
-				found = true;
+			/*
+			 * Here, we register each var name that references a subComponent.
+			 * Those variables will be replaced below[1], but... all this work will
+			 * be removed after explaining this problem in a Svelte issue.
+			 *
+			 * [1] 'new subcomponent( {...} )' to 'new Altiva.component[ 'path/to/subcomponent' ]( {...} )'
+			 *
+			 * Svelte issue number here (soon):
+			 */
 
-				/*
-				 * Here, we register each var name that references a subComponent.
-				 * Those variables will be replaced below[1], but... all this work will
-				 * be removed after explaining this problem in a Svelte issue.
-				 *
-				 * [1] 'new subcomponent( {...} )' to 'new Altiva.component[ 'path/to/subcomponent' ]( {...} )'
-				 *
-				 * Svelte issue number here (soon):
-				 */
+			 const varIndex = value.lastIndexOf( 'var ' );
+			 const varName 	= value.substring( varIndex + 4, value.indexOf( ' = ' + start, varIndex + 4 ) ).trim();
 
-				 const varIndex = value.lastIndexOf( 'var ' );
-				 const instance = value.substring( varIndex + 4, value.indexOf( ' = ' + start, varIndex + 4 ) ).trim();
-
-				 varNames[ subComponent ] = instance;
-			}
+			 varNames[ subComponent ] = varName;
 
 		} );
 
-		// Remove all unnecessary line
+		// Remove all unnecessary lines
 		for ( const key in toBeRemoved )
 			code = code.replace( toBeRemoved[ key ] + EOL, '' );
 
