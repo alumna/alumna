@@ -55,7 +55,7 @@
 		"browser-sync": "^2.23.6",
 		"chokidar": "^2.0.3",
 		"rsyncwrapper": "^2.0.1",
-		"svelte": "^1.60.2",
-		"uglify-es": "^3.3.10"
+		"svelte": "^1.60.0",
+		"uglify-es": "^3.3.9"
 	}
 }
