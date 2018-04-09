@@ -100,7 +100,7 @@ test('Sintatic errors - Cases 2 and 3 - Wrong codes in app.js', () => {
 
 	const promise1 = new Promise( ( resolve, reject ) => {
 
-		const error1 = fs.readFile( __dirname + '/maptocode/case2.js', 'utf8', ( err, code ) => {
+		fs.readFile( __dirname + '/maptocode/case2.js', 'utf8', ( err, code ) => {
 
 			const componentsMap = {}
 
@@ -120,7 +120,7 @@ test('Sintatic errors - Cases 2 and 3 - Wrong codes in app.js', () => {
 
 	const promise2 = new Promise( ( resolve, reject ) => {
 
-		const error2 = fs.readFile( __dirname + '/maptocode/case3.js', 'utf8', ( err, code ) => {
+		fs.readFile( __dirname + '/maptocode/case3.js', 'utf8', ( err, code ) => {
 
 			const componentsMap = {}
 
@@ -191,7 +191,6 @@ test('Semantic errors - Cases 4 to 8 and 10 - Wrong codes in app.js', () => {
 		fs.readFile( __dirname + '/maptocode/case6.js', 'utf8', ( err, code ) => {
 
 			const componentsMap = {}
-			const path = '/'
 
 			const app = new MapToCode( code, componentsMap, appFileName );
 
@@ -212,7 +211,6 @@ test('Semantic errors - Cases 4 to 8 and 10 - Wrong codes in app.js', () => {
 		fs.readFile( __dirname + '/maptocode/case7.js', 'utf8', ( err, code ) => {
 
 			const componentsMap = {}
-			const path = '/'
 
 			const app = new MapToCode( code, componentsMap, appFileName );
 
@@ -234,7 +232,6 @@ test('Semantic errors - Cases 4 to 8 and 10 - Wrong codes in app.js', () => {
 		fs.readFile( __dirname + '/maptocode/case8.js', 'utf8', ( err, code ) => {
 
 			const componentsMap = {}
-			const path = '/'
 
 			const app = new MapToCode( code, componentsMap, appFileName );
 
