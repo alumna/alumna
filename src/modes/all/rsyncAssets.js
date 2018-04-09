@@ -3,7 +3,7 @@ import rsync from 'rsyncwrapper';
 /** Synchronize "src" to "dev" with rsync **/
 const rsyncAssets = function ( mode, options ) {
 
-	return new Zousan( ( resolve, reject ) => {
+	return new Promise( ( resolve, reject ) => {
 
 		// default true for 'dev' mode
 		let deleteFiles = true;

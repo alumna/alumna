@@ -1,5 +1,4 @@
 import page 				from 'page';
-import Zousan 				from "zousan";
 
 // Svelte Shared Helpers
 import * as svelteShared 	from 'svelte/shared';
@@ -71,7 +70,7 @@ const Altiva = {
 
 	load ( url ) {
 
-		return new Altiva.Promise( ( resolve, reject ) => {
+		return new Promise( ( resolve, reject ) => {
 
 			if ( !Altiva.component[ url ] ) {
 
@@ -122,8 +121,6 @@ const Altiva = {
 		
 		return Altiva.routes[ path ] ? Altiva.routes[ path ] : ( Altiva.routes[ slash ] ? Altiva.routes[ slash ] : error );
 	},
-
-	Promise: Zousan,
 
 	route ( route, redirect ) {
 

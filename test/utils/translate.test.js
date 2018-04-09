@@ -1,5 +1,5 @@
 import { EOL } 		from 'os';
-import translate 	from './../../src/utils/translateSvelteShared';
+import translate 	from './../../src/generators/all/translate';
 
 test('Translation of a component that uses svelte shared helpers', () => {
 

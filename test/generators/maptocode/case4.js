@@ -1,0 +1,1 @@
+app.areas = [ 'area1' , { area2: 'area2' } ];

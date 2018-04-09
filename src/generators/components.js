@@ -1,15 +1,15 @@
 import fs 						from 'fs-extra';
 import glob						from 'glob';
 import svelte 					from 'svelte';
-import Zousan 					from "zousan";
 import UglifyJS 				from 'uglify-es';
 
 // Altiva modules - generators
-import subcomponents			from './../generators/subcomponents.js';
+import subcomponents			from './../generators/all/subcomponents.js';
+import translate				from './../generators/all/translate.js';
+import exists					from './../generators/all/exists.js';
 
 // Altiva modules - utils
-import translate				from './../utils/translateSvelteShared.js';
-import uglifyOptions			from './../utils/uglifyOptions.js';
+import uglifyOptions			from './../utils/uglify/options.js';
 
 
 /* Subcomponents map */
@@ -23,7 +23,7 @@ const getMap = function ( ) {
 /** Compile generating a Svelte component **/
 const compile = function ( mode, path, options, command ) {
 
-	return new Zousan( ( resolve ) => {
+	return new Promise( ( resolve ) => {
 
 		fs.readFile( path, 'utf8', ( err, data ) => {
 			
@@ -66,25 +66,50 @@ const compile = function ( mode, path, options, command ) {
 
 				subcomponents( result.code, component ).then( ( { code, subcomponentsList } ) => {
 
-					if ( subcomponentsList ) componentsMap[ component ] = subcomponentsList;
+					const conclude = function ( ) {
 
-					if ( mode == 'dev' )
-						fs.outputFile( path , code ).then( () => resolve( true ) );
+						componentsMap[ component ] = subcomponentsList;
 
-					if ( mode == 'build' ) {
-						translate( code, name ).then( translatedCode => {
+						if ( mode == 'dev' )
+							fs.outputFile( path , code ).then( () => resolve( componentsMap ) );
+
+						if ( mode == 'build' ) {
 							
-							// Minify the generated code, unless disabled by the -u/--uncompressed flag
-							if ( !command.uncompressed ) translatedCode = UglifyJS.minify( translatedCode, uglifyOptions ).code;
+							translate( code, name ).then( translatedCode => {
+								
+								// Minify the generated code, unless disabled by the -u/--uncompressed flag
+								if ( !command.uncompressed ) translatedCode = UglifyJS.minify( translatedCode, uglifyOptions ).code;
 
-							fs.outputFile( path , translatedCode ).then( () => resolve( true ) );
-						} );
+								fs.outputFile( path , translatedCode ).then( () => resolve( componentsMap ) );
+							
+							} );
+						
+						}
+						
 					}
+
+					if ( subcomponentsList ) {
+
+						exists( 'components/' + component + '.html', subcomponentsList )
+						
+						.then( () => conclude() )
+
+						.catch( error => {
+
+							console.log( error.message );
+
+							resolve( componentsMap );
+
+						});
+
+					} else
+						conclude();
+
 				} );
 
 			} else {
 
-				resolve( true );
+				resolve( componentsMap );
 			}
 
 			
@@ -98,11 +123,11 @@ const compile = function ( mode, path, options, command ) {
 /** Compile all components returning a promise **/
 const compileAll = function ( mode, options, command ) {
 
-	return new Zousan( ( resolve, reject ) => {
+	return new Promise( ( resolve, reject ) => {
 
 		/* Recompile the 'scr' to 'dev' or 'build' */
 		glob( 'src/components/**/*.html', ( err, files ) => {
-			err ? reject( err ) : Zousan.all( files.map( path => compile( mode, path, options, command ) ) ).then( () => resolve( componentsMap ) );
+			err ? reject( err ) : Promise.all( files.map( path => compile( mode, path, options, command ) ) ).then( () => resolve( componentsMap ) );
 		} );
 
 	} );

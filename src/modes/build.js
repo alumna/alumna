@@ -1,10 +1,9 @@
 import browserSyncClass 	from 'browser-sync';
 import fs 					from 'fs-extra';
 import historyApiFallback 	from 'connect-history-api-fallback';
-import Zousan 				from 'zousan';
 
-// Altiva modules - utils
-import rsyncAssets from './../utils/rsyncAssets.js';
+// Altiva modules - modes
+import rsyncAssets from './all/rsyncAssets.js';
 
 // Altiva modules - generators
 import { compileAll } from './../generators/components.js';
@@ -55,7 +54,7 @@ const build = function ( options, command ) {
 	 * else from "src" to "dev"
 	 */
 
-	Zousan.all( [ removeComponents( options ), rsyncAssets( 'build', options ) ] ).then( () => {
+	Promise.all( [ removeComponents( options ), rsyncAssets( 'build', options ) ] ).then( () => {
 		
 		/*
 		 * Asynchronously compile every component,

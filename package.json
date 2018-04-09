@@ -1,6 +1,6 @@
 {
 	"name": "@altiva/altiva",
-	"version": "2.0.11",
+	"version": "2.0.12",
 	"description": "Altiva Framework: Development for Humans",
 	"repository": {
 		"type": "git",
@@ -11,7 +11,7 @@
 		"altiva": "cli.js"
 	},
 	"scripts": {
-		"build": "rollup --config rollup/shared.js && rollup --config rollup/cli.js",
+		"build": "rollup --config other/rollup/shared.js && rollup --config other/rollup/cli.js",
 		"prepare": "npm run build",
 		"test": "jest"
 	},
@@ -24,16 +24,18 @@
 		"coverageDirectory": "./coverage/",
 		"collectCoverage": true,
 		"collectCoverageFrom": [
-			"**/src/utils/*.js",
-			"**/src/generators/*.js",
-			"!**/src/utils/rsyncAssets.js",
-			"!**/src/utils/uglifyOptions.js",
+			"**/src/utils/**",
+			"**/src/generators/*/*.js",
+			"**/src/modes/*/*.js",
+			"!**/src/modes/all/rsyncAssets.js",
+			"!**/src/utils/uglify/options.js",
 			"!**/src/utils/updateOptions.js",
 			"!**/node_modules/**"
 		],
 		"verbose": true
 	},
 	"devDependencies": {
+		"babel-plugin-rewire": "^1.1.0",
 		"babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
 		"connect-history-api-fallback": "^1.4.0",
 		"fs-extra": "^5.0.0",
@@ -47,14 +49,13 @@
 		"rollup-plugin-json": "^2.3.0",
 		"rollup-plugin-node-resolve": "^3.3.0",
 		"rollup-plugin-string": "^2.0.2",
-		"rollup-plugin-uglify": "^3.0.0",
-		"zousan": "^2.3.3"
+		"rollup-plugin-uglify": "^3.0.0"
 	},
 	"dependencies": {
 		"browser-sync": "^2.23.6",
 		"chokidar": "^2.0.3",
 		"rsyncwrapper": "^2.0.1",
-		"svelte": "^1.60.0",
+		"svelte": "^1.60.2",
 		"uglify-es": "^3.3.9"
 	}
 }

@@ -3,11 +3,10 @@ import chokidar 						from 'chokidar';
 import fs 								from 'fs-extra';
 import historyApiFallback 				from 'connect-history-api-fallback';
 import rsync 							from 'rsyncwrapper';
-import Zousan 							from "zousan";
 
-// Altiva modules - utils
-import rsyncAssets						from './../utils/rsyncAssets.js';
-import equalComponentList				from './../utils/equalComponentList.js';
+// Altiva modules - modes
+import rsyncAssets						from './all/rsyncAssets.js';
+import equalComponentList				from './dev/equalComponentList.js';
 
 // Altiva modules - generators
 import { compile, compileAll, getMap }	from './../generators/components.js';
@@ -25,7 +24,7 @@ const watchSrc = function ( options ) {
 
 	const update_or_rsync = function ( path ) {
 
-		const componentsMap = getMap();
+		let componentsMap = getMap();
 
 		if ( path.startsWith( 'src/components/' ) && path.endsWith( '.html' ) ) {
 
@@ -41,9 +40,8 @@ const watchSrc = function ( options ) {
 			compile( 'dev', path, options ).then( componentsMap => {
 
 				if ( equalComponentList( current, componentsMap[ component ] ) )
-					
 					browserSync.reload()
-
+				
 				else {
 
 					appGenerator( 'dev', options, componentsMap ).catch( error => {
@@ -152,7 +150,7 @@ const dev = function ( options ) {
 	 * else from "src" to "dev"
 	 */
 
-	Zousan.all( [ fs.remove( 'dev/components' ), rsyncAssets( 'dev', options ) ] ).then( () => {
+	Promise.all( [ fs.remove( 'dev/components' ), rsyncAssets( 'dev', options ) ] ).then( () => {
 		
 		/*
 		 * Asynchronously compile every component,
