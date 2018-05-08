@@ -4,7 +4,7 @@ import vm 			from 'vm';
 // Altiva modules - utils
 import isObject 	from './../../utils/isObject.js';
 
-const MapToCode = function ( userCode, componentsMap, appFileName ) {
+const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 	this.errors 	= [];
 	this.areas 		= [];
@@ -361,4 +361,4 @@ const MapToCode = function ( userCode, componentsMap, appFileName ) {
 
 };
 
-export default MapToCode;
+export default MainCode;

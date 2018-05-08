@@ -7,6 +7,9 @@ import altiva		from './altiva.js';
 // Util to update the user's altiva.hjson, used in all modes
 import update		from './utils/updateOptions.js';
 
+// CLI to install and update modules
+import * as modules	from './cli/modules.js';
+
 // Command line help info
 import help 		from './help.md';
 import { version } 	from '../package.json';
@@ -69,6 +72,25 @@ const command = mri( process.argv.slice( 2 ), {
 	}
 } );
 
+const read_options_and_run = function ( run ) {
+
+	// Check the existence of altiva.hjson config file
+	fs.readFile( 'altiva.hjson', 'utf8', ( err, data ) => {
+
+		if ( !err ) {
+
+			// Getting config data
+			update( data ).then( options => run( options, command ) );
+
+		} else {
+			
+			// This directory isn't an Altiva Project
+			console.log( 'Missing \'altiva.hjson\' file. It seems that this directory isn\'t an Altiva Project' );
+		}
+	} );
+
+}
+
 if ( command.help || ( process.argv.length <= 2 && process.stdin.isTTY ) ) {
 
 	console.log( '\n' + help.replace( '__VERSION__', version ) + '\n' );
@@ -87,20 +109,7 @@ if ( command.help || ( process.argv.length <= 2 && process.stdin.isTTY ) ) {
 		case "dev":
 		case "build":
 
-			// Check the existence of altiva.hjson config file
-			fs.readFile( 'altiva.hjson', 'utf8', ( err, data ) => {
-
-				if ( !err ) {
-
-					// Getting config data
-					update( data ).then( options => altiva[ task ]( options, command ) );
-
-				} else {
-					
-					// This directory isn't an Altiva Project
-					console.log( 'Missing \'altiva.hjson\' file. It seems that this directory isn\'t an Altiva Project' );
-				}
-			} );
+			read_options_and_run( altiva[ task ] );
 
 			break;
 
@@ -111,6 +120,14 @@ if ( command.help || ( process.argv.length <= 2 && process.stdin.isTTY ) ) {
 			
 			break;
 
+		/* NEW MODE */
+		case "install":
+		case "update":
+
+			read_options_and_run( modules.install );
+			
+			break;
+
 		default:
 
 			console.error( 'Unrecognised command' + ( task ? ' ' + task : '' ) + '. Type altiva --help to see instructions' );
@@ -118,4 +135,3 @@ if ( command.help || ( process.argv.length <= 2 && process.stdin.isTTY ) ) {
 			break;
 	}
 }
-

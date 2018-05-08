@@ -1,6 +1,6 @@
 {
 	"name": "@altiva/altiva",
-	"version": "2.0.12",
+	"version": "2.0.13",
 	"description": "Altiva Framework: Development for Humans",
 	"repository": {
 		"type": "git",
@@ -11,7 +11,7 @@
 		"altiva": "cli.js"
 	},
 	"scripts": {
-		"build": "rollup --config other/rollup/shared.js && rollup --config other/rollup/cli.js",
+		"build": "rollup --config other/rollup/browser.js && rollup --config other/rollup/cli.js",
 		"prepare": "npm run build",
 		"test": "jest"
 	},
@@ -28,6 +28,7 @@
 			"**/src/generators/*/*.js",
 			"**/src/modes/*/*.js",
 			"!**/src/modes/all/rsyncAssets.js",
+			"!**/src/utils/to.js",
 			"!**/src/utils/uglify/options.js",
 			"!**/src/utils/updateOptions.js",
 			"!**/node_modules/**"
@@ -36,26 +37,30 @@
 	},
 	"devDependencies": {
 		"babel-plugin-rewire": "^1.1.0",
-		"babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
+		"babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
 		"connect-history-api-fallback": "^1.4.0",
+		"degit": "^2.1.3",
 		"fs-extra": "^5.0.0",
 		"glob": "^7.1.2",
 		"hjson": "^3.1.1",
 		"jest": "^22.4.3",
 		"mri": "^1.1.0",
 		"page": "github:altiva/page.js#master",
-		"rollup": "^0.57.1",
+		"request": "^2.85.0",
+		"rollup": "^0.58.2",
 		"rollup-plugin-commonjs": "^9.1.0",
 		"rollup-plugin-json": "^2.3.0",
 		"rollup-plugin-node-resolve": "^3.3.0",
 		"rollup-plugin-string": "^2.0.2",
-		"rollup-plugin-uglify": "^3.0.0"
+		"rollup-plugin-uglify": "^3.0.0",
+		"rollup-plugin-virtual": "^1.0.1",
+		"rsyncwrapper": "^2.0.1",
+		"semver-compare": "^1.0.0",
+		"svelte": "^1.60.2"
 	},
 	"dependencies": {
-		"browser-sync": "^2.23.6",
+		"browser-sync": "^2.23.7",
 		"chokidar": "^2.0.3",
-		"rsyncwrapper": "^2.0.1",
-		"svelte": "^1.60.2",
 		"uglify-es": "^3.3.9"
 	}
 }

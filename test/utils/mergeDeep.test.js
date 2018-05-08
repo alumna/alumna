@@ -6,13 +6,15 @@ test('mergeDeep - two multi-level (partially equal) objects merging test', () =>
 		one: '1',
 		two: {
 			one: '1',
-			two: '2'
+			two: '2',
+			four: '4'
 		}
 	}
 
 	let final = {
 		two: {
-			three: '3'
+			three: '3',
+			four: '5'
 		},
 		three: '3'
 	}
@@ -24,7 +26,8 @@ test('mergeDeep - two multi-level (partially equal) objects merging test', () =>
 		two: {
 			one: '1',
 			two: '2',
-			three: '3'
+			three: '3',
+			four: '4'
 		},
 		three: '3'
 	});

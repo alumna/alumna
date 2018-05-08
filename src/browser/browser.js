@@ -52,20 +52,11 @@ const Altiva = {
 
 	component: {},
 
-	defaults: {
-		storeData: {}
-	},
+	defaults: {},
 
 	fileOrMobile ( ) {
 
 		return ( window && ( window.cordova || window.location.protocol == 'file:' ) );
-	},
-
-	instances: {},
-
-	libraries: {
-		// Svelte Store Library
-		Store: Store,
 	},
 
 	load ( url ) {
@@ -151,15 +142,17 @@ const Altiva = {
 
 		if ( this.defaults.useStore ) {
 
-			this.instances.store = new this.libraries.Store( this.defaults.storeData );
+			this.store = new Store();
 
-			options.store = this.instances.store;
+			options.store = this.store;
 		}
 
 		Altiva.root = new App( options );
 
 		window[ this.defaults.globalVar ] = Altiva.root;
 	},
+
+	store: null,
 
 	/*
 	 * options: the svelte array passed in the instantiation of the app
