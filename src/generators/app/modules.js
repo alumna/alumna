@@ -63,7 +63,7 @@ const mainfile = async function ( module ) {
 	else
 		return Promise.reject( { message: 'Missing module.hjson or package.json in "' + module + '" module\'s directory.' } )
 
-	let [ err, success ] = await to( valid_main( properties.main, module, is_hjson ) );
+	let [ err ] = await to( valid_main( properties.main, module, is_hjson ) );
 
 	if ( err )
 		return Promise.reject( err );

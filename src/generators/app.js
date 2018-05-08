@@ -62,7 +62,7 @@ const appGenerator = async function ( mode, options, componentsMap, command ) {
 		return true;
 
 	// Do the subcomponents replacement
-	let { code, subcomponentsList } = await subcomponents( result.code );
+	let { code } = await subcomponents( result.code );
 
 	
 	// Get the base code for the browser with (optional) modules
