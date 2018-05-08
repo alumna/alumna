@@ -4,7 +4,7 @@ import vm 			from 'vm';
 // Altiva modules - utils
 import isObject 	from './../../utils/isObject.js';
 
-const MapToCode = function ( userCode, componentsMap, appFileName ) {
+const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 	this.errors 	= [];
 	this.areas 		= [];
@@ -63,9 +63,8 @@ const MapToCode = function ( userCode, componentsMap, appFileName ) {
 
 			let local_errors = 0;
 
-			for ( const area_key in areas_array ) {
-				
-				const area = areas_array[ area_key ];
+			// Iterate ovre the areas_array, but stop when an area is invalid
+			areas_array.every( area => {
 
 				if ( typeof area != 'string' || !area.length ) {
 					
@@ -73,10 +72,12 @@ const MapToCode = function ( userCode, componentsMap, appFileName ) {
 					
 					local_errors = 1;
 					
-					break;
+					return false;
 				}
 
-			}
+				return true;
+
+			});
 
 			if ( !local_errors )
 				this.areas = areas_array;
@@ -361,4 +362,4 @@ const MapToCode = function ( userCode, componentsMap, appFileName ) {
 
 };
 
-export default MapToCode;
+export default MainCode;

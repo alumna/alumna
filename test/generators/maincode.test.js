@@ -1,7 +1,7 @@
 import { EOL } 		from 'os';
 import fs 			from 'fs-extra';
 
-import MapToCode 	from './../../src/generators/app/maptocode';
+import MainCode 	from './../../src/generators/app/maincode';
 
 
 /* Default app file name for the test */
@@ -13,11 +13,11 @@ test('Case 1 - Single area and single component', () => {
 
 	return new Promise( ( resolve, reject ) => {
 
-		fs.readFile( __dirname + '/maptocode/case1.js', 'utf8', ( err, code ) => {
+		fs.readFile( __dirname + '/maincode/case1.js', 'utf8', ( err, code ) => {
 
 			const componentsMap = {}
 
-			const app = new MapToCode( code, componentsMap, appFileName );
+			const app = new MainCode( code, componentsMap, appFileName );
 
 			app.compile().then( () => {
 
@@ -52,7 +52,7 @@ test('Case 1 (part2) - Single area and single component BUT with dependencies', 
 
 	return new Promise( ( resolve, reject ) => {
 
-		fs.readFile( __dirname + '/maptocode/case1.js', 'utf8', ( err, code ) => {
+		fs.readFile( __dirname + '/maincode/case1.js', 'utf8', ( err, code ) => {
 
 			const componentsMap = {
 				
@@ -65,7 +65,7 @@ test('Case 1 (part2) - Single area and single component BUT with dependencies', 
 				},
 			}
 
-			const app = new MapToCode( code, componentsMap, appFileName );
+			const app = new MainCode( code, componentsMap, appFileName );
 
 			app.compile().then( () => {
 
@@ -100,11 +100,11 @@ test('Sintatic errors - Cases 2 and 3 - Wrong codes in app.js', () => {
 
 	const promise1 = new Promise( ( resolve, reject ) => {
 
-		fs.readFile( __dirname + '/maptocode/case2.js', 'utf8', ( err, code ) => {
+		fs.readFile( __dirname + '/maincode/case2.js', 'utf8', ( err, code ) => {
 
 			const componentsMap = {}
 
-			const app = new MapToCode( code, componentsMap, appFileName );
+			const app = new MainCode( code, componentsMap, appFileName );
 
 			app.compile().catch( ( error ) => {
 
@@ -120,11 +120,11 @@ test('Sintatic errors - Cases 2 and 3 - Wrong codes in app.js', () => {
 
 	const promise2 = new Promise( ( resolve, reject ) => {
 
-		fs.readFile( __dirname + '/maptocode/case3.js', 'utf8', ( err, code ) => {
+		fs.readFile( __dirname + '/maincode/case3.js', 'utf8', ( err, code ) => {
 
 			const componentsMap = {}
 
-			const app = new MapToCode( code, componentsMap, appFileName );
+			const app = new MainCode( code, componentsMap, appFileName );
 
 			app.compile().catch( ( error ) => {
 
@@ -148,11 +148,11 @@ test('Semantic errors - Cases 4 to 8 and 10 - Wrong codes in app.js', () => {
 
 	const promise1 = new Promise( ( resolve, reject ) => {
 
-		fs.readFile( __dirname + '/maptocode/case4.js', 'utf8', ( err, code ) => {
+		fs.readFile( __dirname + '/maincode/case4.js', 'utf8', ( err, code ) => {
 
 			const componentsMap = {}
 
-			const app = new MapToCode( code, componentsMap, appFileName );
+			const app = new MainCode( code, componentsMap, appFileName );
 
 			app.compile().catch( ( error ) => {
 
@@ -168,11 +168,11 @@ test('Semantic errors - Cases 4 to 8 and 10 - Wrong codes in app.js', () => {
 
 	const promise2 = new Promise( ( resolve, reject ) => {
 
-		fs.readFile( __dirname + '/maptocode/case5.js', 'utf8', ( err, code ) => {
+		fs.readFile( __dirname + '/maincode/case5.js', 'utf8', ( err, code ) => {
 
 			const componentsMap = {}
 
-			const app = new MapToCode( code, componentsMap, appFileName );
+			const app = new MainCode( code, componentsMap, appFileName );
 
 			app.compile().catch( ( error ) => {
 
@@ -188,11 +188,11 @@ test('Semantic errors - Cases 4 to 8 and 10 - Wrong codes in app.js', () => {
 
 	const promise3 = new Promise( ( resolve, reject ) => {
 
-		fs.readFile( __dirname + '/maptocode/case6.js', 'utf8', ( err, code ) => {
+		fs.readFile( __dirname + '/maincode/case6.js', 'utf8', ( err, code ) => {
 
 			const componentsMap = {}
 
-			const app = new MapToCode( code, componentsMap, appFileName );
+			const app = new MainCode( code, componentsMap, appFileName );
 
 			app.compile().catch( ( error ) => {
 
@@ -208,11 +208,11 @@ test('Semantic errors - Cases 4 to 8 and 10 - Wrong codes in app.js', () => {
 
 	const promise4 = new Promise( ( resolve, reject ) => {
 
-		fs.readFile( __dirname + '/maptocode/case7.js', 'utf8', ( err, code ) => {
+		fs.readFile( __dirname + '/maincode/case7.js', 'utf8', ( err, code ) => {
 
 			const componentsMap = {}
 
-			const app = new MapToCode( code, componentsMap, appFileName );
+			const app = new MainCode( code, componentsMap, appFileName );
 
 			app.compile().catch( ( error ) => {
 
@@ -229,11 +229,11 @@ test('Semantic errors - Cases 4 to 8 and 10 - Wrong codes in app.js', () => {
 	// Multiple errors, to cover 100% the logical possibilities in line 300
 	const promise5 = new Promise( ( resolve, reject ) => {
 
-		fs.readFile( __dirname + '/maptocode/case8.js', 'utf8', ( err, code ) => {
+		fs.readFile( __dirname + '/maincode/case8.js', 'utf8', ( err, code ) => {
 
 			const componentsMap = {}
 
-			const app = new MapToCode( code, componentsMap, appFileName );
+			const app = new MainCode( code, componentsMap, appFileName );
 
 			app.compile().catch( ( error ) => {
 
@@ -254,11 +254,11 @@ test('Semantic errors - Cases 4 to 8 and 10 - Wrong codes in app.js', () => {
 	// Route with an empty object (no areas defined in a route)
 	const promise6 = new Promise( ( resolve, reject ) => {
 
-		fs.readFile( __dirname + '/maptocode/case10.js', 'utf8', ( err, code ) => {
+		fs.readFile( __dirname + '/maincode/case10.js', 'utf8', ( err, code ) => {
 
 			const componentsMap = {}
 
-			const app = new MapToCode( code, componentsMap, appFileName );
+			const app = new MainCode( code, componentsMap, appFileName );
 
 			app.compile().catch( ( error ) => {
 
@@ -275,11 +275,11 @@ test('Semantic errors - Cases 4 to 8 and 10 - Wrong codes in app.js', () => {
 	// app.js without app.route defined
 	const promise7 = new Promise( ( resolve, reject ) => {
 
-		fs.readFile( __dirname + '/maptocode/case11.js', 'utf8', ( err, code ) => {
+		fs.readFile( __dirname + '/maincode/case11.js', 'utf8', ( err, code ) => {
 
 			const componentsMap = {}
 
-			const app = new MapToCode( code, componentsMap, appFileName );
+			const app = new MainCode( code, componentsMap, appFileName );
 
 			app.compile().catch( ( error ) => {
 
@@ -303,11 +303,11 @@ test('Case 9 - Multiple areas and multiple components', () => {
 
 	return new Promise( ( resolve, reject ) => {
 
-		fs.readFile( __dirname + '/maptocode/case9.js', 'utf8', ( err, code ) => {
+		fs.readFile( __dirname + '/maincode/case9.js', 'utf8', ( err, code ) => {
 
 			const componentsMap = {}
 
-			const app = new MapToCode( code, componentsMap, appFileName );
+			const app = new MainCode( code, componentsMap, appFileName );
 
 			app.compile().then( () => {
 

@@ -4,7 +4,7 @@ import hjson	from 'hjson';
 // Merge Deep util
 import mergeDeep from './mergeDeep';
 
-const update = function ( projectOptions ) {
+const update = function ( projectOptions, alreadyParsed = false ) {
 
 	return new Promise( ( resolve ) => {
 
@@ -12,7 +12,7 @@ const update = function ( projectOptions ) {
 		fs.readFile( __dirname + '/other/base/altiva.hjson', 'utf8', ( err, latestOptions ) => {
 
 			// Parse the project's current defined options
-			let parsedProjectOptions = hjson.parse( projectOptions )
+			let parsedProjectOptions = alreadyParsed ? projectOptions : hjson.parse( projectOptions );
 
 			// Parse the latest Altiva hjson using "round-trip" mode
 			let parsedLatestOptions  = hjson.rt.parse( latestOptions )
