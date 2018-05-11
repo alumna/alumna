@@ -55,7 +55,7 @@ const compile = function ( mode, path, options, command ) {
 			} );
 
 			// If there are no erros in compiling process
-			if ( result && result.code ) {
+			if ( result && result.js && result.js.code ) {
 
 				// Runtime name
 				const component = path.replace( 'src/components/', '' ).replace( '.html', '' );
@@ -64,7 +64,7 @@ const compile = function ( mode, path, options, command ) {
 				path = path.replace( 'src', mode );
 				path = path.replace( '.html', '.js' );
 
-				subcomponents( result.code, component ).then( ( { code, subcomponentsList } ) => {
+				subcomponents( result.js.code, component ).then( ( { code, subcomponentsList } ) => {
 
 					const conclude = function ( ) {
 
