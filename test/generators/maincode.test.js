@@ -28,9 +28,9 @@ test('Case 1 - Single area and single component', () => {
 				expect( app.routes ).toEqual( { '/': { content: 'HelloAltiva' } } );
 
 				expect( app.html ).toBe( EOL + '<!-- Area: "content" -->' + EOL
-											 + '{{#if _route == \'/\' }}' + EOL
+											 + '{#if _route == \'/\' }' + EOL
 											 + '\t<HelloAltiva/>' + EOL
-											 + '{{/if}}' + EOL + '' );
+											 + '{/if}' + EOL + '' );
 
 				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],}}</script>' );
 
@@ -76,9 +76,9 @@ test('Case 1 (part2) - Single area and single component BUT with dependencies', 
 				expect( app.routes ).toEqual( { '/': { content: 'HelloAltiva' } } );
 
 				expect( app.html ).toBe( EOL + '<!-- Area: "content" -->' + EOL
-											 + '{{#if _route == \'/\' }}' + EOL
+											 + '{#if _route == \'/\' }' + EOL
 											 + '\t<HelloAltiva/>' + EOL
-											 + '{{/if}}' + EOL + '' );
+											 + '{/if}' + EOL + '' );
 
 				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],}}</script>' );
 
@@ -330,17 +330,17 @@ test('Case 9 - Multiple areas and multiple components', () => {
 				} );
 
 				expect( app.html ).toBe( EOL + '<!-- Area: "content" -->' + EOL
-											 + '{{#if _route == \'/\' || _route == \'/other\' }}' + EOL
+											 + '{#if _route == \'/\' || _route == \'/other\' }' + EOL
 											 + '\t<HelloAltiva/>' + EOL
-											 + '{{/if}}' + EOL
+											 + '{/if}' + EOL
 
 
 									   + EOL + '<!-- Area: "footer" -->' + EOL
-    										 + '{{#if _route == \'/\' }}' + EOL
+    										 + '{#if _route == \'/\' }' + EOL
     										 + '\t<Footer1/>' + EOL
-    										 + '{{elseif _route == \'/other\' }}' + EOL
+    										 + '{:elseif _route == \'/other\' }' + EOL
     										 + '\t<Footer2/>' + EOL
-    										 + '{{/if}}' + EOL
+    										 + '{/if}' + EOL
     										 
     										 + '' );
 

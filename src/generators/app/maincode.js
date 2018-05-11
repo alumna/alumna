@@ -204,13 +204,13 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 					if ( same_area ) {
 
-						this.html += '{{elseif' + if_statement + '}}' + EOL + '\t' + '<' + component_tag + '/>' + EOL;
+						this.html += '{:elseif' + if_statement + '}' + EOL + '\t' + '<' + component_tag + '/>' + EOL;
 
 					} else {
 
-						this.html += iteration ? '{{/if}}' + EOL + EOL : EOL;
+						this.html += iteration ? '{/if}' + EOL + EOL : EOL;
 						this.html += '<!-- Area: \"' + area + '\" -->' + EOL;
-						this.html += '{{#if' + if_statement + '}}' + EOL + '\t' + '<' + component_tag + '/>' + EOL;
+						this.html += '{#if' + if_statement + '}' + EOL + '\t' + '<' + component_tag + '/>' + EOL;
 					}
 
 					same_area++;
@@ -219,8 +219,8 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 			}
 
-			// this.html += iteration ? '{{/if}}' + EOL : EOL;
-			this.html += '{{/if}}' + EOL;
+			// this.html += iteration ? '{/if}' + EOL : EOL;
+			this.html += '{/if}' + EOL;
 
 			resolve( true );
 

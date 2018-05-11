@@ -57,12 +57,12 @@ const appGenerator = async function ( mode, options, componentsMap, command ) {
 
 	});
 
-	// If there are no erros in compiling process
-	if ( !( result && result.code ) )
+	// If there are erros in compiling process, stop
+	if ( !( result && result.js && result.js.code ) )
 		return true;
 
 	// Do the subcomponents replacement
-	let { code } = await subcomponents( result.code );
+	let { code } = await subcomponents( result.js.code );
 
 	
 	// Get the base code for the browser with (optional) modules
