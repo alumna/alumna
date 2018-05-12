@@ -20,6 +20,13 @@ const getMap = function ( ) {
 	return componentsMap;
 };
 
+const showError = function ( error, path ) {
+
+	let message = ( error.name ? error.name : 'Error' ) + ' in ' + path + ( ( error.loc && error.loc.line ) ? ', line ' + error.loc.line : '' ) + ( ( error.loc && error.loc.column ) ? ', column ' + error.loc.column : '' ) + ': ' + error.message
+
+	console.log( message );
+};
+
 /** Compile generating a Svelte component **/
 const compile = function ( mode, path, options, command ) {
 
@@ -48,9 +55,9 @@ const compile = function ( mode, path, options, command ) {
 				shared,
 				store: options.app.useStore,
 
-				onwarn: warning => console.log( ( warning.name ? warning.name : 'Warning' ) + ' in ' + path + ', line ' + warning.loc.line + ', column ' + warning.loc.column + ': ' + warning.message ),
+				onwarn: warning => showError( warning, path ),
 
-				onerror: err => console.log( ( err.name ? err.name : 'Error' ) + ' in ' + path + ', line ' + err.loc.line + ', column ' + err.loc.column + ': ' + err.message )
+				onerror: err => showError( err, path )
 
 			} );
 
