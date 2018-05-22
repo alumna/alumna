@@ -1,4 +1,4 @@
-# Svelte changelog
+# Altova changelog
 
 ## 2.0.17
 
