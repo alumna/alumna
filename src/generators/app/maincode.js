@@ -167,29 +167,23 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 	this.validate_route = function ( path, area_map ) {
 
 		// Check if the toute's path is a non-empty string
-		if ( typeof path !== 'string' || !path.length  )
-			this.errors.push( 'Error in src/' + this.appFileName + ': Route paths must be non-empty strings.' );
+		if ( typeof path !== 'string' || !path.length  ) this.errors.push( 'Error in src/' + this.appFileName + ': Route paths must be non-empty strings.' );
 
 		else {
 
-			let multiple_routes = []
+			let multiple_routes = [], local_errors = 0;
 
 			// Check if it has multiple paths in a single route
 			if ( path.includes( ',' ) ) {
-				
-				multiple_routes = path.split( ',' ).map( string => string.trim() ).filter( s => s )
 
-				if ( multiple_routes.length == 0 )
-					this.errors.push( 'Error in src/' + this.appFileName + ': Invalid route path: "' + path + '"' );
+				multiple_routes = path.split( ',' ).map( string => string.trim() ).filter( s => s );
 
+				if ( multiple_routes.length == 0 ) this.errors.push( 'Error in src/' + this.appFileName + ': Invalid route path: "' + path + '"' );
 			}
 
-			if ( Object.keys( area_map ).length === 0 )
-				this.errors.push( 'Error in src/' + this.appFileName + ': In the route \'' + path + '\' you need to define at least one area to use.' );
+			if ( Object.keys( area_map ).length === 0 ) this.errors.push( 'Error in src/' + this.appFileName + ': In the route \'' + path + '\' you need to define at least one area to use.' );
 
 			else {
-
-				let local_errors = 0;
 
 				for ( const area in area_map ) {
 					
@@ -203,15 +197,9 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 				if ( !local_errors ) {
 
-					if ( multiple_routes.length )
-						multiple_routes.forEach( function ( individual_path ) {
+					if ( multiple_routes.length ) multiple_routes.forEach( function ( individual_path ) { this.routes[ individual_path ] = area_map; }.bind( this ));
 
-							this.routes[ individual_path ] = area_map;
-
-						}.bind( this ));
-
-					else
-						this.routes[ path ] = area_map;
+					else this.routes[ path ] = area_map;
 				}
 
 			}
