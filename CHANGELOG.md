@@ -1,4 +1,4 @@
-# Altova changelog
+# Altiva changelog
 
 ## 2.0.17
 
