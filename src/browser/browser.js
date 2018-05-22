@@ -31,13 +31,22 @@ const Altiva = {
 		// Link each route function with a page.js route
 
 		for ( const route in Altiva.routes )
-			page( route, () => {
 
-				Altiva.routes[ route ].then( () => Altiva.root.set( { _route: route } ) );
+			page( route, ( ctx ) => {
+
+				// !!! Filters must be implemented here !!!
+
+				Altiva.routes[ route ].then( () => {
+
+					Altiva.root.store.set( { _route: route, _path: ctx.pathname, _params: ctx.params } )
+
+					Altiva.root.set( { _route: route } )
+
+				});
 
 			} );
 
-		// Staring routing system with automatic environment discovery, mobile or desktop
+		// Starting routing system with automatic environment discovery, mobile or desktop
 		
 		if ( Altiva.fileOrMobile() ) {
 			

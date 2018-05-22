@@ -1,7 +1,7 @@
 # Altiva build files
 altiva.js
 cli.js
-shared.js
+browser.js
 
 # Coverage directory used by tools like istanbul
 coverage
