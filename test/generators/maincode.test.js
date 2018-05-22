@@ -142,9 +142,9 @@ test('Sintatic errors - Cases 2 and 3 - Wrong codes in app.js', () => {
 
 });
 
-test('Semantic errors - Cases 4 to 8 and 10 - Wrong codes in app.js', () => {
+test('Semantic errors - Cases 4-8, 10-11, 13-16 - Wrong codes in app.js', () => {
 
-	expect.assertions( 7 );
+	expect.assertions( 11 );
 
 	const promise1 = new Promise( ( resolve, reject ) => {
 
@@ -293,7 +293,91 @@ test('Semantic errors - Cases 4 to 8 and 10 - Wrong codes in app.js', () => {
 
 	});
 
-	return Promise.all( [ promise1, promise2, promise3, promise4, promise5, promise6, promise7 ] );
+	// Empty toute path
+	const promise8 = new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case13.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().catch( ( error ) => {
+
+				expect( error ).toEqual( { "message": 'Error in src/' + appFileName + ': Route paths must be non-empty strings.' } );
+
+				resolve( true )
+
+			});
+
+		});
+
+	});
+
+	// Empty multiple paths
+	const promise9 = new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case14.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().catch( ( error ) => {
+
+				expect( error ).toEqual( { "message": 'Error in src/' + appFileName + ': Invalid route path: ",,"' } );
+
+				resolve( true )
+
+			});
+
+		});
+
+	});
+
+	// Single repeated route
+	const promise10 = new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case15.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().catch( ( error ) => {
+
+				expect( error ).toEqual( { "message": "Error in src/" + appFileName + ": The route \"/test\" is defined multiple times." } );
+
+				resolve( true )
+
+			});
+
+		});
+
+	});
+
+	// Various repeated routes
+	const promise11 = new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case16.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().catch( ( error ) => {
+
+				expect( error ).toEqual( { "message": "Error in src/" + appFileName + ": The routes \"/test\" and \"/\" are defined multiple times." } );
+
+				resolve( true )
+
+			});
+
+		});
+
+	});
+
+	return Promise.all( [ promise1, promise2, promise3, promise4, promise5, promise6, promise7, promise8, promise9, promise10, promise11 ] );
 
 });
 
@@ -353,6 +437,50 @@ test('Case 9 - Multiple areas and multiple components', () => {
 				  + 'Altiva.routes[ \'/other\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ), Altiva.load( \'Footer2\' ) ] );' + EOL + EOL
 
 				);
+
+				resolve( true );
+
+			});
+
+		});
+
+	});
+
+});
+
+test('Case 12 - Single area, single component and route with multiple paths', () => {
+
+	expect.assertions( 6 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case12.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().then( () => {
+
+				expect( app.errors ).toEqual( [] );
+
+				expect( app.areas ).toEqual( [ 'content' ] );
+
+				expect( app.routes ).toEqual( {
+
+					'/':      { content: 'HelloAltiva' },
+					'/test': { content: 'HelloAltiva' }
+
+				} );
+
+				expect( app.html ).toBe( EOL + '<!-- Area: "content" -->' + EOL
+											 + '{#if _route == \'/\' || _route == \'/test\' }' + EOL
+											 + '\t<HelloAltiva/>' + EOL
+											 + '{/if}' + EOL + '' );
+
+				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],}}</script>' );
+
+				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] );' + EOL + EOL + 'Altiva.routes[ \'/test\' ] = Altiva.routes[ \'/\' ];' + EOL + EOL );
 
 				resolve( true );
 

@@ -91,15 +91,23 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 	this.validate_routes = function () {
 
+		// Check if there are areas
 		if ( this.areas.length ) {
 
+			// Check if there are routes
 			if ( this.appStructure.route && isObject( this.appStructure.route ) && Object.keys( this.appStructure.route ).length ) {
 
-				for ( const path in this.appStructure.route )
-					this.validate_route( path, this.appStructure.route[ path ] );
+				// Check if there are repeated routes
+				if ( !this.repeated_routes() ) {
+
+					// Validate each route separately
+					for ( const path in this.appStructure.route )
+						this.validate_route( path, this.appStructure.route[ path ] );
+
+				}
 
 			} else
-				this.errors.push( 'Error in src/' + this.appFileName + ': You need at least one route defined in your app. Check documentation for more details.' );
+			this.errors.push( 'Error in src/' + this.appFileName + ': You need at least one route defined in your app. Check documentation for more details.' );
 			
 		} else {
 
@@ -107,28 +115,106 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 				this.errors.push( 'Warning in src/' + this.appFileName + ': Before defining routes you need to define areas in app.areas variable.' );
 		}
 
-	}
+	};
+
+	this.repeated_routes = function () {
+
+		// Count number of occurrences
+		const count = names => 
+			names.reduce( ( a, b ) => Object.assign( a, { [ b ]: ( a[ b ] || 0 ) + 1 } ), {} )
+
+		// Check if there are duplicates
+		const duplicates = dict => 
+			Object.keys( dict ).filter( ( a ) => dict[ a ] > 1 )
+
+		let original = Object.keys( this.appStructure.route );
+		let routes   = [];
+
+		original.forEach( route => {
+
+			if ( route.includes( ',' ) ) {
+				
+				const multiple_routes = route.split( ',' ).map( string => string.trim() ).filter( s => s )
+
+				routes = routes.concat( multiple_routes )
+
+			} else 
+				routes.push( route )
+
+		});
+
+		let repeated = duplicates( count( routes ) )
+
+		if ( repeated.length ) {
+			
+			// Separate each repeated element with commas, using "and" on the last element, if it is the case
+			let repeated_string = repeated.map( a => '"' + a + '"' ).join( ', ' ).replace( /,(?!.*,)/gmi, ' and' );
+
+			if ( repeated.length > 1 )
+				this.errors.push( 'Error in src/' + this.appFileName + ': The routes ' + repeated_string + ' are defined multiple times.' );
+
+			else
+				this.errors.push( 'Error in src/' + this.appFileName + ': The route ' + repeated_string + ' is defined multiple times.' );				
+
+			return true;
+
+		}
+		else
+			return false;
+
+	};
 
 	this.validate_route = function ( path, area_map ) {
 
-		if ( Object.keys( area_map ).length === 0 )
-			this.errors.push( 'Error in src/' + this.appFileName + ': In the route \'' + path + '\' you need to define at least one area to use.' );
+		// Check if the toute's path is a non-empty string
+		if ( typeof path !== 'string' || !path.length  )
+			this.errors.push( 'Error in src/' + this.appFileName + ': Route paths must be non-empty strings.' );
 
 		else {
 
-			let local_errors = 0;
+			let multiple_routes = []
 
-			for ( const area in area_map ) {
+			// Check if it has multiple paths in a single route
+			if ( path.includes( ',' ) ) {
 				
-				if ( !this.areas.includes( area ) ) {
+				multiple_routes = path.split( ',' ).map( string => string.trim() ).filter( s => s )
 
-					this.errors.push( 'Error in src/' + this.appFileName + ': In the route \'' + path + '\' you are refering to the area \'' + area + '\' that was not defined in app.areas array.' );
+				if ( multiple_routes.length == 0 )
+					this.errors.push( 'Error in src/' + this.appFileName + ': Invalid route path: "' + path + '"' );
 
-					local_errors = 1;
-				}
 			}
 
-			if ( !local_errors ) this.routes[ path ] = area_map;
+			if ( Object.keys( area_map ).length === 0 )
+				this.errors.push( 'Error in src/' + this.appFileName + ': In the route \'' + path + '\' you need to define at least one area to use.' );
+
+			else {
+
+				let local_errors = 0;
+
+				for ( const area in area_map ) {
+					
+					if ( !this.areas.includes( area ) ) {
+
+						this.errors.push( 'Error in src/' + this.appFileName + ': In the route \'' + path + '\' you are refering to the area \'' + area + '\' that was not defined in app.areas array.' );
+
+						local_errors = 1;
+					}
+				}
+
+				if ( !local_errors ) {
+
+					if ( multiple_routes.length )
+						multiple_routes.forEach( function ( individual_path ) {
+
+							this.routes[ individual_path ] = area_map;
+
+						}.bind( this ));
+
+					else
+						this.routes[ path ] = area_map;
+				}
+
+			}
 
 		}
 
@@ -151,21 +237,21 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 			 * untouched.
 			 */
 
-			const organizer = {};
+			 const organizer = {};
 
-			for ( const path in this.routes ) {
+			 for ( const path in this.routes ) {
 
-				for ( const area in this.routes[ path ] ) {
+			 	for ( const area in this.routes[ path ] ) {
 
-					const component = this.routes[ path ][ area ];
+			 		const component = this.routes[ path ][ area ];
 
-					if ( !organizer[ area ] ) organizer[ area ] = {};
+			 		if ( !organizer[ area ] ) organizer[ area ] = {};
 
-					if ( !organizer[ area ][ component ] ) organizer[ area ][ component ] = [];
+			 		if ( !organizer[ area ][ component ] ) organizer[ area ][ component ] = [];
 
-					organizer[ area ][ component ].push( path );
-				}
-			}
+			 		organizer[ area ][ component ].push( path );
+			 	}
+			 }
 
 			/*
 			 * Here we have the information well organized that
@@ -177,47 +263,47 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 			 * the user in the areas
 			 */
 
-			let iteration = 0;
+			 let iteration = 0;
 
-			for ( const area_key in this.areas ) {
+			 for ( const area_key in this.areas ) {
 
-				const area = this.areas[ area_key ];
-				let same_area = 0;
+			 	const area = this.areas[ area_key ];
+			 	let same_area = 0;
 
-				for ( const component in organizer[ area ] ) {
+			 	for ( const component in organizer[ area ] ) {
 
-					const component_tag = component.replace( /\//g, '_' );
+			 		const component_tag = component.replace( /\//g, '_' );
 
-					this.firstLevelComponents[ component_tag ] = component;
+			 		this.firstLevelComponents[ component_tag ] = component;
 
-					let if_statement     	= '';
-					let additional_paths 	= 0;
+			 		let if_statement     	= '';
+			 		let additional_paths 	= 0;
 
-					for ( const path_key in organizer[ area ][ component ] ) {
+			 		for ( const path_key in organizer[ area ][ component ] ) {
 
-						const path = organizer[ area ][ component ][ path_key ];
+			 			const path = organizer[ area ][ component ][ path_key ];
 
-						if_statement += ( additional_paths ? '|| ' : ' ' ) + '_route == \'' + path + '\' ';
-						
-						additional_paths++;
-					}
+			 			if_statement += ( additional_paths ? '|| ' : ' ' ) + '_route == \'' + path + '\' ';
 
-					if ( same_area ) {
+			 			additional_paths++;
+			 		}
 
-						this.html += '{:elseif' + if_statement + '}' + EOL + '\t' + '<' + component_tag + '/>' + EOL;
+			 		if ( same_area ) {
 
-					} else {
+			 			this.html += '{:elseif' + if_statement + '}' + EOL + '\t' + '<' + component_tag + '/>' + EOL;
 
-						this.html += iteration ? '{/if}' + EOL + EOL : EOL;
-						this.html += '<!-- Area: \"' + area + '\" -->' + EOL;
-						this.html += '{#if' + if_statement + '}' + EOL + '\t' + '<' + component_tag + '/>' + EOL;
-					}
+			 		} else {
 
-					same_area++;
-					iteration++;
-				}
+			 			this.html += iteration ? '{/if}' + EOL + EOL : EOL;
+			 			this.html += '<!-- Area: \"' + area + '\" -->' + EOL;
+			 			this.html += '{#if' + if_statement + '}' + EOL + '\t' + '<' + component_tag + '/>' + EOL;
+			 		}
 
-			}
+			 		same_area++;
+			 		iteration++;
+			 	}
+
+			 }
 
 			// this.html += iteration ? '{/if}' + EOL : EOL;
 			this.html += '{/if}' + EOL;
@@ -254,9 +340,13 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 		return new Promise( ( resolve, reject ) => {
 
+			// An iverted map with the lines that load the components
+			// and their correpondent routes
+			let map = {}
+
 			for ( const route in this.routes ) {
 
-				this.route_functions += 'Altiva.routes[ \'' + route + '\' ] = Promise.all( [ ';
+				let load_functions = ''
 
 				let components_passed = 0;
 
@@ -265,7 +355,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 					const area_component = this.routes[ route ][ area ];
 
-					this.route_functions += ( components_passed ? ', ' : '' ) + 'Altiva.load( \'' + area_component + '\' )';
+					load_functions += ( components_passed ? ', ' : '' ) + 'Altiva.load( \'' + area_component + '\' )';
 
 					components_passed++;
 
@@ -274,13 +364,25 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 					for ( const subcomponent in dependencies ) {
 
-						this.route_functions += ', ' + 'Altiva.load( \'' + subcomponent + '\' )';
+						load_functions += ', ' + 'Altiva.load( \'' + subcomponent + '\' )';
 
 						components_passed++;
 					}
 				}
 
-				this.route_functions += ' ] );' + EOL + EOL;
+				// Register the functions that load components in the map,
+				// pointing to their original route.
+				// This allows routes with identical to use the same load functions
+				if ( !map[ load_functions ] ) {
+
+					map[ load_functions ] = route;
+
+					this.route_functions += 'Altiva.routes[ \'' + route + '\' ] = Promise.all( [ ' + load_functions + ' ] );' + EOL + EOL;
+				}
+
+				else
+					this.route_functions += 'Altiva.routes[ \'' + route + '\' ] = Altiva.routes[ \'' + map[ load_functions ] + '\' ];' + EOL + EOL;
+
 			}
 
 			resolve( true );
@@ -293,9 +395,9 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 		return new Promise( ( resolve ) => {
 
 			this.script 	= '<script>'
-							+ 	'export default {'
+			+ 	'export default {'
 
-							+ 		'components: {';
+			+ 		'components: {';
 
 			for ( const component in this.firstLevelComponents ) {
 
@@ -305,9 +407,9 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 			this.script 	+=		'}'
 
-							+	'}'
+			+	'}'
 
-							+ '</script>';
+			+ '</script>';
 
 			resolve( true );
 
