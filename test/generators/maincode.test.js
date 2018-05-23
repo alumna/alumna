@@ -346,7 +346,7 @@ test('Semantic errors - Cases 4-8, 10-11, 13-16 - Wrong codes in app.js', () => 
 
 			app.compile().catch( ( error ) => {
 
-				expect( error ).toEqual( { "message": "Error in src/" + appFileName + ": The route \"/test\" is defined multiple times." } );
+				expect( error ).toEqual( { "message": "Error in src/" + appFileName + ": The following routes are defined multiple times: \"/test\"" } );
 
 				resolve( true )
 
@@ -367,7 +367,7 @@ test('Semantic errors - Cases 4-8, 10-11, 13-16 - Wrong codes in app.js', () => 
 
 			app.compile().catch( ( error ) => {
 
-				expect( error ).toEqual( { "message": "Error in src/" + appFileName + ": The routes \"/test\" and \"/\" are defined multiple times." } );
+				expect( error ).toEqual( { "message": "Error in src/" + appFileName + ": The following routes are defined multiple times: \"/test\" and \"/\"" } );
 
 				resolve( true )
 

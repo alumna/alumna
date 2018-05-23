@@ -110,30 +110,25 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 			// Validate each group separately
 			let validations = [];
 
-			for ( const group in this.appStructure.group )
-				validations.push( this.validate_group( group, this.appStructure.group[ group ] ) );
+			for ( const group in this.appStructure.group ) validations.push( this.validate_group( group, this.appStructure.group[ group ] ) );
 
 			// If everything is fine, validate the remaining routes
 			// that were not declated in groups
-			if ( validations.every( passed => passed ) )
-				this.validate_routes();
+			if ( validations.every( passed => passed ) ) this.validate_routes();
 
-		} else
-			this.validate_routes();
+		} else this.validate_routes();
 
 	};
 
 	this.validate_group = function ( group, content ) {
 
 		// Validate the group name or string
-		if ( typeof group != 'string' || !group.length )
-			return !this.add_error( 'Route groups must be defined with a base path or with names like "group:name".' );
+		if ( typeof group != 'string' || !group.length ) return !this.add_error( 'Route groups must be defined with a base path or with names like "group:name".' );
 
 		let base = '', error = false;
 
 		// Base path or name?
-		if ( group == 'group:' )
-			return !this.add_error( 'Incomplete group name "group:"' );
+		if ( group == 'group:' ) return !this.add_error( 'Incomplete group name "group:"' );
 
 
 		if ( !group.startsWith( 'group:' ) ) base = group.endsWith( '/' ) ? group.slice( 0, -1 ) : group
@@ -190,75 +185,45 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 	this.validate_routes = function () {
 
 		// Check if there are areas
-		if ( this.areas.length ) {
+		if ( !this.areas.length  )
+			return this.errors.length ? false : !this.add_error( 'Before defining routes you need to define areas in app.areas variable.', 'Warning' );
 
-			// Check if there are routes
-			if ( isObject( this.appStructure.route, true ) ) {
+		// Check if there are routes
+		if ( !isObject( this.appStructure.route, true ) )
+			return !this.add_error( 'You need at least one route defined in your app. Check documentation for more details.' );
 
-				// Check if there are repeated routes
-				if ( !this.repeated_routes() ) {
+		// Check if there are repeated routes
+		if ( !this.repeated_routes() )
 
-					// Validate each route separately
-					for ( const path in this.appStructure.route )
-						this.validate_route( path, this.appStructure.route[ path ] );
-
-				}
-
-			} else
-				this.add_error( 'You need at least one route defined in your app. Check documentation for more details.' );
+			// Validate each route separately
+			for ( const path in this.appStructure.route ) this.validate_route( path, this.appStructure.route[ path ] );
 			
-		} else {
-
-			if ( !this.errors.length )
-				this.add_error( 'Before defining routes you need to define areas in app.areas variable.', 'Warning' );
-		}
-
 	};
 
 	this.repeated_routes = function () {
 
 		// Count number of occurrences
-		const count = names => 
-			names.reduce( ( a, b ) => Object.assign( a, { [ b ]: ( a[ b ] || 0 ) + 1 } ), {} )
+		const count = names => names.reduce( ( a, b ) => Object.assign( a, { [ b ]: ( a[ b ] || 0 ) + 1 } ), {} )
 
 		// Check if there are duplicates
-		const duplicates = dict => 
-			Object.keys( dict ).filter( ( a ) => dict[ a ] > 1 )
+		const duplicates = dict => Object.keys( dict ).filter( ( a ) => dict[ a ] > 1 )
 
-		let original = Object.keys( this.appStructure.route );
-		let routes   = [];
+		let original = Object.keys( this.appStructure.route ), routes = [];
 
 		original.forEach( route => {
 
-			if ( route.includes( ',' ) ) {
-				
-				const multiple_routes = this.get_multiple_routes( route )
+			if ( route.includes( ',' ) ) routes = routes.concat( this.get_multiple_routes( route ) )
 
-				routes = routes.concat( multiple_routes )
-
-			} else 
-				routes.push( route )
+			else routes.push( route )
 
 		});
 
 		let repeated = duplicates( count( routes ) )
 
-		if ( repeated.length ) {
-			
-			// Separate each repeated element with commas, using "and" on the last element, if it is the case
-			let repeated_string = repeated.map( a => '"' + a + '"' ).join( ', ' ).replace( /,(?!.*,)/gmi, ' and' );
+		// If there are repeated routes, separate each one with commas, using "and" on the last route, if there are more than one
+		if ( repeated.length ) return this.add_error( 'The following routes are defined multiple times: ' + repeated.map( a => '"' + a + '"' ).join( ', ' ).replace( /,(?!.*,)/gmi, ' and' ) );
 
-			if ( repeated.length > 1 )
-				this.add_error( 'The routes ' + repeated_string + ' are defined multiple times.' );
-
-			else
-				this.add_error( 'The route ' + repeated_string + ' is defined multiple times.' );				
-
-			return true;
-
-		}
-		else
-			return false;
+		else return false;
 
 	};
 
