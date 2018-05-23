@@ -176,7 +176,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 				} else {
 					
-					if ( typeof path != 'string' || path.length == 0 ) {
+					if ( path.length == 0 ) {
 
 						this.errors.push( 'Error in src/' + this.appFileName + ': Path with empty string inside group "' + group + '"' );
 
