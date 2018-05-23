@@ -491,3 +491,354 @@ test('Case 12 - Single area, single component and route with multiple paths', ()
 	});
 
 });
+
+test('Case 17 - Wrong route group', () => {
+
+	expect.assertions( 1 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case17.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().catch( ( error ) => {
+
+				expect( error ).toEqual( { "message": "Error in src/" + appFileName + ": The route group \"group:public\" isn't in a valid format." } );
+
+				resolve( true )
+
+			});
+
+		});
+
+	});
+
+});
+
+test('Case 18 - Grouped route without base path', () => {
+
+	expect.assertions( 6 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case18.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().then( () => {
+
+				expect( app.errors ).toEqual( [] );
+
+				expect( app.areas ).toEqual( [ 'content' ] );
+
+				expect( app.routes ).toEqual( { '/': { content: 'HelloAltiva' } } );
+
+				expect( app.html ).toBe( EOL + '<!-- Area: "content" -->' + EOL
+											 + '{#if _route == \'/\' }' + EOL
+											 + '\t<HelloAltiva/>' + EOL
+											 + '{/if}' + EOL + '' );
+
+				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],}}</script>' );
+
+				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] );' + EOL + EOL );
+
+				resolve( true );
+
+			});
+
+		});
+
+	});
+
+});
+
+test('Case 19 - Grouped route with base path', () => {
+
+	expect.assertions( 6 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case19.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().then( () => {
+
+				expect( app.errors ).toEqual( [] );
+
+				expect( app.areas ).toEqual( [ 'content' ] );
+
+				expect( app.routes ).toEqual( { '/base/route': { content: 'HelloAltiva' } } );
+
+				expect( app.html ).toBe( EOL + '<!-- Area: "content" -->' + EOL
+											 + '{#if _route == \'/base/route\' }' + EOL
+											 + '\t<HelloAltiva/>' + EOL
+											 + '{/if}' + EOL + '' );
+
+				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],}}</script>' );
+
+				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/route\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] );' + EOL + EOL );
+
+				resolve( true );
+
+			});
+
+		});
+
+	});
+
+});
+
+test('Case 20 - Conflicting routes from groups and normal routes', () => {
+
+	expect.assertions( 1 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case20.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().catch( ( error ) => {
+
+				expect( error ).toEqual( { "message": "Error in src/" + appFileName + ": The path \"/base/route\" from group \"/base\" is defined multiple times" } );
+
+				resolve( true )
+
+			});
+
+		});
+
+	});
+
+});
+
+test('Case 21 - Empty string for route inside group', () => {
+
+	expect.assertions( 1 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case21.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().catch( ( error ) => {
+
+				expect( error ).toEqual( { "message": "Error in src/" + appFileName + ": Path with empty string inside group \"/base\"" } );
+
+				resolve( true )
+
+			});
+
+		});
+
+	});
+
+});
+
+test('Case 22 - Invalid "multiple" route inside group', () => {
+
+	expect.assertions( 1 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case22.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().catch( ( error ) => {
+
+				expect( error ).toEqual( { "message": "Error in src/" + appFileName + ": Invalid route path \",,,\" from group \"/base\"" } );
+
+				resolve( true )
+
+			});
+
+		});
+
+	});
+
+});
+
+test('Case 23 - Incomplete group name "group:"', () => {
+
+	expect.assertions( 1 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case23.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().catch( ( error ) => {
+
+				expect( error ).toEqual( { "message": "Error in src/" + appFileName + ": Incomplete group name \"group:\"" } );
+
+				resolve( true )
+
+			});
+
+		});
+
+	});
+
+});
+
+test('Case 24 - Routes inside group with multiple paths', () => {
+
+	expect.assertions( 6 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case24.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().then( () => {
+
+				expect( app.errors ).toEqual( [] );
+
+				expect( app.areas ).toEqual( [ 'content' ] );
+
+				expect( app.routes ).toEqual( { '/base/path1': { content: 'ReusedComponent' }, '/base/path2': { content: 'ReusedComponent' } } );
+
+				expect( app.html ).toBe( EOL + '<!-- Area: "content" -->' + EOL
+											 + '{#if _route == \'/base/path1\' || _route == \'/base/path2\' }' + EOL
+											 + '\t<ReusedComponent/>' + EOL
+											 + '{/if}' + EOL + '' );
+
+				expect( app.script ).toBe( '<script>export default {components: {ReusedComponent: Altiva.component[ \'ReusedComponent\' ],}}</script>' );
+
+				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/path1\' ] = Promise.all( [ Altiva.load( \'ReusedComponent\' ) ] );' + EOL + EOL + 'Altiva.routes[ \'/base/path2\' ] = Altiva.routes[ \'/base/path1\' ];' + EOL + EOL );
+
+				resolve( true );
+
+			});
+
+		});
+
+	});
+
+});
+
+test('Case 25 - Empty group name', () => {
+
+	expect.assertions( 1 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case25.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().catch( ( error ) => {
+
+				expect( error ).toEqual( { "message": "Error in src/" + appFileName + ": Route groups must be defined with a base path or with names like \"group:name\"." } );
+
+				resolve( true )
+
+			});
+
+		});
+
+	});
+
+});
+
+test('Case 26 - Corrected (multiple) paths in groups', () => {
+
+	expect.assertions( 6 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case26.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().then( () => {
+
+				expect( app.errors ).toEqual( [] );
+
+				expect( app.areas ).toEqual( [ 'content' ] );
+
+				expect( app.routes ).toEqual( { '/base/path1': { content: 'ReusedComponent' }, '/base/path2': { content: 'ReusedComponent' } } );
+
+				expect( app.html ).toBe( EOL + '<!-- Area: "content" -->' + EOL
+											 + '{#if _route == \'/base/path1\' || _route == \'/base/path2\' }' + EOL
+											 + '\t<ReusedComponent/>' + EOL
+											 + '{/if}' + EOL + '' );
+
+				expect( app.script ).toBe( '<script>export default {components: {ReusedComponent: Altiva.component[ \'ReusedComponent\' ],}}</script>' );
+
+				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/path1\' ] = Promise.all( [ Altiva.load( \'ReusedComponent\' ) ] );' + EOL + EOL + 'Altiva.routes[ \'/base/path2\' ] = Altiva.routes[ \'/base/path1\' ];' + EOL + EOL );
+
+				resolve( true );
+
+			});
+
+		});
+
+	});
+
+});
+
+test('Case 27 - Corrected (single) paths in groups', () => {
+
+	expect.assertions( 6 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case27.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().then( () => {
+
+				expect( app.errors ).toEqual( [] );
+
+				expect( app.areas ).toEqual( [ 'content' ] );
+
+				expect( app.routes ).toEqual( { '/base/route': { content: 'HelloAltiva' } } );
+
+				expect( app.html ).toBe( EOL + '<!-- Area: "content" -->' + EOL
+											 + '{#if _route == \'/base/route\' }' + EOL
+											 + '\t<HelloAltiva/>' + EOL
+											 + '{/if}' + EOL + '' );
+
+				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],}}</script>' );
+
+				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/route\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] );' + EOL + EOL );
+
+				resolve( true );
+
+			});
+
+		});
+
+	});
+
+});
