@@ -1,6 +1,8 @@
-const isObject = function ( item ) {
+const isObject = function ( item, must_be_filled = false ) {
 
-	return ( item && typeof item === 'object' && !Array.isArray( item ) );
+	let result = ( item && typeof item === 'object' && !Array.isArray( item ) )
+
+	return ( result && must_be_filled ) ? Object.keys( item ).length : result;
 }
 
 export default isObject;

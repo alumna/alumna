@@ -105,7 +105,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 	this.validate_groups_and_routes = function () {
 
 		// Check if there are route groups
-		if ( this.appStructure.group && isObject( this.appStructure.group ) && Object.keys( this.appStructure.group ).length ) {
+		if ( isObject( this.appStructure.group, true ) ) {
 
 			// Validate each group separately
 			let validations = [];
@@ -148,7 +148,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 			// Validade each path in group
 			for ( const original_path in content ) {
 				
-				if ( !isObject( content[ original_path ] ) || !Object.keys( content[ original_path ] ).length ) {
+				if ( !isObject( content[ original_path ], true ) ) {
 
 					this.add_error( 'The route group "' + group + '" isn\'t in a valid format.' );
 
@@ -226,7 +226,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 		if ( this.areas.length ) {
 
 			// Check if there are routes
-			if ( this.appStructure.route && isObject( this.appStructure.route ) && Object.keys( this.appStructure.route ).length ) {
+			if ( isObject( this.appStructure.route, true ) ) {
 
 				// Check if there are repeated routes
 				if ( !this.repeated_routes() ) {
