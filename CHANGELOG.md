@@ -1,5 +1,9 @@
 # Altiva changelog
 
+## 2.0.18
+
+* Route groups feature officialy released ([#1](https://github.com/Altiva/altiva/issues/1))
+
 ## 2.0.17
 
 * Multiple routes using array with the same components ([#17](https://github.com/Altiva/altiva/issues/17))
