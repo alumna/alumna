@@ -197,7 +197,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 			// Validate each route separately
 			for ( const path in this.appStructure.route ) this.validate_route( path, this.appStructure.route[ path ] );
-			
+
 	};
 
 	this.repeated_routes = function () {
@@ -393,10 +393,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 				const deep_dependencies = this.get_dependencies( subcomponent );
 
-				for ( const deep_subcomponent in deep_dependencies ) {
-
-					dependencies[ deep_subcomponent ] = true;
-				}
+				for ( const deep_subcomponent in deep_dependencies ) dependencies[ deep_subcomponent ] = true;
 			}
 		}
 
@@ -413,9 +410,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 			for ( const route in this.routes ) {
 
-				let load_functions = ''
-
-				let components_passed = 0;
+				let load_functions = '', components_passed = 0;
 
 				// Add a loader function to each component used in the specified route
 				for ( const area in this.routes[ route ] ) {
@@ -486,8 +481,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 	this.return_errors = function ( ) {
 
-		let mergedErrors = '';
-		let count 		 = 0;
+		let mergedErrors = '', count = 0;
 
 		for ( const key in this.errors ) {
 
