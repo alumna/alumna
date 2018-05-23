@@ -66,6 +66,8 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 		this.errors.push( type + ' in src/' + this.appFileName + ': ' + message );
 
+		return true;
+
 	}
 
 	this.validate_areas = function () {
@@ -74,16 +76,14 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 		if ( Array.isArray( areas_array ) ) {
 
-			let local_errors = 0;
+			let local_errors = false;
 
 			// Iterate ovre the areas_array, but stop when an area is invalid
 			areas_array.every( area => {
 
 				if ( typeof area != 'string' || !area.length ) {
 					
-					this.add_error( 'The area ' + area + ' is not a string, and only strings can be used as names of areas.' );
-					
-					local_errors = 1;
+					local_errors = this.add_error( 'The area ' + area + ' is not a string, and only strings can be used as names of areas.' );
 					
 					return false;
 				}
@@ -128,88 +128,64 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 		// Validate the group name or string
 		if ( typeof group == 'string' && group.length ) {
 
-			let base = null;
+			let base = '', error = false;
 
 			// Base path or name?
-			if ( group.startsWith( 'group:' ) ) {
+			if ( group == 'group:' ) this.add_error( 'Incomplete group name "group:"' );
 
-				if ( group == 'group:' ) {
-					
-					this.add_error( 'Incomplete group name "group:"' );
-
-					return false;
-
-				}
-
-			}
-
-			else base = group.endsWith( '/' ) ? group.slice( 0, -1 ) : group
-
-			// Validade each path in group
-			for ( const original_path in content ) {
+			else {
 				
-				if ( !isObject( content[ original_path ], true ) ) {
+				if ( !group.startsWith( 'group:' ) ) base = group.endsWith( '/' ) ? group.slice( 0, -1 ) : group
 
-					this.add_error( 'The route group "' + group + '" isn\'t in a valid format.' );
-
-					return false;
-
-				}
-
-				let path = original_path;
-
-				// Check for multiple paths in a single string
-				if ( path.includes( ',' ) ) {
-
-					const multiple_routes = this.get_multiple_routes( path );
-
-					if ( multiple_routes.length == 0 ) {
-
-						this.add_error( 'Invalid route path "' + path + '" from group "' + group + '"' );
-
-						return false;
-
-					}
-
-					// The group's paths receive the base even when
-					// there are multiple paths on the same string
-					path = multiple_routes.map( s => {
-						
-						if ( !s.startsWith( '/' ) ) s = '/' + s;
-						return base + s
-
-					}).join( ', ' );
-
-				} else {
+				// Validade each path in group
+				for ( const original_path in content ) {
 					
-					if ( path.length == 0 ) {
+					if ( !error ) {
 
-						this.add_error( 'Path with empty string inside group "' + group + '"' );
+						if ( !isObject( content[ original_path ], true ) ) error = this.add_error( 'The route group "' + group + '" isn\'t in a valid format.' );
 
-						return false;
+						else {
+
+							let path = original_path;
+
+							// Check for multiple paths in a single string
+							if ( path.includes( ',' ) ) {
+
+								const multiple_routes = this.get_multiple_routes( path );
+
+								if ( multiple_routes.length == 0 ) error = this.add_error( 'Invalid route path "' + path + '" from group "' + group + '"' );
+
+								// The group's paths receive the base even when
+								// there are multiple paths on the same string
+								else  path = multiple_routes.map( local_path => base + ( local_path.startsWith( '/' ) ? '' : '/' ) + local_path ).join( ', ' );
+
+							} else {
+								
+								if ( path.length == 0 ) error = this.add_error( 'Path with empty string inside group "' + group + '"' );
+
+								// Receive the base
+								else path = base + ( path.startsWith( '/' ) ? '' : '/' ) + path;
+
+							}
+
+							if ( !error ) {
+
+								// Check if the final path already exists
+								if ( this.appStructure.route[ path ] ) error = this.add_error( 'The path "' + path + '" from group "' + group + '" is defined multiple times' );
+
+								// Add the path separately with its base
+								else this.appStructure.route[ path ] = content[ original_path ];
+
+							}
+
+						}
 
 					}
 
-					if ( !path.startsWith( '/' ) ) path = '/' + path;
-
-					// Receive the base
-					path = base ? base + path : path
 				}
 
-				// Check if the final path already exists
-				if ( this.appStructure.route[ path ] ) {
-
-					this.add_error( 'The path "' + path + '" from group "' + group + '" is defined multiple times' );
-
-					return false;
-
-				}
-
-				// Add the path separately with its base
-				this.appStructure.route[ path ] = content[ original_path ];
+				return !error;
 			}
-
-			return true;
 
 		} else {
 			

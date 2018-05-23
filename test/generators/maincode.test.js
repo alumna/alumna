@@ -842,3 +842,29 @@ test('Case 27 - Corrected (single) paths in groups', () => {
 	});
 
 });
+
+test('Case 28 - Multiple errors inside group to cover 100% of the possibilities', () => {
+
+	expect.assertions( 1 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case28.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().catch( ( error ) => {
+
+				expect( error ).toEqual( { "message": "Error in src/" + appFileName + ": Path with empty string inside group \"/base\"" } );
+
+				resolve( true )
+
+			});
+
+		});
+
+	});
+
+});
