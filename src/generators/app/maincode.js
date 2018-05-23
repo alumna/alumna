@@ -62,6 +62,12 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 	}
 
+	this.add_error = function ( message, type = 'Error' ) {
+
+		this.errors.push( type + ' in src/' + this.appFileName + ': ' + message );
+
+	}
+
 	this.validate_areas = function () {
 
 		const areas_array = this.appStructure.areas;
@@ -75,7 +81,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 				if ( typeof area != 'string' || !area.length ) {
 					
-					this.errors.push( 'Error in src/' + this.appFileName + ': The area ' + area + ' is not a string, and only strings can be used as names of areas.' );
+					this.add_error( 'The area ' + area + ' is not a string, and only strings can be used as names of areas.' );
 					
 					local_errors = 1;
 					
@@ -91,7 +97,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 		} else {
 
-			this.errors.push( 'Error in src/' + this.appFileName + ': You need to define an array to "app.areas" with one or more strings as the areas\' names.' );
+			this.add_error( 'You need to define an array to "app.areas" with one or more strings as the areas\' names.' );
 		}
 
 	};
@@ -129,7 +135,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 				if ( group == 'group:' ) {
 					
-					this.errors.push( 'Error in src/' + this.appFileName + ': Incomplete group name "group:"' );
+					this.add_error( 'Incomplete group name "group:"' );
 
 					return false;
 
@@ -144,7 +150,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 				
 				if ( !isObject( content[ original_path ] ) || !Object.keys( content[ original_path ] ).length ) {
 
-					this.errors.push( 'Error in src/' + this.appFileName + ': The route group "' + group + '" isn\'t in a valid format.' );
+					this.add_error( 'The route group "' + group + '" isn\'t in a valid format.' );
 
 					return false;
 
@@ -159,7 +165,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 					if ( multiple_routes.length == 0 ) {
 
-						this.errors.push( 'Error in src/' + this.appFileName + ': Invalid route path "' + path + '" from group "' + group + '"' );
+						this.add_error( 'Invalid route path "' + path + '" from group "' + group + '"' );
 
 						return false;
 
@@ -178,7 +184,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 					
 					if ( path.length == 0 ) {
 
-						this.errors.push( 'Error in src/' + this.appFileName + ': Path with empty string inside group "' + group + '"' );
+						this.add_error( 'Path with empty string inside group "' + group + '"' );
 
 						return false;
 
@@ -193,7 +199,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 				// Check if the final path already exists
 				if ( this.appStructure.route[ path ] ) {
 
-					this.errors.push( 'Error in src/' + this.appFileName + ': The path "' + path + '" from group "' + group + '" is defined multiple times' );
+					this.add_error( 'The path "' + path + '" from group "' + group + '" is defined multiple times' );
 
 					return false;
 
@@ -207,7 +213,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 		} else {
 			
-			this.errors.push( 'Error in src/' + this.appFileName + ': Route groups must be defined with a base path or with names like "group:name".' );
+			this.add_error( 'Route groups must be defined with a base path or with names like "group:name".' );
 
 			return false;
 		}
@@ -232,12 +238,12 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 				}
 
 			} else
-				this.errors.push( 'Error in src/' + this.appFileName + ': You need at least one route defined in your app. Check documentation for more details.' );
+				this.add_error( 'You need at least one route defined in your app. Check documentation for more details.' );
 			
 		} else {
 
 			if ( !this.errors.length )
-				this.errors.push( 'Warning in src/' + this.appFileName + ': Before defining routes you need to define areas in app.areas variable.' );
+				this.add_error( 'Before defining routes you need to define areas in app.areas variable.', 'Warning' );
 		}
 
 	};
@@ -276,10 +282,10 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 			let repeated_string = repeated.map( a => '"' + a + '"' ).join( ', ' ).replace( /,(?!.*,)/gmi, ' and' );
 
 			if ( repeated.length > 1 )
-				this.errors.push( 'Error in src/' + this.appFileName + ': The routes ' + repeated_string + ' are defined multiple times.' );
+				this.add_error( 'The routes ' + repeated_string + ' are defined multiple times.' );
 
 			else
-				this.errors.push( 'Error in src/' + this.appFileName + ': The route ' + repeated_string + ' is defined multiple times.' );				
+				this.add_error( 'The route ' + repeated_string + ' is defined multiple times.' );				
 
 			return true;
 
@@ -292,7 +298,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 	this.validate_route = function ( path, area_map ) {
 
 		// Check if the toute's path is a non-empty string
-		if ( typeof path !== 'string' || !path.length  ) this.errors.push( 'Error in src/' + this.appFileName + ': Route paths must be non-empty strings.' );
+		if ( typeof path !== 'string' || !path.length  ) this.add_error( 'Route paths must be non-empty strings.' );
 
 		else {
 
@@ -303,10 +309,10 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 				multiple_routes = this.get_multiple_routes( path );
 
-				if ( multiple_routes.length == 0 ) this.errors.push( 'Error in src/' + this.appFileName + ': Invalid route path: "' + path + '"' );
+				if ( multiple_routes.length == 0 ) this.add_error( 'Invalid route path: "' + path + '"' );
 			}
 
-			if ( Object.keys( area_map ).length === 0 ) this.errors.push( 'Error in src/' + this.appFileName + ': In the route \'' + path + '\' you need to define at least one area to use.' );
+			if ( Object.keys( area_map ).length === 0 ) this.add_error( 'In the route \'' + path + '\' you need to define at least one area to use.' );
 
 			else {
 
@@ -314,7 +320,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 					
 					if ( !this.areas.includes( area ) ) {
 
-						this.errors.push( 'Error in src/' + this.appFileName + ': In the route \'' + path + '\' you are refering to the area \'' + area + '\' that was not defined in app.areas array.' );
+						this.add_error( 'In the route \'' + path + '\' you are refering to the area \'' + area + '\' that was not defined in app.areas array.' );
 
 						local_errors = 1;
 					}
