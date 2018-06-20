@@ -32,7 +32,7 @@ test('Case 1 - Single area and single component', () => {
 											 + '\t<HelloAltiva/>' + EOL
 											 + '{/if}' + EOL + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
 
 				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] );' + EOL + EOL );
 
@@ -80,7 +80,7 @@ test('Case 1 (part2) - Single area and single component BUT with dependencies', 
 											 + '\t<HelloAltiva/>' + EOL
 											 + '{/if}' + EOL + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
 
 				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ), Altiva.load( \'Sub\' ), Altiva.load( \'Sub2\' ) ] );' + EOL + EOL );
 
@@ -428,7 +428,7 @@ test('Case 9 - Multiple areas and multiple components', () => {
     										 
     										 + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],Footer1: Altiva.component[ \'Footer1\' ],Footer2: Altiva.component[ \'Footer2\' ],}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],Footer1: Altiva.component[ \'Footer1\' ],Footer2: Altiva.component[ \'Footer2\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
 
 				expect( app.route_functions ).toBe(
 
@@ -478,7 +478,7 @@ test('Case 12 - Single area, single component and route with multiple paths', ()
 											 + '\t<HelloAltiva/>' + EOL
 											 + '{/if}' + EOL + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
 
 				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] );' + EOL + EOL + 'Altiva.routes[ \'/test\' ] = Altiva.routes[ \'/\' ];' + EOL + EOL );
 
@@ -543,7 +543,7 @@ test('Case 18 - Grouped route without base path', () => {
 											 + '\t<HelloAltiva/>' + EOL
 											 + '{/if}' + EOL + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
 
 				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] );' + EOL + EOL );
 
@@ -582,7 +582,7 @@ test('Case 19 - Grouped route with base path', () => {
 											 + '\t<HelloAltiva/>' + EOL
 											 + '{/if}' + EOL + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
 
 				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/route\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] );' + EOL + EOL );
 
@@ -725,7 +725,7 @@ test('Case 24 - Routes inside group with multiple paths', () => {
 											 + '\t<ReusedComponent/>' + EOL
 											 + '{/if}' + EOL + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {ReusedComponent: Altiva.component[ \'ReusedComponent\' ],}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {ReusedComponent: Altiva.component[ \'ReusedComponent\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
 
 				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/path1\' ] = Promise.all( [ Altiva.load( \'ReusedComponent\' ) ] );' + EOL + EOL + 'Altiva.routes[ \'/base/path2\' ] = Altiva.routes[ \'/base/path1\' ];' + EOL + EOL );
 
@@ -790,7 +790,7 @@ test('Case 26 - Corrected (multiple) paths in groups', () => {
 											 + '\t<ReusedComponent/>' + EOL
 											 + '{/if}' + EOL + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {ReusedComponent: Altiva.component[ \'ReusedComponent\' ],}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {ReusedComponent: Altiva.component[ \'ReusedComponent\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
 
 				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/path1\' ] = Promise.all( [ Altiva.load( \'ReusedComponent\' ) ] );' + EOL + EOL + 'Altiva.routes[ \'/base/path2\' ] = Altiva.routes[ \'/base/path1\' ];' + EOL + EOL );
 
@@ -829,7 +829,7 @@ test('Case 27 - Corrected (single) paths in groups', () => {
 											 + '\t<HelloAltiva/>' + EOL
 											 + '{/if}' + EOL + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
 
 				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/route\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] );' + EOL + EOL );
 
@@ -858,6 +858,200 @@ test('Case 28 - Multiple errors inside group to cover 100% of the possibilities'
 			app.compile().catch( ( error ) => {
 
 				expect( error ).toEqual( { "message": "Error in src/" + appFileName + ": Path with empty string inside group \"/base\"" } );
+
+				resolve( true )
+
+			});
+
+		});
+
+	});
+
+});
+
+test('Case 29 - One middleware', () => {
+
+	expect.assertions( 5 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case29-used-middlewares.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().then( () => {
+
+				expect( app.errors ).toEqual( [] );
+
+				expect( app.areas ).toEqual( [ 'content' ] );
+
+				expect( app.routes ).toEqual( {
+					
+					'/': {
+						content: 'HelloAltiva'
+					},
+
+					'/:number': {
+						content: 'HelloAltiva'
+					}
+
+				} );
+
+				expect( app.middlewares ).toEqual( {
+					
+					'/:number': [ 'first' ]
+
+				} );
+
+				expect( app.used_middlewares ).toEqual( { first: true } );
+
+				resolve( true );
+
+			});
+
+		});
+
+	});
+
+});
+
+test('Case 30 - Multiple middleware', () => {
+
+	expect.assertions( 5 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case30-multiple-middlewares.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().then( () => {
+
+				expect( app.errors ).toEqual( [] );
+
+				expect( app.areas ).toEqual( [ 'content' ] );
+
+				expect( app.routes ).toEqual( {
+					
+					'/:number': {
+						content: 'HelloAltiva'
+					}
+
+				} );
+
+				expect( app.middlewares ).toEqual( {
+					
+					'/:number': [ 'first', 'second' ]
+
+				} );
+
+				expect( app.used_middlewares ).toEqual( { first: true, second: true } );
+
+				resolve( true );
+
+			});
+
+		});
+
+	});
+
+});
+
+test('Case 31 - Invalid middleware', () => {
+
+	expect.assertions( 1 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case31-invalid-middlewares.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().catch( ( error ) => {
+
+				expect( error ).toEqual( { "message": "Error in src/" + appFileName + ": Invalid middlewares defined on route '/:number'." } );
+
+				resolve( true )
+
+			});
+
+		});
+
+	});
+
+});
+
+test('Case 32 - One middleware', () => {
+
+	expect.assertions( 5 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case32-multiple-middlewares-and-routes.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().then( () => {
+
+				expect( app.errors ).toEqual( [] );
+
+				expect( app.areas ).toEqual( [ 'content' ] );
+
+				expect( app.routes ).toEqual( {
+					
+					'/': {
+						content: 'HelloAltiva'
+					},
+
+					'/:number': {
+						content: 'HelloAltiva'
+					}
+
+				} );
+
+				expect( app.middlewares ).toEqual( {
+					
+					'/': [ 'first', 'second' ],
+
+					'/:number': [ 'first', 'second' ]
+
+				} );
+
+				expect( app.used_middlewares ).toEqual( { first: true, second: true } );
+
+				resolve( true );
+
+			});
+
+		});
+
+	});
+
+});
+
+test('Case 33 - Invalid middlewares in multiple routes', () => {
+
+	expect.assertions( 1 );
+
+	return new Promise( ( resolve, reject ) => {
+
+		fs.readFile( __dirname + '/maincode/case33-invalid-middlewares-in-multiple-routes.js', 'utf8', ( err, code ) => {
+
+			const componentsMap = {}
+
+			const app = new MainCode( code, componentsMap, appFileName );
+
+			app.compile().catch( ( error ) => {
+
+				expect( error ).toEqual( { "message": "Error in src/" + appFileName + ": Invalid middlewares defined on route '/'." } );
 
 				resolve( true )
 

@@ -2,6 +2,7 @@ import browserSyncClass 				from 'browser-sync';
 import chokidar 						from 'chokidar';
 import fs 								from 'fs-extra';
 import historyApiFallback 				from 'connect-history-api-fallback';
+import hjson							from 'hjson';
 import rsync 							from 'rsyncwrapper';
 
 // Altiva modules - modes
@@ -26,54 +27,57 @@ const watchSrc = function ( options ) {
 
 		let componentsMap = getMap();
 
-		if ( path.startsWith( 'src/components/' ) && path.endsWith( '.html' ) ) {
+		if ( path.startsWith( 'src/components/' ) ) {
 
-			/*
-			 * If the component changed his subcomponents,
-			 * regenerate the app file, otherwise just reload
-			 * browserSync after recompiling
-			 */
+			// Only compile components that ends with ".html"
+			if ( path.endsWith( '.html' ) ) {
 
-			const component = path.replace( 'src/components/', '' ).replace( '.html', '' );
-			const current 	= Object.assign( {}, componentsMap[ component ] );
+				/*
+				 * If the component changed his subcomponents,
+				 * regenerate the app file, otherwise just reload
+				 * browserSync after recompiling
+				 */
 
-			compile( 'dev', path, options ).then( componentsMap => {
+				const component = path.replace( 'src/components/', '' ).replace( '.html', '' );
+				const current 	= Object.assign( {}, componentsMap[ component ] );
 
-				if ( equalComponentList( current, componentsMap[ component ] ) )
-					browserSync.reload()
-				
-				else {
+				compile( 'dev', path, options ).then( componentsMap => {
 
-					appGenerator( 'dev', options, componentsMap ).catch( error => {
+					if ( equalComponentList( current, componentsMap[ component ] ) )
+						browserSync.reload()
+					
+					else {
 
-						console.log( error.message );
+						appGenerator( 'dev', options, componentsMap ).catch( error => {
 
-					});
-				} 
-			} );
+							console.log( error.message );
+
+						});
+					}
+					
+				} );
+
+			}
 
 		} else {
 
-			if ( !path.startsWith( 'src/components/' ) ) {
+			if ( path == 'src/' + options.app.filename || path.startsWith( 'middlewares/' ) || path == 'altiva.hjson' ) {
+
+				appGenerator( 'dev', options, componentsMap ).catch( error => {
+
+					console.log( error.message );
+
+				});
+
+			} else {
 
 				const devPath = path.replace( 'src', 'dev' );
 
-				if ( path == 'src/' + options.app.filename ) {
-
-					appGenerator( 'dev', options, componentsMap ).catch( error => {
-
-						console.log( error.message );
-
-					});	
-
-				} else {
-
-					rsync( {
-						src: path,
-						dest: devPath
-					},
-					() => browserSync.reload() );
-				}
+				rsync( {
+					src: path,
+					dest: devPath
+				},
+				() => browserSync.reload() );
 			}
 		}
 	};
@@ -81,7 +85,7 @@ const watchSrc = function ( options ) {
 
 	/* Source files and components watching rules */
 
-	const sourceWatcher = chokidar.watch( 'src/**', {
+	const sourceWatcher = chokidar.watch( [ 'src/**', 'middlewares/**', 'altiva.hjson' ], {
 		
 		ignored: 		/(^|[\/\\])\../,
 		persistent: 	true,
@@ -93,25 +97,35 @@ const watchSrc = function ( options ) {
 		
 	} );
 
-	sourceWatcher.on( 'all', ( event, path ) => {
+	sourceWatcher.on( 'all', async ( event, path ) => {
 
-		// For new or changed components
-		if ( event == 'add' || event == 'change' ) return update_or_rsync( path );
+		if ( path.startsWith( 'src/' ) ) {
 
-		// For the other cases, replace the initial folder
-		let devPath = path.replace( 'src', 'dev' );
+			// For new or changed components
+			if ( event == 'add' || event == 'change' ) return update_or_rsync( path );
 
-		// For removed folders and files
-		if ( event == 'unlink' || event == 'unlinkDir' ) {
-			
-			if ( event == 'unlink' )
-				devPath = devPath.replace( '.html', '.js' );
+			// For the other cases, replace the initial folder
+			let devPath = path.replace( 'src', 'dev' );
 
-			return fs.remove( devPath, err => { if ( !err ) browserSync.reload(); } );
+			// For removed folders and files
+			if ( event == 'unlink' || event == 'unlinkDir' ) {
+				
+				if ( event == 'unlink' )
+					devPath = devPath.replace( '.html', '.js' );
+
+				return fs.remove( devPath, err => { if ( !err ) browserSync.reload(); } );
+			}
+
+			// For added folders
+			if ( event == 'addDir' ) return fs.ensureDir( devPath );
+
+		} else {
+
+			if ( path == 'altiva.hjson' ) options = hjson.parse( await fs.readFile( 'altiva.hjson', 'utf8' ) )
+
+			return update_or_rsync( path );
+
 		}
-
-		// For added folders
-		if ( event == 'addDir' ) return fs.ensureDir( devPath );
 
 	} );
 

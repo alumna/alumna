@@ -25,6 +25,7 @@
 		"collectCoverageFrom": [
 			"**/src/utils/**",
 			"**/src/generators/*/*.js",
+			"**/src/generators/*/*/*.js",
 			"**/src/modes/*/*.js",
 			"!**/src/modes/all/rsyncAssets.js",
 			"!**/src/utils/to.js",

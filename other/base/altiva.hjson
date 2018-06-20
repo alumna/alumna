@@ -27,5 +27,17 @@
 		// component and of the project.
 		// The downside is that each component is not independent and not standalone.
 		smallComponents: true
+	},
+
+	middlewares: {
+		// Define here your middlewares files, informing them in the format:
+		// variable_name: "path/of/file"
+
+		// Do not inform in the path the "middlewares/" directory. Also, the ".js" extension isn't needed
+	},
+
+	modules: {
+		// Install a module using the command: altiva install <github_author/repository_name>
+		// For example: altiva install altiva/module_keys
 	}
 }
