@@ -1,6 +1,6 @@
 import { EOL } 			from 'os';
 import fs 				from 'fs-extra';
-import glob				from 'glob';
+// import glob				from 'glob';
 import hjson			from 'hjson';
 import { promisify } 	from 'util';
 
@@ -10,7 +10,7 @@ import isObject 	from './../../utils/isObject.js';
 import to			from './../../utils/to.js';
 
 // Promisified glob
-const globp = promisify( glob )
+// const globp = promisify( glob )
 
 let base_dir    = __dirname;
 let modules_dir = './modules/';
@@ -130,8 +130,6 @@ const merge_modules = function ( module_codes ) {
 };
 
 const middlewares = async function ( options, app ) {
-
-	let err;
 
 	// Check if there are used middlewares
 	if ( isObject( app.used_middlewares, true ) ) {
