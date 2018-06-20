@@ -92,16 +92,16 @@ const module = async function ( module_name ) {
 
 const validate_module = async function( mainfile, module_name, is_hjson ) {
 
-	if ( mainfile && typeof mainfile === 'string' && mainfile.length ) {
+	let json = is_hjson ? 'module.hjson' : 'package.json';
 
-		if ( await fileExists( modules_dir + module_name + '/' + mainfile ) )
-			return true
+	if ( !( mainfile && typeof mainfile === 'string' && mainfile.length ) )
+		return Promise.reject( { message: 'Missing or wrong "main" property in "' + module_name + '/' + json + '" file.' } );
 
-		else
-			return Promise.reject( { message: 'The main "' + mainfile + '" file defined in module "' + module_name + '" doesn\'t exist.' } );
+	if ( !await fileExists( modules_dir + module_name + '/' + mainfile ) )
+		return Promise.reject( { message: 'The main "' + mainfile + '" file defined in module "' + module_name + '" doesn\'t exist.' } );
 
-	} else
-		return Promise.reject( { message: 'Missing or wrong "main" property in "' + module_name + '/' + ( is_hjson ? 'module.hjson' : 'package.json' ) + '" file.' } );
+	return true;
+		
 
 };
 
