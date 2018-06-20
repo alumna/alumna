@@ -139,19 +139,14 @@ const middlewares = async function ( options, app ) {
 			return Promise.reject( { message: 'Error in "app.js": The middleware "' + middleware + '" isn\'t defined in "altiva.hjson".' } );
 			
 		// Get and adjust the path properly
-		let file_path = options.middlewares[ middleware ]
-
-		if ( file_path.startsWith( '/' ) ) file_path = file_path.substring( 1 );
-
-		if ( !file_path.endsWith( '.js' ) ) file_path += '.js';
+		let path = middleware_path( options.middlewares[ middleware ] );
 
 		// And check if the informed file exists
-		if ( await fs.pathExists( middlewares_dir + file_path ) )
-			middleware_codes += await fs.readFile( middlewares_dir + file_path, 'utf8' ) + EOL + EOL;
+		if ( await fs.pathExists( path ) )
+			middleware_codes += await fs.readFile( path, 'utf8' ) + EOL + EOL;
 
 		else
 			return Promise.reject( { message: 'Error in "app.js": The file of middleware "' + middleware + '" doesn\'t exist.' } );
-			
 
 	}
 
@@ -164,5 +159,15 @@ const middlewares = async function ( options, app ) {
 	return middleware_codes;
 
 };
+
+const middleware_path = function ( path ) {
+
+	if ( path.startsWith( '/' ) ) path = path.substring( 1 );
+
+	if ( !path.endsWith( '.js' ) ) path += '.js';
+
+	return middlewares_dir + path;
+
+}
 
 export default modules_and_middlewares;
