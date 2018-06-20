@@ -1,16 +1,11 @@
 import { EOL } 			from 'os';
 import fs 				from 'fs-extra';
-// import glob				from 'glob';
 import hjson			from 'hjson';
-import { promisify } 	from 'util';
 
 // Altiva modules - utils
 import fileExists 	from './../../utils/fileExists.js';
 import isObject 	from './../../utils/isObject.js';
 import to			from './../../utils/to.js';
-
-// Promisified glob
-// const globp = promisify( glob )
 
 let base_dir    = __dirname;
 let modules_dir = './modules/';
@@ -62,7 +57,7 @@ const modules = async function ( options ) {
 
 	}
 
-	return modules_codes.length ? merge_modules( modules_codes, 'modules', 'module' ) : '';
+	return modules_codes.length ? merge_modules( modules_codes ) : '';
 
 };
 
