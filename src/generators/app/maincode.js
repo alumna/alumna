@@ -171,64 +171,33 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 	this.validate_route = function ( path, route_data ) {
 
 		// Check if the toute's path is a non-empty string
-		if ( typeof path !== 'string' || !path.length  ) this.add_error( 'Route paths must be non-empty strings.' );
+		if ( typeof path !== 'string' || !path.length  ) return this.add_error( 'Route paths must be non-empty strings.' );
 
-		else {
+		const routes = get_multiple_routes( path );
 
-			let multiple_routes = [];
+		if ( routes.length == 0 ) return this.add_error( 'Invalid route path: "' + path + '"' );
 
-			// Check if it has multiple paths in a single route
-			if ( path.includes( ',' ) ) {
+		// Separate the area map from the array of filters, if it is the case
+		let [ area_map, middlewares ] = this.separate_middlewares( route_data );
 
-				multiple_routes = get_multiple_routes( path );
+		if ( Object.keys( area_map ).length === 0 ) return this.add_error( 'In the route \'' + path + '\' you need to define at least one area to use.' );
 
-				if ( multiple_routes.length == 0 ) this.add_error( 'Invalid route path: "' + path + '"' );
-			}
+		for ( const area in area_map )
+			if ( !this.areas.includes( area ) ) this.add_error( 'In the route \'' + path + '\' you are refering to the area \'' + area + '\' that was not defined in app.areas array.' );
 
-			// Separate the area map from the array of filters, if it is the case
-			let [ area_map, middlewares ] = this.separate_middlewares( route_data );
+		if ( this.errors.length ) return false;
 
-			if ( Object.keys( area_map ).length === 0 ) this.add_error( 'In the route \'' + path + '\' you need to define at least one area to use.' );
+		routes.every( function ( individual_path ) {
 
-			else {
+			if ( this.errors.length ) return false;
 
-				for ( const area in area_map ) {
-					
-					if ( !this.areas.includes( area ) )
-						this.add_error( 'In the route \'' + path + '\' you are refering to the area \'' + area + '\' that was not defined in app.areas array.' );
-				}
+			this.routes[ individual_path ] = area_map;
 
-				if ( !this.errors.length ) {
+			this.validate_middlewares( individual_path, middlewares );
 
-					// For each validated route, validate its middlewares as well
+			return true;
 
-					if ( multiple_routes.length ) {
-
-						multiple_routes.forEach( function ( individual_path ) {
-
-							if ( !this.errors.length ) {
-
-								this.routes[ individual_path ] = area_map;
-
-								this.validate_middlewares( individual_path, middlewares );
-
-							}
-
-						}.bind( this ));
-					}
-
-					else {
-						
-						this.routes[ path ] = area_map;
-
-						this.validate_middlewares( path, middlewares );
-					}
-
-				}
-
-			}
-
-		}
+		}.bind( this ));
 
 	};
 
