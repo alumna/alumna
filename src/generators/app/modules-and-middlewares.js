@@ -38,26 +38,20 @@ const modules = async function ( options ) {
 	/* MODULES */
 
 	// Check if the "modules" property is defined in options ( altiva.hjson )
+	if ( !options.modules ) return ''; 
+
 	// and it is an object
-	if ( options.modules ) {
+	if ( !isObject( options.modules ) ) return Promise.reject( { message: 'Error in "app.js": The app.modules property is not an object.' } );
 
-		if ( !isObject( options.modules ) )
-			return Promise.reject( { message: 'Error in "app.js": The app.modules property is not an object.' } );
+	let modules_sarray = Object.keys( options.modules );
+	
+	// If there aren't modules, don't bundle the codes
+	if ( !modules_sarray.length ) return ''; 
 
-		let modules_sarray = Object.keys( options.modules );
-		
-		// If there are modules, bundle the codes
-		if ( modules_sarray.length ) {
+	// Otherwise, do it
+	[ err, modules_codes ] = await to( Promise.all( modules_sarray.map( module ) ) );
 
-			[ err, modules_codes ] = await to( Promise.all( modules_sarray.map( module ) ) );
-
-			if ( err ) return Promise.reject( err );
-
-		}
-
-	}
-
-	return modules_codes.length ? merge_modules( modules_codes ) : '';
+	return err ? Promise.reject( err ) : merge_modules( modules_codes );
 
 };
 

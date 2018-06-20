@@ -1,17 +1,5 @@
 const organize_areas = function ( routes ) {
 
-	const organize = function ( organizer, path, routes, area ) {
-
-		const component = routes[ path ][ area ];
-
-		if ( !organizer[ area ] ) organizer[ area ] = {};
-
-		if ( !organizer[ area ][ component ] ) organizer[ area ][ component ] = [];
-
-		organizer[ area ][ component ].push( path );
-		
-	}
-
 	/*
 	 * Organize conditional rules based first on areas.
 	 * 
@@ -39,7 +27,17 @@ const organize_areas = function ( routes ) {
 
 };
 
+const organize = function ( organizer, path, routes, area ) {
 
+	const component = routes[ path ][ area ];
+
+	if ( !organizer[ area ] ) organizer[ area ] = {};
+
+	if ( !organizer[ area ][ component ] ) organizer[ area ][ component ] = [];
+
+	organizer[ area ][ component ].push( path );
+	
+};
 
  
 
