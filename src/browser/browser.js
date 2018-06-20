@@ -62,7 +62,7 @@ const Altiva = {
 
 			}
 
-			if ( Altiva.middleware_in_routes && Altiva.middleware_in_routes[ route ] ) return Altiva.routes_configured[ route ][ 0 ] = render;
+			if ( !Altiva.middleware_in_routes || !Altiva.middleware_in_routes[ route ] ) return Altiva.routes_configured[ route ][ 0 ] = render;
 
 			let size = Altiva.middleware_in_routes[ route ].length
 
