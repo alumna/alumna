@@ -5,7 +5,7 @@ import UglifyJS 				from 'uglify-es';
 
 // Altiva modules - generators
 import MainCode					from './app/maincode.js';
-import modules					from './app/modules.js';
+import modules_and_middlewares	from './app/modules-and-middlewares.js';
 import subcomponents			from './all/subcomponents.js';
 import translate				from './all/translate.js';
 
@@ -28,6 +28,17 @@ const appGenerator = async function ( mode, options, componentsMap, command ) {
 	const app = new MainCode( userCode, componentsMap, options.app.filename );
 
 	[ err ] = await to( app.compile() );
+
+	if ( err )
+		return Promise.reject( err );
+
+	// Generate the browser code with modules and middlewares
+	// In this process, we validate specially the middlewares, to check if
+	// there is a required middleware in "app.js" that doesn't exists
+	// in middleware directory
+	let browser_code;
+
+	[ err, browser_code ] = await to( modules_and_middlewares( options, app ) );
 
 	if ( err )
 		return Promise.reject( err );
@@ -64,15 +75,6 @@ const appGenerator = async function ( mode, options, componentsMap, command ) {
 	// Do the subcomponents replacement
 	let { code } = await subcomponents( result.js.code );
 
-	
-	// Get the base code for the browser with (optional) modules
-	let browser_base_code;
-
-	[ err, browser_base_code ] = await to( modules( options ) );
-
-	if ( err )
-		return Promise.reject( err );
-
 	// Everything is fine, lets finalize the browser app complete code
 	let appDefaults = 'Altiva.defaults.globalVar = \'' + options.app.globalVar + '\';' + EOL;
 	    appDefaults += 'Altiva.defaults.useStore = ' + options.app.useStore  + ';' + EOL;
@@ -82,7 +84,7 @@ const appGenerator = async function ( mode, options, componentsMap, command ) {
 	// Dev mode code
 	if ( mode == 'dev' ) {
 		
-		const final_code = browser_base_code + EOL + appDefaults + EOL + app.route_functions + EOL + code + EOL + autoStart;
+		const final_code = browser_code + EOL + appDefaults + EOL + app.route_functions + EOL + code + EOL + autoStart;
 
 		await fs.outputFile( 'dev/' + options.app.filename, final_code );
 
@@ -93,7 +95,7 @@ const appGenerator = async function ( mode, options, componentsMap, command ) {
 		
 		let translatedCode = await translate( code, 'App' );
 			
-		let final_code = browser_base_code + EOL + appDefaults + EOL + app.route_functions + EOL + 'var App = ' + translatedCode + EOL + autoStart;
+		let final_code = browser_code + EOL + appDefaults + EOL + app.route_functions + EOL + 'var App = ' + translatedCode + EOL + autoStart;
 
 		// Minify the generated code, unless disabled by the -u/--uncompressed flag
 		if ( !command.uncompressed ) final_code = UglifyJS.minify( final_code, uglifyOptions ).code;

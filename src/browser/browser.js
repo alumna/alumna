@@ -1,4 +1,8 @@
+// Routing library (currently page.js, that will be replaced)
 import page 				from 'page';
+
+// API library, from github.com/typicode/fetchival
+import fetchival			from './fetchival.js'
 
 // Svelte Shared Helpers
 import * as svelteShared 	from 'svelte/shared';
@@ -7,6 +11,8 @@ import * as svelteShared 	from 'svelte/shared';
 import { Store } 			from 'svelte/store.js';
 
 const Altiva = {
+
+	api: fetchival,
 
 	config: {
 		
@@ -26,25 +32,66 @@ const Altiva = {
 		Altiva.load.baseUrl = Altiva.config.path + Altiva.load.baseUrl;
 	},
 
-	configPageJs ( ) {
+	configRoute( route ) {
 
-		// Link each route function with a page.js route
+		return ( page_context ) => {
 
-		for ( const route in Altiva.routes )
+			Altiva.routes_context.next = { _route: route, _path: page_context.pathname, _params: page_context.params };
 
-			page( route, ( ctx ) => {
+			// In the first time a route is called, check if it has middlewares
+			// and configure them (in the correct sequence).
 
-				// !!! Filters must be implemented here !!!
+			// Every subsequent call to the same route is benefited from the previous
+			// configuration and runs even faster
+
+			if ( Altiva.routes_configured[ route ] ) return Altiva.routes_configured[ route ][ 0 ]();
+
+			Altiva.routes_configured[ route ] = []
+
+			let render = () => {
 
 				Altiva.routes[ route ].then( () => {
 
-					Altiva.root.store.set( { _route: route, _path: ctx.pathname, _params: ctx.params } )
+					Altiva.routes_context.current = JSON.parse( JSON.stringify( Altiva.routes_context.next ) );
+
+					Altiva.root.store.set( Altiva.routes_context.current )
 
 					Altiva.root.set( { _route: route } )
 
 				});
 
-			} );
+			}
+
+			if ( !Altiva.middleware_in_routes || !Altiva.middleware_in_routes[ route ] ) return Altiva.routes_configured[ route ][ 0 ] = render;
+
+			let size = Altiva.middleware_in_routes[ route ].length
+
+			for ( let i = size; i >= 0; i-- ) {
+				
+				Altiva.routes_configured[ route ][ i ] = ( i == size ) ? render : () => {
+
+					let context = JSON.parse( JSON.stringify( Altiva.routes_context ) );
+
+					Altiva.middleware[ Altiva.middleware_in_routes[ route ][ i ] ].call( Altiva.root, context, Altiva.routes_configured[ route ][ i + 1 ] )
+
+				}
+
+			}
+
+		}
+
+	},
+
+	configPageJs ( ) {
+
+		// Link each route function with a page.js route and
+		// configure the route middlewares on first access
+
+		for ( const route in Altiva.routes ) {
+
+			page( route, configRoute( route ) );
+
+		}
 
 		// Starting routing system with automatic environment discovery, mobile or desktop
 		
@@ -111,15 +158,8 @@ const Altiva = {
 
 	},
 
-	preloadComponents ( ) {
-
-		const path = Altiva.fileOrMobile() ? Altiva.config.initial : window.location.pathname;
-
-		const slash = ( path.slice( -1 ) == '/' ? path.slice( 0, -1 ) : path + '/' );
-
-		const error = { then: () => console.log( '[Altiva] 404: Can\'t load your app since the url \'' + path + '\' or \'' + slash + '\' is not defined in your app.js file' ) };
-		
-		return Altiva.routes[ path ] ? Altiva.routes[ path ] : ( Altiva.routes[ slash ] ? Altiva.routes[ slash ] : error );
+	redirect ( path ) {
+		page.redirect( path )
 	},
 
 	route ( route, redirect ) {
@@ -132,6 +172,16 @@ const Altiva = {
 	},
 
 	routes: {},
+
+	routes_configured: {},
+
+	routes_context: {
+
+		current: null,
+
+		next: null
+
+	},
 
 	// Var that will point to the main app variable
 	root: null,
@@ -170,13 +220,9 @@ const Altiva = {
 
 		Altiva.configBaseUrl();
 
-		Altiva.preloadComponents().then( () => {
+		Altiva.startInstance( options );
 
-			Altiva.startInstance( options );
-
-			Altiva.configPageJs();
-
-		} );
+		Altiva.configPageJs();
 
 	}
 
