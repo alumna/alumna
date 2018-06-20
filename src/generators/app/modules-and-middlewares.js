@@ -129,8 +129,7 @@ const middlewares = async function ( options, app ) {
 	// Check if there are used middlewares
 	if ( !isObject( app.used_middlewares, true ) ) return '';
 
-	let middleware_codes  = EOL + EOL + 'Altiva.middlewares = {};' +
-							EOL + EOL + 'Altiva.middleware = Altiva.middlewares;' + EOL + EOL;
+	let middleware_codes  = EOL + EOL + 'Altiva.middlewares = {};' + EOL + EOL + 'Altiva.middleware = Altiva.middlewares;' + EOL + EOL;
 
 	for ( const middleware in app.used_middlewares ) {
 

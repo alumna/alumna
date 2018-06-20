@@ -42,31 +42,27 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 		const areas_array = this.appStructure.areas;
 
-		if ( Array.isArray( areas_array ) ) {
+		if ( !Array.isArray( areas_array ) )
+			return !this.add_error( 'You need to define an array to "app.areas" with one or more strings as the areas\' names.' );
 
-			let local_errors = false;
+		let local_errors = false;
 
-			// Iterate ovre the areas_array, but stop when an area is invalid
-			areas_array.every( area => {
+		// Iterate ovre the areas_array, but stop when an area is invalid
+		areas_array.every( area => {
 
-				if ( typeof area != 'string' || !area.length ) {
-					
-					local_errors = this.add_error( 'The area ' + area + ' is not a string, and only strings can be used as names of areas.' );
-					
-					return false;
-				}
+			if ( typeof area != 'string' || !area.length ) {
+				
+				local_errors = this.add_error( 'The area ' + area + ' is not a string, and only strings can be used as names of areas.' );
+				
+				return false;
+			}
 
-				return true;
+			return true;
 
-			});
+		});
 
-			if ( !local_errors )
-				this.areas = areas_array;
-
-		} else {
-
-			this.add_error( 'You need to define an array to "app.areas" with one or more strings as the areas\' names.' );
-		}
+		if ( !local_errors )
+			this.areas = areas_array;
 
 	};
 
