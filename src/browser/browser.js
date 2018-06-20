@@ -32,6 +32,56 @@ const Altiva = {
 		Altiva.load.baseUrl = Altiva.config.path + Altiva.load.baseUrl;
 	},
 
+	configRoute( route ) {
+
+		return ( page_context ) => {
+
+			Altiva.routes_context.next = { _route: route, _path: page_context.pathname, _params: page_context.params };
+
+			// In the first time a route is called, check if it has middlewares
+			// and configure them (in the correct sequence).
+
+			// Every subsequent call to the same route is benefited from the previous
+			// configuration and runs even faster
+
+			if ( Altiva.routes_configured[ route ] ) return Altiva.routes_configured[ route ][ 0 ]();
+
+			Altiva.routes_configured[ route ] = []
+
+			let render = () => {
+
+				Altiva.routes[ route ].then( () => {
+
+					Altiva.routes_context.current = JSON.parse( JSON.stringify( Altiva.routes_context.next ) );
+
+					Altiva.root.store.set( Altiva.routes_context.current )
+
+					Altiva.root.set( { _route: route } )
+
+				});
+
+			}
+
+			if ( Altiva.middleware_in_routes && Altiva.middleware_in_routes[ route ] ) return Altiva.routes_configured[ route ][ 0 ] = render;
+
+			let size = Altiva.middleware_in_routes[ route ].length
+
+			for ( let i = size; i >= 0; i-- ) {
+				
+				Altiva.routes_configured[ route ][ i ] = ( i == size ) ? render : () => {
+
+					let context = JSON.parse( JSON.stringify( Altiva.routes_context ) );
+
+					Altiva.middleware[ Altiva.middleware_in_routes[ route ][ i ] ].call( Altiva.root, context, Altiva.routes_configured[ route ][ i + 1 ] )
+
+				}
+
+			}
+
+		}
+
+	},
+
 	configPageJs ( ) {
 
 		// Link each route function with a page.js route and
@@ -39,63 +89,7 @@ const Altiva = {
 
 		for ( const route in Altiva.routes ) {
 
-			page( route, ( page_context ) => {
-
-				Altiva.routes_context.next = { _route: route, _path: page_context.pathname, _params: page_context.params };
-
-				// In the first time a route is called, check if it has middlewares
-				// and configure them (in the correct sequence).
-
-				// Every subsequent call to the same route is benefited from the previous
-				// configuration and runs even faster
-
-				if ( !Altiva.routes_configured[ route ] ) {
-
-					Altiva.routes_configured[ route ] = []
-
-					let render = () => {
-
-						Altiva.routes[ route ].then( () => {
-
-							Altiva.routes_context.current = JSON.parse( JSON.stringify( Altiva.routes_context.next ) );
-
-							Altiva.root.store.set( Altiva.routes_context.current )
-
-							Altiva.root.set( { _route: route } )
-
-						});
-
-					}
-
-					if ( Altiva.middleware_in_routes && Altiva.middleware_in_routes[ route ] ) {
-
-						let size = Altiva.middleware_in_routes[ route ].length
-
-						for ( let i = size; i >= 0; i-- ) {
-							
-							// Set the last function "render", after all middlewares
-							if ( i == size )
-								Altiva.routes_configured[ route ][ i ] = render
-
-							else
-								Altiva.routes_configured[ route ][ i ] = () => {
-
-									let context = JSON.parse( JSON.stringify( Altiva.routes_context ) );
-
-									Altiva.middleware[ Altiva.middleware_in_routes[ route ][ i ] ].call( Altiva.root, context, Altiva.routes_configured[ route ][ i + 1 ] )
-
-								}
-
-						}
-
-					} else
-						Altiva.routes_configured[ route ][ 0 ] = render;
-
-				}
-
-				Altiva.routes_configured[ route ][ 0 ]();
-
-			} );
+			page( route, configRoute( route ) );
 
 		}
 

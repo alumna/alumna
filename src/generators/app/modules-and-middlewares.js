@@ -135,11 +135,10 @@ const middlewares = async function ( options, app ) {
 		let path = middleware_path( options.middlewares[ middleware ] );
 
 		// And check if the informed file exists
-		if ( await fs.pathExists( path ) )
-			middleware_codes += await fs.readFile( path, 'utf8' ) + EOL + EOL;
-
-		else
+		if ( !await fs.pathExists( path ) )
 			return Promise.reject( { message: 'Error in "app.js": The file of middleware "' + middleware + '" doesn\'t exist.' } );
+		
+		middleware_codes += await fs.readFile( path, 'utf8' ) + EOL + EOL;
 
 	}
 
