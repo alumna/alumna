@@ -127,44 +127,41 @@ const merge_modules = function ( module_codes ) {
 const middlewares = async function ( options, app ) {
 
 	// Check if there are used middlewares
-	if ( isObject( app.used_middlewares, true ) ) {
+	if ( !isObject( app.used_middlewares, true ) ) return '';
 
-		let middleware_codes  = EOL + EOL + 'Altiva.middlewares = {};' +
-								EOL + EOL + 'Altiva.middleware = Altiva.middlewares;' + EOL + EOL;
+	let middleware_codes  = EOL + EOL + 'Altiva.middlewares = {};' +
+							EOL + EOL + 'Altiva.middleware = Altiva.middlewares;' + EOL + EOL;
 
-		for ( const middleware in app.used_middlewares ) {
+	for ( const middleware in app.used_middlewares ) {
 
-			// Check if the used middleware is properly defined in "altiva.hjson"
-			if ( options.middlewares[ middleware ] ) {
-				
-				// Get and adjust the path properly
-				let file_path = options.middlewares[ middleware ]
+		// Check if the used middleware is properly defined in "altiva.hjson"
+		if ( !options.middlewares[ middleware ] )
+			return Promise.reject( { message: 'Error in "app.js": The middleware "' + middleware + '" isn\'t defined in "altiva.hjson".' } );
+			
+		// Get and adjust the path properly
+		let file_path = options.middlewares[ middleware ]
 
-				if ( file_path.startsWith( '/' ) ) file_path = file_path.substring( 1 );
+		if ( file_path.startsWith( '/' ) ) file_path = file_path.substring( 1 );
 
-				if ( !file_path.endsWith( '.js' ) ) file_path += '.js';
+		if ( !file_path.endsWith( '.js' ) ) file_path += '.js';
 
-				// And check if the informed file exists
-				if ( await fs.pathExists( middlewares_dir + file_path ) )
-					middleware_codes += await fs.readFile( middlewares_dir + file_path, 'utf8' ) + EOL + EOL;
+		// And check if the informed file exists
+		if ( await fs.pathExists( middlewares_dir + file_path ) )
+			middleware_codes += await fs.readFile( middlewares_dir + file_path, 'utf8' ) + EOL + EOL;
 
-				else
-					return Promise.reject( { message: 'Error in "app.js": The file of middleware "' + middleware + '" doesn\'t exist.' } );
+		else
+			return Promise.reject( { message: 'Error in "app.js": The file of middleware "' + middleware + '" doesn\'t exist.' } );
+			
 
-			} else
-				return Promise.reject( { message: 'Error in "app.js": The middleware "' + middleware + '" isn\'t defined in "altiva.hjson".' } );
+	}
 
-		}
+	// Here, all middlewares were successfully imported
+	// We will, then, add to the browser code the relation of routes and its middlewares,
+	// so the runtime code will have all the information to correctly apply those middlewares.
 
-		// Here, all middlewares were successfully imported
-		// We will, then, add to the browser code the relation of routes and its middlewares,
-		// so the runtime code will have all the information to correctly apply those middlewares.
+	middleware_codes += 'Altiva.middleware_in_routes = ' + JSON.stringify( app.middlewares ) + ';'
 
-		middleware_codes += 'Altiva.middleware_in_routes = ' + JSON.stringify( app.middlewares ) + ';'
-
-		return middleware_codes;
-
-	} else return '';
+	return middleware_codes;
 
 };
 
