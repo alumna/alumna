@@ -1,5 +1,10 @@
 # Altiva changelog
 
+## 2.0.19
+
+* Route middlewares feature officialy released ([#1](https://github.com/Altiva/altiva/issues/1))
+* Better ajax library (fetchival.js) for http requests ([#50](https://github.com/Altiva/altiva/issues/50))
+
 ## 2.0.18
 
 * Route groups feature officialy released ([#1](https://github.com/Altiva/altiva/issues/1))

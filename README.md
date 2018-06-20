@@ -15,8 +15,9 @@ Altiva is open-source (MIT), written in Javascript and based on [Svelte](https:/
  - Easy component creation (HTML and CSS)
  - Easy mobile packaging (Android, iOS, Windows Phone, etc)
  - Component auto-loading and auto-caching
- - Ajax caching *(in development)*
- - Easy route filters *(in development)*
+ - Ajax library
+ - Ream-time integration with socket back-ends *(in development)*
+ - Easy route filters
  - Support for APIs and backends with JWT authentication
 
 ## Install
