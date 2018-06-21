@@ -1,5 +1,9 @@
 # Altiva changelog
 
+## 2.0.20
+
+* Fix [#51](https://github.com/Altiva/altiva/issues/51): Optimize execution of routing functions with and without middlewares
+
 ## 2.0.19
 
 * Route middlewares feature officialy released ([#1](https://github.com/Altiva/altiva/issues/1))

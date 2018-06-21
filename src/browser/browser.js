@@ -34,7 +34,7 @@ const Altiva = {
 
 	configRoute( route ) {
 
-		return ( page_context ) => {
+		return function ( page_context ) {
 
 			Altiva.routes_context.next = { _route: route, _path: page_context.pathname, _params: page_context.params };
 
@@ -62,7 +62,12 @@ const Altiva = {
 
 			}
 
-			if ( !Altiva.middleware_in_routes || !Altiva.middleware_in_routes[ route ] ) return Altiva.routes_configured[ route ][ 0 ] = render;
+			if ( !Altiva.middleware_in_routes || !Altiva.middleware_in_routes[ route ] ) {
+				
+				Altiva.routes_configured[ route ][ 0 ] = render;
+
+				return Altiva.routes_configured[ route ][ 0 ]();
+			}
 
 			let size = Altiva.middleware_in_routes[ route ].length
 
@@ -78,6 +83,8 @@ const Altiva = {
 
 			}
 
+			return Altiva.routes_configured[ route ][ 0 ]();
+
 		}
 
 	},
@@ -89,7 +96,7 @@ const Altiva = {
 
 		for ( const route in Altiva.routes ) {
 
-			page( route, configRoute( route ) );
+			page( route, Altiva.configRoute( route ) );
 
 		}
 
