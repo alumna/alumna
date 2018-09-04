@@ -1,5 +1,9 @@
 # Altiva changelog
 
+## 2.0.21 - 2018-09-04
+
+* Updated dependencies
+
 ## 2.0.20
 
 * Fix [#51](https://github.com/Altiva/altiva/issues/51): Optimize execution of routing functions with and without middlewares
