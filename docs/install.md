@@ -42,3 +42,7 @@ altiva build
 ```
 
 It will be compiled and saved in `build` folder, with additional minification and tree-shaking process.
+
+---
+
+Now, let's understand the [app structure](structure.md). You will be ready to start your own app in minutes.

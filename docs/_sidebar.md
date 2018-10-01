@@ -2,18 +2,23 @@
 
 * Welcome
 
-  * [Quick Start](install.md)
+  * [Install and first run](install.md)
   * [App structure](structure.md)
 
 * Routes
 
-* Component template
+  * [Managing routes](routes/routes.md)
 
-* Component methods
+* Components
+
+  * [Template](components/template.md)
+  * [Methods](components/methods.md)
 
 * Behaviors
 
 * Directives
+
+* Middlewares
 
 * Modules
 

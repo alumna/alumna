@@ -4,6 +4,8 @@ Altiva is a **front-end framework** and its goal is to make universal app develo
 
 Altiva is open-source (MIT), written in Javascript and based on [Svelte](https://svelte.technology/).
 
+See the [Install and first run](install.md) for more details and getting started.
+
 #### Features
 
  - Easy built-in routing
@@ -15,6 +17,10 @@ Altiva is open-source (MIT), written in Javascript and based on [Svelte](https:/
  - Real-time integration with socket back-ends *(in development)*
  - Easy route filters
  - Support for APIs and backends with JWT authentication
+
+#### Community
+
+Users and development team are on [Github](https://github.com/altiva/altiva) and [Gitter](https://gitter.im/Altiva/altiva).
 
 #### License
 
