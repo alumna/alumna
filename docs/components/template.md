@@ -1,0 +1,1 @@
+# Component's template
