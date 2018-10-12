@@ -19,4 +19,4 @@ When you create an Altiva project, after running `altiva dev` and `altiva build`
   └ # build files (auto generated with "altiva build")
 ```
 
-To get a practical learning, we will show you [how to create and manage routes](routes/routes.md) and how to choose which components must be loaded on each of them.
+To get a practical learning, we will show you [how to create and manage routes](routes.md) and how to choose which components must be loaded on each of them.

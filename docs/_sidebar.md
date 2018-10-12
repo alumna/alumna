@@ -7,12 +7,12 @@
 
 * Routes
 
-  * [Managing routes](routes/routes.md)
+  * [Managing routes](routes.md)
 
 * Components
 
-  * [Template](components/template.md)
-  * [Methods](components/methods.md)
+  * [Template](template.md)
+  * [Methods](methods.md)
 
 * Behaviors
 
