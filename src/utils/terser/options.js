@@ -1,4 +1,4 @@
-const uglifyOptions = {
+const terserOptions = {
 
 	compress: {
 		negate_iife: false,
@@ -9,4 +9,4 @@ const uglifyOptions = {
 
 }
 
-export default uglifyOptions;
+export default terserOptions;

@@ -1,7 +1,7 @@
 import { EOL } 					from 'os';
 import fs 						from 'fs-extra';
 import svelte 					from 'svelte';
-import UglifyJS 				from 'uglify-es';
+import terser 					from 'terser';
 
 // Altiva modules - generators
 import MainCode					from './app/maincode.js';
@@ -10,7 +10,8 @@ import subcomponents			from './all/subcomponents.js';
 import translate				from './all/translate.js';
 
 // Altiva modules - utils
-import uglifyOptions			from './../utils/uglify/options.js';
+import terserOptions			from './../utils/terser/options.js';
+import showError				from './../utils/showError.js';
 import to						from './../utils/to.js';
 
 
@@ -55,18 +56,28 @@ const appGenerator = async function ( mode, options, componentsMap, command ) {
 
 	const main_code = app.html + EOL + app.script;
 
-	const result = svelte.compile( main_code, {
+	// compiling
+	let result;
 
-		format,
-		name: 'App',
-		shared,
-		store: options.app.useStore,
+	try {
+
+		result = svelte.compile( main_code, {
+
+			format,
+			name: 'App',
+			shared,
+			store: options.app.useStore,
+		
+			onwarn: warning => showError( warning, path, true )
+
+		});
+
+	}
+	catch( err ) {
+		showError( err, path, true )
+	}
+
 	
-		onwarn: warning => console.log( '[Altiva generated code error] ' + warning.name + ' in ' + path + ', line ' + warning.loc.line + ', column ' + warning.loc.column + ': ' + warning.message ),
-
-		onerror: err => console.log( '[Altiva generated code error] ' + err.name + ' in ' + path + ', line ' + err.loc.line + ', column ' + err.loc.column + ': ' + err.message )
-
-	});
 
 	// If there are erros in compiling process, stop
 	if ( !( result && result.js && result.js.code ) )
@@ -77,14 +88,19 @@ const appGenerator = async function ( mode, options, componentsMap, command ) {
 
 	// Everything is fine, lets finalize the browser app complete code
 	let appDefaults = 'Altiva.defaults.globalVar = \'' + options.app.globalVar + '\';' + EOL;
-	    appDefaults += 'Altiva.defaults.useStore = ' + options.app.useStore  + ';' + EOL;
+	    appDefaults += 'Altiva.defaults.useStore = ' + options.app.useStore  + ';' + EOL + EOL;
+
+	// Create the code that runs Altiva.configBaseUrl()
+	// to ensure that the base URL for component loading
+	// works in every scenario, including mobile
+	const baseUrlForComponents = 'Altiva.configBaseUrl();' + EOL + EOL;
 
 	const autoStart  = options.app.autoStart ? EOL + 'Altiva.start();' : '';
 
 	// Dev mode code
 	if ( mode == 'dev' ) {
 		
-		const final_code = browser_code + EOL + appDefaults + EOL + app.route_functions + EOL + code + EOL + autoStart;
+		const final_code = browser_code + EOL + appDefaults + baseUrlForComponents + app.route_functions + EOL + code + EOL + autoStart;
 
 		await fs.outputFile( 'dev/' + options.app.filename, final_code );
 
@@ -95,10 +111,10 @@ const appGenerator = async function ( mode, options, componentsMap, command ) {
 		
 		let translatedCode = await translate( code, 'App' );
 			
-		let final_code = browser_code + EOL + appDefaults + EOL + app.route_functions + EOL + 'var App = ' + translatedCode + EOL + autoStart;
+		let final_code = browser_code + EOL + appDefaults + baseUrlForComponents + app.route_functions + EOL + 'var App = ' + translatedCode + EOL + autoStart;
 
 		// Minify the generated code, unless disabled by the -u/--uncompressed flag
-		if ( !command.uncompressed ) final_code = UglifyJS.minify( final_code, uglifyOptions ).code;
+		if ( !command.uncompressed ) final_code = terser.minify( final_code, terserOptions ).code;
 
 		await fs.outputFile( 'build/' + options.app.filename , final_code );
 

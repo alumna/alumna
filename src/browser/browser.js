@@ -20,14 +20,18 @@ const Altiva = {
 		initial: '/'
 	},
 
+	/*
+	 * This function is runned before any component is loaded to ensure
+	 * mobile compatibility (since cordova's apps run with file:// protocol)
+	 */
 	configBaseUrl ( ) {
 
 		// Update components URL's to absolute and protocol agnostic
 
-		if ( window.location.protocol !== 'file:' )
-			Altiva.config.path = window.location.origin;
-		else
+		if ( Altiva.fileOrMobile() )
 			Altiva.config.path = window.location.pathname.replace( '/index.html', '' );
+		else
+			Altiva.config.path = window.location.origin;
 
 		Altiva.load.baseUrl = Altiva.config.path + Altiva.load.baseUrl;
 	},
@@ -50,13 +54,25 @@ const Altiva = {
 
 			let render = () => {
 
-				Altiva.routes[ route ].then( () => {
+				const conclude_rendering = () => {
 
 					Altiva.routes_context.current = JSON.parse( JSON.stringify( Altiva.routes_context.next ) );
 
 					Altiva.root.store.set( Altiva.routes_context.current )
 
-					Altiva.root.set( { _route: route } )
+					Altiva.root.set( { _route: route } )					
+
+				}
+
+				// If this route was already rendered on this session,
+				// skip all the logic that loads the components again.
+				if ( Altiva.routes_rendered[ route ] ) return conclude_rendering();
+
+				Altiva.routes[ route ]().then( () => {
+					
+					conclude_rendering();
+					
+					Altiva.routes_rendered[ route ] = true;
 
 				});
 
@@ -190,6 +206,8 @@ const Altiva = {
 
 	},
 
+	routes_rendered: {},
+
 	// Var that will point to the main app variable
 	root: null,
 
@@ -224,8 +242,6 @@ const Altiva = {
 	 * options: the svelte array passed in the instantiation of the app
 	 */
 	start ( options ) {
-
-		Altiva.configBaseUrl();
 
 		Altiva.startInstance( options );
 
