@@ -1,5 +1,15 @@
 # Altiva changelog
 
+## 2.0.22 - 2018-11-06
+
+* Fixes for mobile devices. Running fine on Cordova, Phonegap and Cocoon compiled apps
+
+* Fixes on errors lines/columns
+
+* Using npm ci for fast tests
+
+* Updated deps and compression libs
+
 ## 2.0.21 - 2018-09-04
 
 * Updated dependencies
