@@ -1,7 +1,7 @@
 language: node_js
 install:
   - npm ci
-  - npm ci -g codecov
+  - npm install -g codecov
 node_js:
   - "node"
 after_script:
