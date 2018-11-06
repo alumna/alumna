@@ -34,7 +34,7 @@ test('Case 1 - Single area and single component', () => {
 
 				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
 
-				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] );' + EOL + EOL );
+				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = function () { return Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] ); };' + EOL + EOL );
 
 				resolve( true );
 
@@ -82,7 +82,7 @@ test('Case 1 (part2) - Single area and single component BUT with dependencies', 
 
 				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
 
-				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ), Altiva.load( \'Sub\' ), Altiva.load( \'Sub2\' ) ] );' + EOL + EOL );
+				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = function () { return Promise.all( [ Altiva.load( \'HelloAltiva\' ), Altiva.load( \'Sub\' ), Altiva.load( \'Sub2\' ) ] ); };' + EOL + EOL );
 
 				resolve( true );
 
@@ -432,9 +432,9 @@ test('Case 9 - Multiple areas and multiple components', () => {
 
 				expect( app.route_functions ).toBe(
 
-					'Altiva.routes[ \'/\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ), Altiva.load( \'Footer1\' ) ] );' + EOL + EOL
+					'Altiva.routes[ \'/\' ] = function () { return Promise.all( [ Altiva.load( \'HelloAltiva\' ), Altiva.load( \'Footer1\' ) ] ); };' + EOL + EOL
 
-				  + 'Altiva.routes[ \'/other\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ), Altiva.load( \'Footer2\' ) ] );' + EOL + EOL
+				  + 'Altiva.routes[ \'/other\' ] = function () { return Promise.all( [ Altiva.load( \'HelloAltiva\' ), Altiva.load( \'Footer2\' ) ] ); };' + EOL + EOL
 
 				);
 
@@ -480,7 +480,7 @@ test('Case 12 - Single area, single component and route with multiple paths', ()
 
 				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
 
-				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] );' + EOL + EOL + 'Altiva.routes[ \'/test\' ] = Altiva.routes[ \'/\' ];' + EOL + EOL );
+				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = function () { return Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] ); };' + EOL + EOL + 'Altiva.routes[ \'/test\' ] = Altiva.routes[ \'/\' ];' + EOL + EOL );
 
 				resolve( true );
 
@@ -545,7 +545,7 @@ test('Case 18 - Grouped route without base path', () => {
 
 				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
 
-				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] );' + EOL + EOL );
+				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = function () { return Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] ); };' + EOL + EOL );
 
 				resolve( true );
 
@@ -584,7 +584,7 @@ test('Case 19 - Grouped route with base path', () => {
 
 				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
 
-				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/route\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] );' + EOL + EOL );
+				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/route\' ] = function () { return Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] ); };' + EOL + EOL );
 
 				resolve( true );
 
@@ -727,7 +727,7 @@ test('Case 24 - Routes inside group with multiple paths', () => {
 
 				expect( app.script ).toBe( '<script>export default {components: {ReusedComponent: Altiva.component[ \'ReusedComponent\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
 
-				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/path1\' ] = Promise.all( [ Altiva.load( \'ReusedComponent\' ) ] );' + EOL + EOL + 'Altiva.routes[ \'/base/path2\' ] = Altiva.routes[ \'/base/path1\' ];' + EOL + EOL );
+				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/path1\' ] = function () { return Promise.all( [ Altiva.load( \'ReusedComponent\' ) ] ); };' + EOL + EOL + 'Altiva.routes[ \'/base/path2\' ] = Altiva.routes[ \'/base/path1\' ];' + EOL + EOL );
 
 				resolve( true );
 
@@ -792,7 +792,7 @@ test('Case 26 - Corrected (multiple) paths in groups', () => {
 
 				expect( app.script ).toBe( '<script>export default {components: {ReusedComponent: Altiva.component[ \'ReusedComponent\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
 
-				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/path1\' ] = Promise.all( [ Altiva.load( \'ReusedComponent\' ) ] );' + EOL + EOL + 'Altiva.routes[ \'/base/path2\' ] = Altiva.routes[ \'/base/path1\' ];' + EOL + EOL );
+				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/path1\' ] = function () { return Promise.all( [ Altiva.load( \'ReusedComponent\' ) ] ); };' + EOL + EOL + 'Altiva.routes[ \'/base/path2\' ] = Altiva.routes[ \'/base/path1\' ];' + EOL + EOL );
 
 				resolve( true );
 
@@ -831,7 +831,7 @@ test('Case 27 - Corrected (single) paths in groups', () => {
 
 				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
 
-				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/route\' ] = Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] );' + EOL + EOL );
+				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/route\' ] = function () { return Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] ); };' + EOL + EOL );
 
 				resolve( true );
 

@@ -1,7 +1,7 @@
 import fs 						from 'fs-extra';
 import glob						from 'glob';
 import svelte 					from 'svelte';
-import UglifyJS 				from 'uglify-es';
+import terser 					from 'terser';
 
 // Altiva modules - generators
 import subcomponents			from './../generators/all/subcomponents.js';
@@ -9,7 +9,8 @@ import translate				from './../generators/all/translate.js';
 import exists					from './../generators/all/exists.js';
 
 // Altiva modules - utils
-import uglifyOptions			from './../utils/uglify/options.js';
+import terserOptions			from './../utils/terser/options.js';
+import showError				from './../utils/showError.js';
 
 
 /* Subcomponents map */
@@ -18,13 +19,6 @@ const componentsMap = {};
 const getMap = function ( ) {
 
 	return componentsMap;
-};
-
-const showError = function ( error, path ) {
-
-	let message = ( error.name ? error.name : 'Error' ) + ' in ' + path + ( ( error.loc && error.loc.line ) ? ', line ' + error.loc.line : '' ) + ( ( error.loc && error.loc.column ) ? ', column ' + error.loc.column : '' ) + ': ' + error.message
-
-	console.log( message );
 };
 
 /** Compile generating a Svelte component **/
@@ -48,78 +42,81 @@ const compile = function ( mode, path, options, command ) {
 				shared = options.build.smallComponents == undefined ? true : options.build.smallComponents;
 
 			// Compiling
-			const result = svelte.compile( data, {
+			let result;
 
-				format,
-				name,
-				shared,
-				store: options.app.useStore,
+			try {
 
-				onwarn: warning => showError( warning, path ),
+				result = svelte.compile( data, {
 
-				onerror: err => showError( err, path )
+					format,
+					name,
+					shared,
+					store: options.app.useStore,
 
-			} );
+					onwarn: warning => showError( warning, path )
 
-			// If there are no erros in compiling process
-			if ( result && result.js && result.js.code ) {
+				});
 
-				// Runtime name
-				const component = path.replace( 'src/components/', '' ).replace( '.html', '' );
-
-				// Replace "src" with "dev"
-				path = path.replace( 'src', mode );
-				path = path.replace( '.html', '.js' );
-
-				subcomponents( result.js.code, component ).then( ( { code, subcomponentsList } ) => {
-
-					const conclude = function ( ) {
-
-						componentsMap[ component ] = subcomponentsList;
-
-						if ( mode == 'dev' )
-							fs.outputFile( path , code ).then( () => resolve( componentsMap ) );
-
-						if ( mode == 'build' ) {
-							
-							translate( code, name ).then( translatedCode => {
-								
-								// Minify the generated code, unless disabled by the -u/--uncompressed flag
-								if ( !command.uncompressed ) translatedCode = UglifyJS.minify( translatedCode, uglifyOptions ).code;
-
-								fs.outputFile( path , translatedCode ).then( () => resolve( componentsMap ) );
-							
-							} );
-						
-						}
-						
-					}
-
-					if ( subcomponentsList ) {
-
-						exists( 'components/' + component + '.html', subcomponentsList )
-						
-						.then( () => conclude() )
-
-						.catch( error => {
-
-							console.log( error.message );
-
-							resolve( componentsMap );
-
-						});
-
-					} else
-						conclude();
-
-				} );
-
-			} else {
-
-				resolve( componentsMap );
+			}
+			catch( err ) {
+				showError( err, path )
 			}
 
-			
+			if ( !( result && result.js && result.js.code ) ) {
+				resolve( componentsMap );
+				return;
+			}
+
+			// If there are no erros in compiling process
+			// Runtime name
+			const component = path.replace( 'src/components/', '' ).replace( '.html', '' );
+
+			// Replace "src" with "dev"
+			path = path.replace( 'src', mode );
+			path = path.replace( '.html', '.js' );
+
+			subcomponents( result.js.code, component ).then( ( { code, subcomponentsList } ) => {
+
+				const conclude = function ( ) {
+
+					componentsMap[ component ] = subcomponentsList;
+
+					if ( mode == 'dev' )
+						fs.outputFile( path , code ).then( () => resolve( componentsMap ) );
+
+					if ( mode == 'build' ) {
+						
+						translate( code, name ).then( translatedCode => {
+							
+							// Minify the generated code, unless disabled by the -u/--uncompressed flag
+							if ( !command.uncompressed ) translatedCode = terser.minify( translatedCode, terserOptions ).code;
+
+							fs.outputFile( path , translatedCode ).then( () => resolve( componentsMap ) );
+						
+						} );
+					
+					}
+					
+				}
+
+				if ( subcomponentsList ) {
+
+					exists( 'components/' + component + '.html', subcomponentsList )
+					
+					.then( () => conclude() )
+
+					.catch( error => {
+
+						console.log( error.message );
+
+						resolve( componentsMap );
+
+					});
+
+				} else
+					conclude();
+
+			} );
 
 		} );
 

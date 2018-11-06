@@ -5,9 +5,6 @@ import string 		from 'rollup-plugin-string';
 import commonjs 	from 'rollup-plugin-commonjs';
 import resolve 		from 'rollup-plugin-node-resolve';
 
-// import uglify 		from 'rollup-plugin-uglify';
-// import { minify } 	from 'uglify-es';
-
 export default {
 	input: 'src/cli.js',
 
@@ -28,8 +25,8 @@ export default {
 		// 'rsyncwrapper',
 		'stream',
 		'string_decoder',
+		'terser',
 		// 'svelte',
-		'uglify-es',
 		'url',
 		'util',
 		'vm',
@@ -73,6 +70,5 @@ export default {
 			preferBuiltins: true
 		} ),
 		commonjs(),
-		// uglify( {}, minify )
 	]
 };

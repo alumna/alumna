@@ -373,14 +373,13 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 				}
 			}
 
-			// Register the functions that load components in the map,
-			// pointing to their original route.
-			// This allows routes with identical to use the same load functions
+			// Register every function that loads components in the map, pointing to its original route.
+			// This allows routes with identical components to use the same load function, generating less code on the final .js
 			if ( !map[ load_functions ] ) {
 
 				map[ load_functions ] = route;
 
-				this.route_functions += 'Altiva.routes[ \'' + route + '\' ] = Promise.all( [ ' + load_functions + ' ] );' + EOL + EOL;
+				this.route_functions += 'Altiva.routes[ \'' + route + '\' ] = function () { return Promise.all( [ ' + load_functions + ' ] ); };' + EOL + EOL;
 			}
 
 			else

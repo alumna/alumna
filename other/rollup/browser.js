@@ -1,7 +1,6 @@
 import commonjs 	from 'rollup-plugin-commonjs';
 import resolve 		from 'rollup-plugin-node-resolve';
-import uglify 		from 'rollup-plugin-uglify';
-import { minify } 	from 'uglify-es';
+import { terser } 	from 'rollup-plugin-terser';
 
 export default {
 	input: 'src/browser/browser.js',
@@ -13,10 +12,13 @@ export default {
 	},
 
 	plugins: [
-		resolve( {
+
+		resolve({
 			jsnext: true
-		} ),
+		}),
+
 		commonjs(),
-		uglify( {}, minify )
+
+		terser()
 	]
 };
