@@ -8,7 +8,7 @@ export default {
 	output: {
 		file: 'browser.js',
 		format: 'iife',
-		name: 'Altiva',
+		name: 'Alumna',
 	},
 
 	plugins: [

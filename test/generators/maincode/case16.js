@@ -2,15 +2,15 @@ app.areas = [ 'content' ];
 
 app.route[ '/test' ] = {
 	
-	content: 'HelloAltiva'
+	content: 'HelloAlumna'
 };
 
 app.route[ '/, /test' ] = {
 	
-	content: 'HelloAltiva'
+	content: 'HelloAlumna'
 };
 
 app.route[ '/, /test2' ] = {
 	
-	content: 'HelloAltiva'
+	content: 'HelloAlumna'
 };

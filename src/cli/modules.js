@@ -19,14 +19,14 @@ const install = async function ( options, command ) {
 	// Save current list of modules
 	let current = current_modules( options )
 
-	// altiva install
+	// alumna install
 	if ( command[ '_' ].length == 1 ) {
 		
-		current ? await install_all() : console.log( 'No modules found in "altiva.hjson".' );
+		current ? await install_all() : console.log( 'No modules found in "alumna.hjson".' );
 
 	}
 
-	// altiva install <something>
+	// alumna install <something>
 	else {
 
 		const repo = command[ '_' ][ 1 ];
@@ -34,7 +34,7 @@ const install = async function ( options, command ) {
 		await install_one( repo );
 	}
 
-	// Update modules in project's altiva.hjson file
+	// Update modules in project's alumna.hjson file
 	options.modules = {};
 	Object.keys( modules ).sort().map( key => options.modules[ key ] = modules[ key ] );
 	await update( options, true );
@@ -45,7 +45,7 @@ const install = async function ( options, command ) {
 
 const current_modules = function ( options ) {
 
-	// Check if there are modules defined in options (altiva.hjson)
+	// Check if there are modules defined in options (alumna.hjson)
 	if ( isObject( options.modules ) && Object.keys( options.modules ).length ) {
 
 		modules = options.modules

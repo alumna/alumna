@@ -3,13 +3,13 @@ import fs 						from 'fs-extra';
 import svelte 					from 'svelte';
 import terser 					from 'terser';
 
-// Altiva modules - generators
+// Alumna modules - generators
 import MainCode					from './app/maincode.js';
 import modules_and_middlewares	from './app/modules-and-middlewares.js';
 import subcomponents			from './all/subcomponents.js';
 import translate				from './all/translate.js';
 
-// Altiva modules - utils
+// Alumna modules - utils
 import terserOptions			from './../utils/terser/options.js';
 import showError				from './../utils/showError.js';
 import to						from './../utils/to.js';
@@ -87,15 +87,15 @@ const appGenerator = async function ( mode, options, componentsMap, command ) {
 	let { code } = await subcomponents( result.js.code );
 
 	// Everything is fine, lets finalize the browser app complete code
-	let appDefaults = 'Altiva.defaults.globalVar = \'' + options.app.globalVar + '\';' + EOL;
-	    appDefaults += 'Altiva.defaults.useStore = ' + options.app.useStore  + ';' + EOL + EOL;
+	let appDefaults = 'Alumna.defaults.globalVar = \'' + options.app.globalVar + '\';' + EOL;
+	    appDefaults += 'Alumna.defaults.useStore = ' + options.app.useStore  + ';' + EOL + EOL;
 
-	// Create the code that runs Altiva.configBaseUrl()
+	// Create the code that runs Alumna.configBaseUrl()
 	// to ensure that the base URL for component loading
 	// works in every scenario, including mobile
-	const baseUrlForComponents = 'Altiva.configBaseUrl();' + EOL + EOL;
+	const baseUrlForComponents = 'Alumna.configBaseUrl();' + EOL + EOL;
 
-	const autoStart  = options.app.autoStart ? EOL + 'Altiva.start();' : '';
+	const autoStart  = options.app.autoStart ? EOL + 'Alumna.start();' : '';
 
 	// Dev mode code
 	if ( mode == 'dev' ) {

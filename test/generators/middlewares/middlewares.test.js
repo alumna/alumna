@@ -23,10 +23,10 @@ test('Middleware Test 1 - Just one middleware', () => {
 	return modules_and_middlewares( options, { middlewares: { '/': [ 'test1' ] }, used_middlewares: { test1: true } } ).then( code => {
 
 		let expected_code  = 'The browser code.' + EOL + EOL;
-			expected_code += 'Altiva.middlewares = {};' + EOL + EOL;
-			expected_code += 'Altiva.middleware = Altiva.middlewares;' + EOL + EOL;
-			expected_code += 'Altiva.middleware[ \'test1\' ] = \'Code of test1\';' + EOL + EOL;
-			expected_code += 'Altiva.middleware_in_routes = {"/":["test1"]};';
+			expected_code += 'Alumna.middlewares = {};' + EOL + EOL;
+			expected_code += 'Alumna.middleware = Alumna.middlewares;' + EOL + EOL;
+			expected_code += 'Alumna.middleware[ \'test1\' ] = \'Code of test1\';' + EOL + EOL;
+			expected_code += 'Alumna.middleware_in_routes = {"/":["test1"]};';
 
 
 		expect( code ).toBe( expected_code );
@@ -53,7 +53,7 @@ test('Middleware Test 2 - Missing middleware file', () => {
 	});
 });
 
-test('Middleware Test 3 - Missing middleware definition on altiva.hjson', () => {
+test('Middleware Test 3 - Missing middleware definition on alumna.hjson', () => {
 
 	expect.assertions( 1 );
 
@@ -67,7 +67,7 @@ test('Middleware Test 3 - Missing middleware definition on altiva.hjson', () => 
 
 	return modules_and_middlewares( options, { middlewares: { '/': [ 'test3' ] }, used_middlewares: { test3: true } } ).catch( error => {
 
-		expect( error ).toEqual( { message: 'Error in "app.js": The middleware "test3" isn\'t defined in "altiva.hjson".' } );
+		expect( error ).toEqual( { message: 'Error in "app.js": The middleware "test3" isn\'t defined in "alumna.hjson".' } );
 
 	});
 });
@@ -87,10 +87,10 @@ test('Middleware Test 4 - Testing the optional use of "/" on middleware path and
 	return modules_and_middlewares( options, { middlewares: { '/': [ 'test1' ] }, used_middlewares: { test1: true } } ).then( code => {
 
 		let expected_code  = 'The browser code.' + EOL + EOL;
-			expected_code += 'Altiva.middlewares = {};' + EOL + EOL;
-			expected_code += 'Altiva.middleware = Altiva.middlewares;' + EOL + EOL;
-			expected_code += 'Altiva.middleware[ \'test1\' ] = \'Code of test1\';' + EOL + EOL;
-			expected_code += 'Altiva.middleware_in_routes = {"/":["test1"]};';
+			expected_code += 'Alumna.middlewares = {};' + EOL + EOL;
+			expected_code += 'Alumna.middleware = Alumna.middlewares;' + EOL + EOL;
+			expected_code += 'Alumna.middleware[ \'test1\' ] = \'Code of test1\';' + EOL + EOL;
+			expected_code += 'Alumna.middleware_in_routes = {"/":["test1"]};';
 
 
 		expect( code ).toBe( expected_code );

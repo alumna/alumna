@@ -8,13 +8,13 @@ const update = function ( projectOptions, alreadyParsed = false ) {
 
 	return new Promise( ( resolve ) => {
 
-		// Get latest altiva.hjson file from project
-		fs.readFile( __dirname + '/other/base/altiva.hjson', 'utf8', ( err, latestOptions ) => {
+		// Get latest alumna.hjson file from project
+		fs.readFile( __dirname + '/other/base/alumna.hjson', 'utf8', ( err, latestOptions ) => {
 
 			// Parse the project's current defined options
 			let parsedProjectOptions = alreadyParsed ? projectOptions : hjson.parse( projectOptions );
 
-			// Parse the latest Altiva hjson using "round-trip" mode
+			// Parse the latest Alumna hjson using "round-trip" mode
 			let parsedLatestOptions  = hjson.rt.parse( latestOptions )
 
 			// Generate an update version with all missing properties
@@ -29,7 +29,7 @@ const update = function ( projectOptions, alreadyParsed = false ) {
 				space: 				'\t'
 			}
 
-			fs.outputFile( 'altiva.hjson', hjson.rt.stringify( parsedLatestOptions, hjsonOptions ) );
+			fs.outputFile( 'alumna.hjson', hjson.rt.stringify( parsedLatestOptions, hjsonOptions ) );
 
 			resolve( parsedLatestOptions );
 		});

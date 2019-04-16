@@ -2,5 +2,5 @@ app.areas = [ 'content' ];
 
 app.route[ '/' ] = {
 	
-	content: 'HelloAltiva'
+	content: 'HelloAlumna'
 };

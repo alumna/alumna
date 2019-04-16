@@ -3,12 +3,12 @@ import glob						from 'glob';
 import svelte 					from 'svelte';
 import terser 					from 'terser';
 
-// Altiva modules - generators
+// Alumna modules - generators
 import subcomponents			from './../generators/all/subcomponents.js';
 import translate				from './../generators/all/translate.js';
 import exists					from './../generators/all/exists.js';
 
-// Altiva modules - utils
+// Alumna modules - utils
 import terserOptions			from './../utils/terser/options.js';
 import showError				from './../utils/showError.js';
 

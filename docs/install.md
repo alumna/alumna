@@ -1,26 +1,26 @@
 # Install and Quick Start
 
-## Step 1 - Install Altiva
+## Step 1 - Install Alumna
 
-[Install Node.js](https://nodejs.org/en/download/) and then install Altiva 2.0 globally:
+[Install Node.js](https://nodejs.org/en/download/) and then install Alumna 2.0 globally:
 
 ```shell
-npm install @altiva/altiva -g
+npm install @alumna/alumna -g
 ```
 
 ## Step 2 - Create a project
 
  1. Navigate in your terminal to a directory where you organize your projects
- 2. Create a new Altiva project. A new folder "project_name" will be created with the base structure of files and folders.
+ 2. Create a new Alumna project. A new folder "project_name" will be created with the base structure of files and folders.
 
 ```shell
-altiva new <project_name>
+alumna new <project_name>
 ```
 
- 3. Or, create a new Altiva project using an existing empty directory. The base structure of files and folders will be created inside of it.
+ 3. Or, create a new Alumna project using an existing empty directory. The base structure of files and folders will be created inside of it.
 
 ```shell
-altiva new .
+alumna new .
 ```
 
 ## Step 3 - Start the Dev mode
@@ -28,7 +28,7 @@ altiva new .
 Start the development mode with:
 
 ```shell
-altiva dev
+alumna dev
 ```
 
 The pre-compiled files of your project will be saved in `dev` folder and will run in your browser, refreshing with each modification.
@@ -38,7 +38,7 @@ The pre-compiled files of your project will be saved in `dev` folder and will ru
 When you are done, end the dev-mode with a `CTRL+C` and build your project with:
 
 ```shell
-altiva build
+alumna build
 ```
 
 It will be compiled and saved in `build` folder, with additional minification and tree-shaking process.

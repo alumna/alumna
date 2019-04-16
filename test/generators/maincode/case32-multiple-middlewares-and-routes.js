@@ -2,6 +2,6 @@ app.areas = [ 'content' ];
 
 app.route[ '/, /:number' ] = [{
 	
-	content: 'HelloAltiva'
+	content: 'HelloAlumna'
 
 }, 'first', 'second' ];

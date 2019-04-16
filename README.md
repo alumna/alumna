@@ -1,13 +1,13 @@
-# Altiva Framework: Development for Humans
+# Alumna Framework: Development for Humans
 
-[![Join the chat at https://gitter.im/Altiva/altiva](https://badges.gitter.im/Altiva/altiva.svg)](https://gitter.im/Altiva/altiva?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/Altiva/altiva.svg?branch=2.0)](https://travis-ci.org/Altiva/altiva) [![codecov](https://codecov.io/gh/Altiva/altiva/branch/2.0/graph/badge.svg)](https://codecov.io/gh/Altiva/altiva) ![npm](https://img.shields.io/npm/dt/@altiva/altiva.svg) ![npm](https://img.shields.io/npm/v/@altiva/altiva.svg)
+[![Join the chat at https://gitter.im/alumna/alumna](https://badges.gitter.im/alumna/alumna.svg)](https://gitter.im/alumna/alumna?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/alumna/alumna.svg?branch=2.0)](https://travis-ci.org/alumna/alumna) [![codecov](https://codecov.io/gh/alumna/alumna/branch/2.0/graph/badge.svg)](https://codecov.io/gh/alumna/alumna) ![npm](https://img.shields.io/npm/dt/@alumna/alumna.svg) ![npm](https://img.shields.io/npm/v/@alumna/alumna.svg)
 
-Altiva is a **front-end framework** and its goal is to make universal app development as **human-friendly** as possible. Nevertheless, besides the easiness, we also consider high performance and safety.
+Alumna is a **front-end framework** and its goal is to make universal app development as **human-friendly** as possible. Nevertheless, besides the easiness, we also consider high performance and safety.
 
 
-# ![altiva](other/media/altiva.png)
+# ![alumna](other/media/alumna.png)
 
-Altiva is open-source (MIT), written in Javascript and based on [Svelte](https://svelte.technology/).
+Alumna is open-source (MIT), written in Javascript and based on [Svelte](https://svelte.technology/).
 
 ## Features
 
@@ -25,25 +25,25 @@ Altiva is open-source (MIT), written in Javascript and based on [Svelte](https:/
 
 ### Step 1
 
-[Install Node.js](https://nodejs.org/en/download/) and then install Altiva 2.0 globally:
+[Install Node.js](https://nodejs.org/en/download/) and then install Alumna 2.0 globally:
 
 ```shell
-npm install @altiva/altiva -g
+npm install @alumna/alumna -g
 ```
 
 ### Step 2
 
  1. Navigate in your terminal to a directory where you organize your projects
- 2. Create a new Altiva project. A new folder "project_name" will be created with the base structure of files and folders.
+ 2. Create a new Alumna project. A new folder "project_name" will be created with the base structure of files and folders.
 
 ```shell
-altiva new <project_name>
+alumna new <project_name>
 ```
 
- 3. Or, create a new Altiva project using an existing empty directory. The base structure of files and folders will be created inside of it.
+ 3. Or, create a new Alumna project using an existing empty directory. The base structure of files and folders will be created inside of it.
 
 ```shell
-altiva new .
+alumna new .
 ```
 
 ### Step 3
@@ -51,7 +51,7 @@ altiva new .
 Start the development mode with:
 
 ```shell
-altiva dev
+alumna dev
 ```
 
 The pre-compiled files of your project will be saved in `dev` folder and will run in your browser, refreshing with each modification.
@@ -61,7 +61,7 @@ The pre-compiled files of your project will be saved in `dev` folder and will ru
 When you are done, end the dev-mode with a `CTRL+C` and build your project with:
 
 ```shell
-altiva build
+alumna build
 ```
 
 It will be compiled and saved in `build` folder, with additional minification and tree-shaking process.

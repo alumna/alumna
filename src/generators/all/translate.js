@@ -9,7 +9,7 @@ const translate = async function ( code, name ) {
 
 	let replaceCode		= '';
 
-	// Get the shared modules used in this component and point them to Altiva global var
+	// Get the shared modules used in this component and point them to Alumna global var
 	if ( startIndex !== -1 ) {
 
 		const modulesString = code.substring( startIndex + start.length, code.indexOf( finish, startIndex + start.length ) ).replace( /["']/g , '' ).trim();
@@ -18,7 +18,7 @@ const translate = async function ( code, name ) {
 
 		for ( const key in modulesArray ) {
 
-			replaceCode += 'var ' + modulesArray[ key ] + ' = Altiva.shared.' + modulesArray[ key ] + ';' + EOL;
+			replaceCode += 'var ' + modulesArray[ key ] + ' = Alumna.shared.' + modulesArray[ key ] + ';' + EOL;
 		}
 
 		// Replace the import statement with the "replaceCode" content

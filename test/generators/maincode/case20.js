@@ -4,7 +4,7 @@ app.group[ '/base' ] = {
 	
 	'/route': {
 
-		content: 'HelloAltiva'
+		content: 'HelloAlumna'
 	
 	}
 };

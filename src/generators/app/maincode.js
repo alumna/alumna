@@ -1,6 +1,6 @@
 import { EOL } 				from 'os';
 
-// Altiva modules - utils
+// Alumna modules - utils
 import isObject 			from './../../utils/isObject.js';
 import to					from './../../utils/to.js';
 
@@ -281,7 +281,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 		 		let component_tag = component.replace( /\//g, '_' ), if_statement = '', additional_paths = 0
 
 		 		// And register this component on the first level components
-		 		// (the ones used by the main app, generated automatically by Altiva)
+		 		// (the ones used by the main app, generated automatically by Alumna)
 		 		this.firstLevelComponents[ component_tag ] = component;
 
 		 		// Finally, get the paths that each component may apper when navigated
@@ -358,7 +358,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 				const area_component = this.routes[ route ][ area ];
 
-				load_functions += ( components_passed ? ', ' : '' ) + 'Altiva.load( \'' + area_component + '\' )';
+				load_functions += ( components_passed ? ', ' : '' ) + 'Alumna.load( \'' + area_component + '\' )';
 
 				components_passed++;
 
@@ -367,7 +367,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 				for ( const subcomponent in dependencies ) {
 
-					load_functions += ', ' + 'Altiva.load( \'' + subcomponent + '\' )';
+					load_functions += ', ' + 'Alumna.load( \'' + subcomponent + '\' )';
 
 					components_passed++;
 				}
@@ -379,11 +379,11 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 				map[ load_functions ] = route;
 
-				this.route_functions += 'Altiva.routes[ \'' + route + '\' ] = function () { return Promise.all( [ ' + load_functions + ' ] ); };' + EOL + EOL;
+				this.route_functions += 'Alumna.routes[ \'' + route + '\' ] = function () { return Promise.all( [ ' + load_functions + ' ] ); };' + EOL + EOL;
 			}
 
 			else
-				this.route_functions += 'Altiva.routes[ \'' + route + '\' ] = Altiva.routes[ \'' + map[ load_functions ] + '\' ];' + EOL + EOL;
+				this.route_functions += 'Alumna.routes[ \'' + route + '\' ] = Alumna.routes[ \'' + map[ load_functions ] + '\' ];' + EOL + EOL;
 
 		}
 
@@ -401,7 +401,7 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 
 		for ( const component in this.firstLevelComponents ) {
 
-			this.script += 		component +': Altiva.component[ \'' + this.firstLevelComponents[ component ] + '\' ],';
+			this.script += 		component +': Alumna.component[ \'' + this.firstLevelComponents[ component ] + '\' ],';
 
 		}
 
@@ -409,8 +409,8 @@ const MainCode = function ( userCode, componentsMap, appFileName ) {
 		+		'},'
 
 		+ 		'methods: {'
-		+ 			'route: Altiva.route,'
-		+ 			'redirect: Altiva.redirect'
+		+ 			'route: Alumna.route,'
+		+ 			'redirect: Alumna.redirect'
 		+		'}'
 
 		+	'}'

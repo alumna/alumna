@@ -1,8 +1,8 @@
-### Altiva Framework: Development for Humans
+### Alumna Framework: Development for Humans
 
-Altiva is a **front-end framework** and its goal is to make universal app development as **human-friendly** as possible. Nevertheless, besides the easiness, we also consider high performance and safety.
+Alumna is a **front-end framework** and its goal is to make universal app development as **human-friendly** as possible. Nevertheless, besides the easiness, we also consider high performance and safety.
 
-Altiva is open-source (MIT), written in Javascript and based on [Svelte](https://svelte.technology/).
+Alumna is open-source (MIT), written in Javascript and based on [Svelte](https://svelte.technology/).
 
 See the [Install and first run](install.md) for more details and getting started.
 
@@ -20,8 +20,8 @@ See the [Install and first run](install.md) for more details and getting started
 
 #### Community
 
-Users and development team are on [Github](https://github.com/altiva/altiva) and [Gitter](https://gitter.im/Altiva/altiva).
+Users and development team are on [Github](https://github.com/alumna/alumna) and [Gitter](https://gitter.im/alumna/alumna).
 
 #### License
 
-Copyright (c) 2015-2018 Paulo Coghi and contributors. Released under an [MIT license](https://github.com/altiva/altiva/blob/2.0/LICENSE.md).
+Copyright (c) 2015-2018 Paulo Coghi and contributors. Released under an [MIT license](https://github.com/alumna/alumna/blob/3.0/LICENSE.md).

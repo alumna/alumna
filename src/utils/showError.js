@@ -1,6 +1,6 @@
 const showError = function ( error, path, app = false ) {
 
-	const app_message   = app ? '[Altiva generated code error] ' : ''
+	const app_message   = app ? '[Alumna generated code error] ' : ''
 	const error_name    = error.name ? error.name : 'Error'
 
 	let error_line = '', error_column = ''

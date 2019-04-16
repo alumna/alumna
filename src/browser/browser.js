@@ -10,7 +10,7 @@ import * as svelteShared 	from 'svelte/shared';
 // Svelte Store Library
 import { Store } 			from 'svelte/store.js';
 
-const Altiva = {
+const Alumna = {
 
 	api: fetchival,
 
@@ -28,19 +28,19 @@ const Altiva = {
 
 		// Update components URL's to absolute and protocol agnostic
 
-		if ( Altiva.fileOrMobile() )
-			Altiva.config.path = window.location.pathname.replace( '/index.html', '' );
+		if ( Alumna.fileOrMobile() )
+			Alumna.config.path = window.location.pathname.replace( '/index.html', '' );
 		else
-			Altiva.config.path = window.location.origin;
+			Alumna.config.path = window.location.origin;
 
-		Altiva.load.baseUrl = Altiva.config.path + Altiva.load.baseUrl;
+		Alumna.load.baseUrl = Alumna.config.path + Alumna.load.baseUrl;
 	},
 
 	configRoute( route ) {
 
 		return function ( page_context ) {
 
-			Altiva.routes_context.next = { _route: route, _path: page_context.pathname, _params: page_context.params };
+			Alumna.routes_context.next = { _route: route, _path: page_context.pathname, _params: page_context.params };
 
 			// In the first time a route is called, check if it has middlewares
 			// and configure them (in the correct sequence).
@@ -48,58 +48,58 @@ const Altiva = {
 			// Every subsequent call to the same route is benefited from the previous
 			// configuration and runs even faster
 
-			if ( Altiva.routes_configured[ route ] ) return Altiva.routes_configured[ route ][ 0 ]();
+			if ( Alumna.routes_configured[ route ] ) return Alumna.routes_configured[ route ][ 0 ]();
 
-			Altiva.routes_configured[ route ] = []
+			Alumna.routes_configured[ route ] = []
 
 			let render = () => {
 
 				const conclude_rendering = () => {
 
-					Altiva.routes_context.current = JSON.parse( JSON.stringify( Altiva.routes_context.next ) );
+					Alumna.routes_context.current = JSON.parse( JSON.stringify( Alumna.routes_context.next ) );
 
-					Altiva.root.store.set( Altiva.routes_context.current )
+					Alumna.root.store.set( Alumna.routes_context.current )
 
-					Altiva.root.set( { _route: route } )					
+					Alumna.root.set( { _route: route } )					
 
 				}
 
 				// If this route was already rendered on this session,
 				// skip all the logic that loads the components again.
-				if ( Altiva.routes_rendered[ route ] ) return conclude_rendering();
+				if ( Alumna.routes_rendered[ route ] ) return conclude_rendering();
 
-				Altiva.routes[ route ]().then( () => {
+				Alumna.routes[ route ]().then( () => {
 					
 					conclude_rendering();
 					
-					Altiva.routes_rendered[ route ] = true;
+					Alumna.routes_rendered[ route ] = true;
 
 				});
 
 			}
 
-			if ( !Altiva.middleware_in_routes || !Altiva.middleware_in_routes[ route ] ) {
+			if ( !Alumna.middleware_in_routes || !Alumna.middleware_in_routes[ route ] ) {
 				
-				Altiva.routes_configured[ route ][ 0 ] = render;
+				Alumna.routes_configured[ route ][ 0 ] = render;
 
-				return Altiva.routes_configured[ route ][ 0 ]();
+				return Alumna.routes_configured[ route ][ 0 ]();
 			}
 
-			let size = Altiva.middleware_in_routes[ route ].length
+			let size = Alumna.middleware_in_routes[ route ].length
 
 			for ( let i = size; i >= 0; i-- ) {
 				
-				Altiva.routes_configured[ route ][ i ] = ( i == size ) ? render : () => {
+				Alumna.routes_configured[ route ][ i ] = ( i == size ) ? render : () => {
 
-					let context = JSON.parse( JSON.stringify( Altiva.routes_context ) );
+					let context = JSON.parse( JSON.stringify( Alumna.routes_context ) );
 
-					Altiva.middleware[ Altiva.middleware_in_routes[ route ][ i ] ].call( Altiva.root, context, Altiva.routes_configured[ route ][ i + 1 ] )
+					Alumna.middleware[ Alumna.middleware_in_routes[ route ][ i ] ].call( Alumna.root, context, Alumna.routes_configured[ route ][ i + 1 ] )
 
 				}
 
 			}
 
-			return Altiva.routes_configured[ route ][ 0 ]();
+			return Alumna.routes_configured[ route ][ 0 ]();
 
 		}
 
@@ -110,18 +110,18 @@ const Altiva = {
 		// Link each route function with a page.js route and
 		// configure the route middlewares on first access
 
-		for ( const route in Altiva.routes ) {
+		for ( const route in Alumna.routes ) {
 
-			page( route, Altiva.configRoute( route ) );
+			page( route, Alumna.configRoute( route ) );
 
 		}
 
 		// Starting routing system with automatic environment discovery, mobile or desktop
 		
-		if ( Altiva.fileOrMobile() ) {
+		if ( Alumna.fileOrMobile() ) {
 			
 			page( { dispatch: false } );
-			page( Altiva.config.initial );
+			page( Alumna.config.initial );
 
 		} else {
 			
@@ -142,12 +142,12 @@ const Altiva = {
 
 		return new Promise( ( resolve, reject ) => {
 
-			if ( !Altiva.component[ url ] ) {
+			if ( !Alumna.component[ url ] ) {
 
 				let loaded;
 
 				const request = new XMLHttpRequest();
-				request.open( 'GET', Altiva.load.baseUrl + url + '.js' );
+				request.open( 'GET', Alumna.load.baseUrl + url + '.js' );
 
 				const onload = function ( ) {
 
@@ -156,7 +156,7 @@ const Altiva = {
 						return;
 					}
 
-					Altiva.component[ url ] = new Function ( 'return ' + request.responseText )();
+					Alumna.component[ url ] = new Function ( 'return ' + request.responseText )();
 
 					resolve( true );
 
@@ -231,9 +231,9 @@ const Altiva = {
 			options.store = this.store;
 		}
 
-		Altiva.root = new App( options );
+		Alumna.root = new App( options );
 
-		window[ this.defaults.globalVar ] = Altiva.root;
+		window[ this.defaults.globalVar ] = Alumna.root;
 	},
 
 	store: null,
@@ -243,14 +243,14 @@ const Altiva = {
 	 */
 	start ( options ) {
 
-		Altiva.startInstance( options );
+		Alumna.startInstance( options );
 
-		Altiva.configPageJs();
+		Alumna.configPageJs();
 
 	}
 
 };
 
-Altiva.load.baseUrl = '/components/';
+Alumna.load.baseUrl = '/components/';
 
-export default Altiva;
+export default Alumna;

@@ -2,12 +2,12 @@ app.areas = [ 'content', 'footer' ];
 
 app.route[ '/' ] = {
 	
-	content: 'HelloAltiva',
+	content: 'HelloAlumna',
 	footer: 'Footer1'
 };
 
 app.route[ '/other' ] = {
 	
-	content: 'HelloAltiva',
+	content: 'HelloAlumna',
 	footer: 'Footer2'
 };

@@ -58,7 +58,7 @@ test('Modules - Case 4 - Module not installed', () => {
 
 	return modules_and_middlewares( options, {} ).catch( error => {
 
-		expect( error ).toEqual( { message: 'Missing "test4" module. Please install it with: altiva install' } );
+		expect( error ).toEqual( { message: 'Missing "test4" module. Please install it with: alumna install' } );
 
 	});
 });
@@ -84,7 +84,7 @@ test('Modules - Case 6 - Module using module.hjson file', () => {
 
 	return modules_and_middlewares( options, {} ).then( code => {
 
-		expect( code ).toBe( 'The browser code.' + EOL + EOL + 'Altiva.modules = {};' + EOL + EOL + 'Altiva.modules[ \'test6\' ] = ' + '{ do: \'this\' }' + EOL + EOL + 'Altiva.module = Altiva.modules;' + EOL + EOL );
+		expect( code ).toBe( 'The browser code.' + EOL + EOL + 'Alumna.modules = {};' + EOL + EOL + 'Alumna.modules[ \'test6\' ] = ' + '{ do: \'this\' }' + EOL + EOL + 'Alumna.module = Alumna.modules;' + EOL + EOL );
 
 	});
 });
@@ -97,7 +97,7 @@ test('Modules - Case 7 - Module using package.json file', () => {
 
 	return modules_and_middlewares( options, {} ).then( code => {
 
-		expect( code ).toBe( 'The browser code.' + EOL + EOL + 'Altiva.modules = {};' + EOL + EOL + 'Altiva.modules[ \'test7\' ] = ' + '{ do: \'that\' }' + EOL + EOL + 'Altiva.module = Altiva.modules;' + EOL + EOL );
+		expect( code ).toBe( 'The browser code.' + EOL + EOL + 'Alumna.modules = {};' + EOL + EOL + 'Alumna.modules[ \'test7\' ] = ' + '{ do: \'that\' }' + EOL + EOL + 'Alumna.module = Alumna.modules;' + EOL + EOL );
 
 	});
 });

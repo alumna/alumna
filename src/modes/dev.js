@@ -5,11 +5,11 @@ import historyApiFallback 				from 'connect-history-api-fallback';
 import hjson							from 'hjson';
 import rsync 							from 'rsyncwrapper';
 
-// Altiva modules - modes
+// Alumna modules - modes
 import rsyncAssets						from './all/rsyncAssets.js';
 import equalComponentList				from './dev/equalComponentList.js';
 
-// Altiva modules - generators
+// Alumna modules - generators
 import { compile, compileAll, getMap }	from './../generators/components.js';
 import appGenerator						from './../generators/app.js';
 
@@ -61,7 +61,7 @@ const watchSrc = function ( options ) {
 
 		} else {
 
-			if ( path == 'src/' + options.app.filename || path.startsWith( 'middlewares/' ) || path == 'altiva.hjson' ) {
+			if ( path == 'src/' + options.app.filename || path.startsWith( 'middlewares/' ) || path == 'alumna.hjson' ) {
 
 				appGenerator( 'dev', options, componentsMap ).catch( error => {
 
@@ -85,7 +85,7 @@ const watchSrc = function ( options ) {
 
 	/* Source files and components watching rules */
 
-	const sourceWatcher = chokidar.watch( [ 'src/**', 'middlewares/**', 'altiva.hjson' ], {
+	const sourceWatcher = chokidar.watch( [ 'src/**', 'middlewares/**', 'alumna.hjson' ], {
 		
 		ignored: 		/(^|[\/\\])\../,
 		persistent: 	true,
@@ -121,7 +121,7 @@ const watchSrc = function ( options ) {
 
 		} else {
 
-			if ( path == 'altiva.hjson' ) options = hjson.parse( await fs.readFile( 'altiva.hjson', 'utf8' ) )
+			if ( path == 'alumna.hjson' ) options = hjson.parse( await fs.readFile( 'alumna.hjson', 'utf8' ) )
 
 			return update_or_rsync( path );
 
@@ -149,7 +149,7 @@ const watchDev = function ( options ) {
 		//},
 		ghostMode: false,
 		logLevel: "silent",
-		logPrefix: "Altiva Dev"
+		logPrefix: "Alumna Dev"
 	} );
 	
 };

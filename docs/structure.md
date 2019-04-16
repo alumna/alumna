@@ -1,9 +1,9 @@
 # Structure of your app
 
-When you create an Altiva project, after running `altiva dev` and `altiva build` mode, this is the folder structure you will find:
+When you create an Alumna project, after running `alumna dev` and `alumna build` mode, this is the folder structure you will find:
 
 ```
-├ altiva.hjson
+├ alumna.hjson
 ├ src
 │ ├ components
 │ │ ├ # component files
@@ -14,9 +14,9 @@ When you create an Altiva project, after running `altiva dev` and `altiva build`
 ├ modules
 │ └ # module files
 ├ dev
-│ └ # development mode files (auto generated with "altiva dev")
+│ └ # development mode files (auto generated with "alumna dev")
 └ build
-  └ # build files (auto generated with "altiva build")
+  └ # build files (auto generated with "alumna build")
 ```
 
 To get a practical learning, we will show you [how to create and manage routes](routes.md) and how to choose which components must be loaded on each of them.

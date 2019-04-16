@@ -10,7 +10,7 @@ const newProject = function ( project_name ) {
 
 			if ( !err ) {
 				
-				let message = path === '.' ? 'Done! Now start developing with "altiva dev" !' : 'Done! Now enter your directory with "cd ' + project_name + '" and start developing with "altiva dev" !';
+				let message = path === '.' ? 'Done! Now start developing with "alumna dev" !' : 'Done! Now enter your directory with "cd ' + project_name + '" and start developing with "alumna dev" !';
 
 				console.log( message );
 			}

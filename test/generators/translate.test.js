@@ -12,9 +12,9 @@ test('Translation of a component that uses svelte shared helpers', () => {
 
 		expect( code ).toEqual(
 			'(function () { "use strict";' + EOL
-			+ 'var addListener = Altiva.shared.addListener;' + EOL
-			+ 'var appendNode = Altiva.shared.appendNode;' + EOL
-			+ 'var assign = Altiva.shared.assign;' + EOL
+			+ 'var addListener = Alumna.shared.addListener;' + EOL
+			+ 'var appendNode = Alumna.shared.appendNode;' + EOL
+			+ 'var assign = Alumna.shared.assign;' + EOL
 			+ EOL + 'return ' + name + ';' + EOL + '}())'
 		);
 

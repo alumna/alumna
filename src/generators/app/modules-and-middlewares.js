@@ -2,7 +2,7 @@ import { EOL } 			from 'os';
 import fs 				from 'fs-extra';
 import hjson			from 'hjson';
 
-// Altiva modules - utils
+// Alumna modules - utils
 import fileExists 	from './../../utils/fileExists.js';
 import isObject 	from './../../utils/isObject.js';
 import to			from './../../utils/to.js';
@@ -37,7 +37,7 @@ const modules = async function ( options ) {
 
 	/* MODULES */
 
-	// Check if the "modules" property is defined in options ( altiva.hjson )
+	// Check if the "modules" property is defined in options ( alumna.hjson )
 	if ( !options.modules ) return ''; 
 
 	// and it is an object
@@ -59,7 +59,7 @@ const module = async function ( module_name ) {
 
 	// Check the existence of module directory
 	if ( ! await fileExists( modules_dir + module_name ) )
-		return Promise.reject( { message: 'Missing "' + module_name + '" module. Please install it with: altiva install' } );
+		return Promise.reject( { message: 'Missing "' + module_name + '" module. Please install it with: alumna install' } );
 
 	// Check the existence of module.hjson or package.json and get its properties
 	let properties 	= null;
@@ -108,11 +108,11 @@ const validate_module = async function( mainfile, module_name, is_hjson ) {
 
 const merge_modules = function ( module_codes ) {
 
-	let code = EOL + EOL + 'Altiva.modules = {};' + EOL;
+	let code = EOL + EOL + 'Alumna.modules = {};' + EOL;
 
-	module_codes.forEach( single => Object.keys( single ).map( single_name => code += EOL + 'Altiva.modules[ \'' + single_name + '\' ] = ' + single[ single_name ] + EOL ) );
+	module_codes.forEach( single => Object.keys( single ).map( single_name => code += EOL + 'Alumna.modules[ \'' + single_name + '\' ] = ' + single[ single_name ] + EOL ) );
 
-	code += EOL + 'Altiva.module = Altiva.modules;' + EOL;
+	code += EOL + 'Alumna.module = Alumna.modules;' + EOL;
 
 	return code + EOL;
 
@@ -123,13 +123,13 @@ const middlewares = async function ( options, app ) {
 	// Check if there are used middlewares
 	if ( !isObject( app.used_middlewares, true ) ) return '';
 
-	let middleware_codes  = EOL + EOL + 'Altiva.middlewares = {};' + EOL + EOL + 'Altiva.middleware = Altiva.middlewares;' + EOL + EOL;
+	let middleware_codes  = EOL + EOL + 'Alumna.middlewares = {};' + EOL + EOL + 'Alumna.middleware = Alumna.middlewares;' + EOL + EOL;
 
 	for ( const middleware in app.used_middlewares ) {
 
-		// Check if the used middleware is properly defined in "altiva.hjson"
+		// Check if the used middleware is properly defined in "alumna.hjson"
 		if ( !options.middlewares[ middleware ] )
-			return Promise.reject( { message: 'Error in "app.js": The middleware "' + middleware + '" isn\'t defined in "altiva.hjson".' } );
+			return Promise.reject( { message: 'Error in "app.js": The middleware "' + middleware + '" isn\'t defined in "alumna.hjson".' } );
 			
 		// Get and adjust the path properly
 		let path = middleware_path( options.middlewares[ middleware ] );
@@ -146,7 +146,7 @@ const middlewares = async function ( options, app ) {
 	// We will, then, add to the browser code the relation of routes and its middlewares,
 	// so the runtime code will have all the information to correctly apply those middlewares.
 
-	middleware_codes += 'Altiva.middleware_in_routes = ' + JSON.stringify( app.middlewares ) + ';'
+	middleware_codes += 'Alumna.middleware_in_routes = ' + JSON.stringify( app.middlewares ) + ';'
 
 	return middleware_codes;
 

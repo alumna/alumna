@@ -2,10 +2,10 @@ import browserSyncClass 	from 'browser-sync';
 import fs 					from 'fs-extra';
 import historyApiFallback 	from 'connect-history-api-fallback';
 
-// Altiva modules - modes
+// Alumna modules - modes
 import rsyncAssets from './all/rsyncAssets.js';
 
-// Altiva modules - generators
+// Alumna modules - generators
 import { compileAll } from './../generators/components.js';
 import appGenerator from './../generators/app.js';
 
@@ -40,7 +40,7 @@ const previewBuild = function ( options ) {
 		// },
 		ghostMode: false,
 		logLevel: "silent",
-		logPrefix: "Altiva Build - Preview"
+		logPrefix: "Alumna Build - Preview"
 	} );
 	
 };

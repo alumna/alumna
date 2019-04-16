@@ -1,13 +1,13 @@
 {
-	"name": "@altiva/altiva",
-	"version": "2.0.22",
-	"description": "Altiva Framework: Development for Humans",
+	"name": "@alumna/alumna",
+	"version": "3.0.0",
+	"description": "Alumna Framework: Development for Humans",
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/altiva/altiva.git"
+		"url": "git://github.com/alumna/alumna.git"
 	},
 	"bin": {
-		"altiva": "cli.js"
+		"alumna": "cli.js"
 	},
 	"scripts": {
 		"build": "rollup --config other/rollup/browser.js && rollup --config other/rollup/cli.js",
@@ -17,7 +17,7 @@
 	"author": "Paulo Coghi",
 	"license": "MIT",
 	"bugs": {
-		"url": "https://github.com/altiva/altiva/issues"
+		"url": "https://github.com/alumna/alumna/issues"
 	},
 	"jest": {
 		"coverageDirectory": "./coverage/",
@@ -45,7 +45,7 @@
 		"hjson": "^3.1.1",
 		"jest": "^23.6.0",
 		"mri": "^1.1.1",
-		"page": "github:altiva/page.js#master",
+		"page": "github:alumna/page.js#master",
 		"rollup": "^0.67.0",
 		"rollup-plugin-commonjs": "^9.2.0",
 		"rollup-plugin-json": "^3.1.0",

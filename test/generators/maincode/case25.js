@@ -4,7 +4,7 @@ app.group[ '' ] = {
 	
 	'/': {
 
-		content: 'HelloAltiva'
+		content: 'HelloAlumna'
 	
 	}
 };

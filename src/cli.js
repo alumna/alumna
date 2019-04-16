@@ -1,10 +1,10 @@
 import fs 			from 'fs';
 import mri			from 'mri';
 
-// Altiva Library
-import altiva		from './altiva.js';
+// Alumna Library
+import alumna		from './alumna.js';
 
-// Util to update the user's altiva.hjson, used in all modes
+// Util to update the user's alumna.hjson, used in all modes
 import update		from './utils/updateOptions.js';
 
 // CLI to install and update modules
@@ -19,8 +19,8 @@ import { version } 	from '../package.json';
 /*
  * [ New mode ]
  *
- * Copy the "base" skeleton of an Altiva project to
- * the directory informed in "altiva new <directory>""
+ * Copy the "base" skeleton of an Alumna project to
+ * the directory informed in "alumna new <directory>""
  * 
  * Create this directory if it doesn't exists, or use
  * the current one if a dot "." is passed.
@@ -74,8 +74,8 @@ const command = mri( process.argv.slice( 2 ), {
 
 const read_options_and_run = function ( run ) {
 
-	// Check the existence of altiva.hjson config file
-	fs.readFile( 'altiva.hjson', 'utf8', ( err, data ) => {
+	// Check the existence of alumna.hjson config file
+	fs.readFile( 'alumna.hjson', 'utf8', ( err, data ) => {
 
 		if ( !err ) {
 
@@ -84,8 +84,8 @@ const read_options_and_run = function ( run ) {
 
 		} else {
 			
-			// This directory isn't an Altiva Project
-			console.log( 'Missing \'altiva.hjson\' file. It seems that this directory isn\'t an Altiva Project' );
+			// This directory isn't an Alumna Project
+			console.log( 'Missing \'alumna.hjson\' file. It seems that this directory isn\'t an Alumna Project' );
 		}
 	} );
 
@@ -97,7 +97,7 @@ if ( command.help || ( process.argv.length <= 2 && process.stdin.isTTY ) ) {
 
 } else if ( command.version ) {
 
-	console.log( 'altiva version ' + version );
+	console.log( 'alumna version ' + version );
 
 } else {
 
@@ -109,14 +109,14 @@ if ( command.help || ( process.argv.length <= 2 && process.stdin.isTTY ) ) {
 		case "dev":
 		case "build":
 
-			read_options_and_run( altiva[ task ] );
+			read_options_and_run( alumna[ task ] );
 
 			break;
 
 		/* NEW MODE */
 		case "new":
 
-			command[ '_' ].length == 2 ? altiva.newProject( command[ '_' ][ 1 ] ) : console.log( 'Use: altiva new <project_name>' );
+			command[ '_' ].length == 2 ? alumna.newProject( command[ '_' ][ 1 ] ) : console.log( 'Use: alumna new <project_name>' );
 			
 			break;
 
@@ -130,7 +130,7 @@ if ( command.help || ( process.argv.length <= 2 && process.stdin.isTTY ) ) {
 
 		default:
 
-			console.error( 'Unrecognised command' + ( task ? ' ' + task : '' ) + '. Type altiva --help to see instructions' );
+			console.error( 'Unrecognised command' + ( task ? ' ' + task : '' ) + '. Type alumna --help to see instructions' );
 
 			break;
 	}

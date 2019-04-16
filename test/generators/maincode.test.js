@@ -25,16 +25,16 @@ test('Case 1 - Single area and single component', () => {
 
 				expect( app.areas ).toEqual( [ 'content' ] );
 
-				expect( app.routes ).toEqual( { '/': { content: 'HelloAltiva' } } );
+				expect( app.routes ).toEqual( { '/': { content: 'HelloAlumna' } } );
 
 				expect( app.html ).toBe( EOL + '<!-- Area: "content" -->' + EOL
 											 + '{#if _route == \'/\' }' + EOL
-											 + '\t<HelloAltiva/>' + EOL
+											 + '\t<HelloAlumna/>' + EOL
 											 + '{/if}' + EOL + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {HelloAlumna: Alumna.component[ \'HelloAlumna\' ],},methods: {route: Alumna.route,redirect: Alumna.redirect}}</script>' );
 
-				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = function () { return Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] ); };' + EOL + EOL );
+				expect( app.route_functions ).toBe( 'Alumna.routes[ \'/\' ] = function () { return Promise.all( [ Alumna.load( \'HelloAlumna\' ) ] ); };' + EOL + EOL );
 
 				resolve( true );
 
@@ -56,7 +56,7 @@ test('Case 1 (part2) - Single area and single component BUT with dependencies', 
 
 			const componentsMap = {
 				
-				HelloAltiva: {
+				HelloAlumna: {
 					Sub: true
 				},
 
@@ -73,16 +73,16 @@ test('Case 1 (part2) - Single area and single component BUT with dependencies', 
 
 				expect( app.areas ).toEqual( [ 'content' ] );
 
-				expect( app.routes ).toEqual( { '/': { content: 'HelloAltiva' } } );
+				expect( app.routes ).toEqual( { '/': { content: 'HelloAlumna' } } );
 
 				expect( app.html ).toBe( EOL + '<!-- Area: "content" -->' + EOL
 											 + '{#if _route == \'/\' }' + EOL
-											 + '\t<HelloAltiva/>' + EOL
+											 + '\t<HelloAlumna/>' + EOL
 											 + '{/if}' + EOL + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {HelloAlumna: Alumna.component[ \'HelloAlumna\' ],},methods: {route: Alumna.route,redirect: Alumna.redirect}}</script>' );
 
-				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = function () { return Promise.all( [ Altiva.load( \'HelloAltiva\' ), Altiva.load( \'Sub\' ), Altiva.load( \'Sub2\' ) ] ); };' + EOL + EOL );
+				expect( app.route_functions ).toBe( 'Alumna.routes[ \'/\' ] = function () { return Promise.all( [ Alumna.load( \'HelloAlumna\' ), Alumna.load( \'Sub\' ), Alumna.load( \'Sub2\' ) ] ); };' + EOL + EOL );
 
 				resolve( true );
 
@@ -402,12 +402,12 @@ test('Case 9 - Multiple areas and multiple components', () => {
 				expect( app.routes ).toEqual( {
 					
 					'/': {
-						content: 'HelloAltiva',
+						content: 'HelloAlumna',
 						footer: 'Footer1'
 					},
 
 					'/other': {
-						content: 'HelloAltiva',
+						content: 'HelloAlumna',
 						footer: 'Footer2'
 					}
 
@@ -415,7 +415,7 @@ test('Case 9 - Multiple areas and multiple components', () => {
 
 				expect( app.html ).toBe( EOL + '<!-- Area: "content" -->' + EOL
 											 + '{#if _route == \'/\' || _route == \'/other\' }' + EOL
-											 + '\t<HelloAltiva/>' + EOL
+											 + '\t<HelloAlumna/>' + EOL
 											 + '{/if}' + EOL
 
 
@@ -428,13 +428,13 @@ test('Case 9 - Multiple areas and multiple components', () => {
     										 
     										 + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],Footer1: Altiva.component[ \'Footer1\' ],Footer2: Altiva.component[ \'Footer2\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {HelloAlumna: Alumna.component[ \'HelloAlumna\' ],Footer1: Alumna.component[ \'Footer1\' ],Footer2: Alumna.component[ \'Footer2\' ],},methods: {route: Alumna.route,redirect: Alumna.redirect}}</script>' );
 
 				expect( app.route_functions ).toBe(
 
-					'Altiva.routes[ \'/\' ] = function () { return Promise.all( [ Altiva.load( \'HelloAltiva\' ), Altiva.load( \'Footer1\' ) ] ); };' + EOL + EOL
+					'Alumna.routes[ \'/\' ] = function () { return Promise.all( [ Alumna.load( \'HelloAlumna\' ), Alumna.load( \'Footer1\' ) ] ); };' + EOL + EOL
 
-				  + 'Altiva.routes[ \'/other\' ] = function () { return Promise.all( [ Altiva.load( \'HelloAltiva\' ), Altiva.load( \'Footer2\' ) ] ); };' + EOL + EOL
+				  + 'Alumna.routes[ \'/other\' ] = function () { return Promise.all( [ Alumna.load( \'HelloAlumna\' ), Alumna.load( \'Footer2\' ) ] ); };' + EOL + EOL
 
 				);
 
@@ -468,19 +468,19 @@ test('Case 12 - Single area, single component and route with multiple paths', ()
 
 				expect( app.routes ).toEqual( {
 
-					'/':      { content: 'HelloAltiva' },
-					'/test': { content: 'HelloAltiva' }
+					'/':      { content: 'HelloAlumna' },
+					'/test': { content: 'HelloAlumna' }
 
 				} );
 
 				expect( app.html ).toBe( EOL + '<!-- Area: "content" -->' + EOL
 											 + '{#if _route == \'/\' || _route == \'/test\' }' + EOL
-											 + '\t<HelloAltiva/>' + EOL
+											 + '\t<HelloAlumna/>' + EOL
 											 + '{/if}' + EOL + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {HelloAlumna: Alumna.component[ \'HelloAlumna\' ],},methods: {route: Alumna.route,redirect: Alumna.redirect}}</script>' );
 
-				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = function () { return Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] ); };' + EOL + EOL + 'Altiva.routes[ \'/test\' ] = Altiva.routes[ \'/\' ];' + EOL + EOL );
+				expect( app.route_functions ).toBe( 'Alumna.routes[ \'/\' ] = function () { return Promise.all( [ Alumna.load( \'HelloAlumna\' ) ] ); };' + EOL + EOL + 'Alumna.routes[ \'/test\' ] = Alumna.routes[ \'/\' ];' + EOL + EOL );
 
 				resolve( true );
 
@@ -536,16 +536,16 @@ test('Case 18 - Grouped route without base path', () => {
 
 				expect( app.areas ).toEqual( [ 'content' ] );
 
-				expect( app.routes ).toEqual( { '/': { content: 'HelloAltiva' } } );
+				expect( app.routes ).toEqual( { '/': { content: 'HelloAlumna' } } );
 
 				expect( app.html ).toBe( EOL + '<!-- Area: "content" -->' + EOL
 											 + '{#if _route == \'/\' }' + EOL
-											 + '\t<HelloAltiva/>' + EOL
+											 + '\t<HelloAlumna/>' + EOL
 											 + '{/if}' + EOL + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {HelloAlumna: Alumna.component[ \'HelloAlumna\' ],},methods: {route: Alumna.route,redirect: Alumna.redirect}}</script>' );
 
-				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/\' ] = function () { return Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] ); };' + EOL + EOL );
+				expect( app.route_functions ).toBe( 'Alumna.routes[ \'/\' ] = function () { return Promise.all( [ Alumna.load( \'HelloAlumna\' ) ] ); };' + EOL + EOL );
 
 				resolve( true );
 
@@ -575,16 +575,16 @@ test('Case 19 - Grouped route with base path', () => {
 
 				expect( app.areas ).toEqual( [ 'content' ] );
 
-				expect( app.routes ).toEqual( { '/base/route': { content: 'HelloAltiva' } } );
+				expect( app.routes ).toEqual( { '/base/route': { content: 'HelloAlumna' } } );
 
 				expect( app.html ).toBe( EOL + '<!-- Area: "content" -->' + EOL
 											 + '{#if _route == \'/base/route\' }' + EOL
-											 + '\t<HelloAltiva/>' + EOL
+											 + '\t<HelloAlumna/>' + EOL
 											 + '{/if}' + EOL + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {HelloAlumna: Alumna.component[ \'HelloAlumna\' ],},methods: {route: Alumna.route,redirect: Alumna.redirect}}</script>' );
 
-				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/route\' ] = function () { return Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] ); };' + EOL + EOL );
+				expect( app.route_functions ).toBe( 'Alumna.routes[ \'/base/route\' ] = function () { return Promise.all( [ Alumna.load( \'HelloAlumna\' ) ] ); };' + EOL + EOL );
 
 				resolve( true );
 
@@ -725,9 +725,9 @@ test('Case 24 - Routes inside group with multiple paths', () => {
 											 + '\t<ReusedComponent/>' + EOL
 											 + '{/if}' + EOL + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {ReusedComponent: Altiva.component[ \'ReusedComponent\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {ReusedComponent: Alumna.component[ \'ReusedComponent\' ],},methods: {route: Alumna.route,redirect: Alumna.redirect}}</script>' );
 
-				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/path1\' ] = function () { return Promise.all( [ Altiva.load( \'ReusedComponent\' ) ] ); };' + EOL + EOL + 'Altiva.routes[ \'/base/path2\' ] = Altiva.routes[ \'/base/path1\' ];' + EOL + EOL );
+				expect( app.route_functions ).toBe( 'Alumna.routes[ \'/base/path1\' ] = function () { return Promise.all( [ Alumna.load( \'ReusedComponent\' ) ] ); };' + EOL + EOL + 'Alumna.routes[ \'/base/path2\' ] = Alumna.routes[ \'/base/path1\' ];' + EOL + EOL );
 
 				resolve( true );
 
@@ -790,9 +790,9 @@ test('Case 26 - Corrected (multiple) paths in groups', () => {
 											 + '\t<ReusedComponent/>' + EOL
 											 + '{/if}' + EOL + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {ReusedComponent: Altiva.component[ \'ReusedComponent\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {ReusedComponent: Alumna.component[ \'ReusedComponent\' ],},methods: {route: Alumna.route,redirect: Alumna.redirect}}</script>' );
 
-				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/path1\' ] = function () { return Promise.all( [ Altiva.load( \'ReusedComponent\' ) ] ); };' + EOL + EOL + 'Altiva.routes[ \'/base/path2\' ] = Altiva.routes[ \'/base/path1\' ];' + EOL + EOL );
+				expect( app.route_functions ).toBe( 'Alumna.routes[ \'/base/path1\' ] = function () { return Promise.all( [ Alumna.load( \'ReusedComponent\' ) ] ); };' + EOL + EOL + 'Alumna.routes[ \'/base/path2\' ] = Alumna.routes[ \'/base/path1\' ];' + EOL + EOL );
 
 				resolve( true );
 
@@ -822,16 +822,16 @@ test('Case 27 - Corrected (single) paths in groups', () => {
 
 				expect( app.areas ).toEqual( [ 'content' ] );
 
-				expect( app.routes ).toEqual( { '/base/route': { content: 'HelloAltiva' } } );
+				expect( app.routes ).toEqual( { '/base/route': { content: 'HelloAlumna' } } );
 
 				expect( app.html ).toBe( EOL + '<!-- Area: "content" -->' + EOL
 											 + '{#if _route == \'/base/route\' }' + EOL
-											 + '\t<HelloAltiva/>' + EOL
+											 + '\t<HelloAlumna/>' + EOL
 											 + '{/if}' + EOL + '' );
 
-				expect( app.script ).toBe( '<script>export default {components: {HelloAltiva: Altiva.component[ \'HelloAltiva\' ],},methods: {route: Altiva.route,redirect: Altiva.redirect}}</script>' );
+				expect( app.script ).toBe( '<script>export default {components: {HelloAlumna: Alumna.component[ \'HelloAlumna\' ],},methods: {route: Alumna.route,redirect: Alumna.redirect}}</script>' );
 
-				expect( app.route_functions ).toBe( 'Altiva.routes[ \'/base/route\' ] = function () { return Promise.all( [ Altiva.load( \'HelloAltiva\' ) ] ); };' + EOL + EOL );
+				expect( app.route_functions ).toBe( 'Alumna.routes[ \'/base/route\' ] = function () { return Promise.all( [ Alumna.load( \'HelloAlumna\' ) ] ); };' + EOL + EOL );
 
 				resolve( true );
 
@@ -890,11 +890,11 @@ test('Case 29 - One middleware', () => {
 				expect( app.routes ).toEqual( {
 					
 					'/': {
-						content: 'HelloAltiva'
+						content: 'HelloAlumna'
 					},
 
 					'/:number': {
-						content: 'HelloAltiva'
+						content: 'HelloAlumna'
 					}
 
 				} );
@@ -938,7 +938,7 @@ test('Case 30 - Multiple middleware', () => {
 				expect( app.routes ).toEqual( {
 					
 					'/:number': {
-						content: 'HelloAltiva'
+						content: 'HelloAlumna'
 					}
 
 				} );
@@ -1008,11 +1008,11 @@ test('Case 32 - One middleware', () => {
 				expect( app.routes ).toEqual( {
 					
 					'/': {
-						content: 'HelloAltiva'
+						content: 'HelloAlumna'
 					},
 
 					'/:number': {
-						content: 'HelloAltiva'
+						content: 'HelloAlumna'
 					}
 
 				} );

@@ -1,1 +1,1 @@
-Altiva.middleware[ 'test1' ] = 'Code of test1';
+Alumna.middleware[ 'test1' ] = 'Code of test1';

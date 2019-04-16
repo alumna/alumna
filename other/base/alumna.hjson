@@ -1,6 +1,6 @@
 {
 	app: {
-		// Decide if the application starts automatically or if you will use Altiva.start( 'app', {...} )
+		// Decide if the application starts automatically or if you will use Alumna.start( 'app', {...} )
 		autoStart: true,
 
 		// When changing this, erase the old file in dev/
@@ -37,7 +37,7 @@
 	},
 
 	modules: {
-		// Install a module using the command: altiva install <github_author/repository_name>
-		// For example: altiva install altiva/module_keys
+		// Install a module using the command: alumna install <github_author/repository_name>
+		// For example: alumna install alumna/module_keys
 	}
 }

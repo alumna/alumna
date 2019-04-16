@@ -2,6 +2,6 @@ app.areas = [ 'content' ];
 
 app.route[ '/' ] = {
 	
-	content3: 'HelloAltiva',
-	content4: 'HelloAltiva',
+	content3: 'HelloAlumna',
+	content4: 'HelloAlumna',
 };

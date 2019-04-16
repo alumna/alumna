@@ -5,7 +5,7 @@ const subcomponents = function ( code, component ) {
 
 	return new Promise( ( resolve ) => {
 
-		const start  			= 'Altiva.component[';
+		const start  			= 'Alumna.component[';
 		const finish 			= ']';
 		const subcomponents 	= {};
 		const varNames 			= {};
@@ -34,7 +34,7 @@ const subcomponents = function ( code, component ) {
 			 * Those variables will be replaced below[1], but... all this work will
 			 * be removed after explaining this problem in a Svelte issue.
 			 *
-			 * [1] 'new subcomponent( {...} )' to 'new Altiva.component[ 'path/to/subcomponent' ]( {...} )'
+			 * [1] 'new subcomponent( {...} )' to 'new Alumna.component[ 'path/to/subcomponent' ]( {...} )'
 			 *
 			 * Svelte issue number here (soon):
 			 */
@@ -50,12 +50,12 @@ const subcomponents = function ( code, component ) {
 		for ( const key in toBeRemoved )
 			code = code.replace( toBeRemoved[ key ] + EOL, '' );
 
-		// Now, replace 'new subcomponent( {...} )' to 'new Altiva.component[ 'path/to/subcomponent' ]( {...} )'
+		// Now, replace 'new subcomponent( {...} )' to 'new Alumna.component[ 'path/to/subcomponent' ]( {...} )'
 		for ( const subComponent in varNames ) {
 			
 			const regex = new RegExp( 'new ' + varNames[ subComponent ] + '\\(', 'g' );
 
-			code = code.replace( regex, 'new Altiva.component[ \'' + subComponent + '\' ](' );
+			code = code.replace( regex, 'new Alumna.component[ \'' + subComponent + '\' ](' );
 		}
 
 

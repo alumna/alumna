@@ -22,7 +22,7 @@ const rsyncAssets = function ( mode, options ) {
 			
 			// Delete in 'dev/' or 'build/' any non-existent files in 'src/'
 			// In 'build' mode, the default is false, but can be overrided 
-			// in options.build.deleteFiles (from altiva.hjson)
+			// in options.build.deleteFiles (from alumna.hjson)
 			delete: deleteFiles,
 			
 			exclude: [ ".*", ".*/", "components", options.app.filename ]
