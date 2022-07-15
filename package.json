@@ -55,7 +55,7 @@
 		"rollup-plugin-virtual": "^1.0.1",
 		"rsyncwrapper": "^2.0.1",
 		"semver-compare": "^1.0.0",
-		"svelte": "^2.15.2"
+		"svelte": "^3.49.0"
 	},
 	"dependencies": {
 		"browser-sync": "^2.26.3",
