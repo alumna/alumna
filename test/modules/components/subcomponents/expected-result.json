@@ -1,0 +1,486 @@
+{
+	"type": "Program",
+	"sourceType": "module",
+	"body": [
+		{
+			"type": "VariableDeclaration",
+			"kind": "const",
+			"declarations": [
+				{
+					"type": "VariableDeclarator",
+					"id": {
+						"type": "Identifier",
+						"name": "test_const"
+					},
+					"init": {
+						"type": "Literal",
+						"value": 123
+					}
+				}
+			]
+		},
+		{
+			"type": "VariableDeclaration",
+			"kind": "const",
+			"declarations": [
+				{
+					"type": "VariableDeclarator",
+					"id": {
+						"type": "Identifier",
+						"name": "Component_1"
+					},
+					"init": {
+						"type": "MemberExpression",
+						"object": {
+							"type": "MemberExpression",
+							"object": {
+								"type": "Identifier",
+								"name": "Alumna"
+							},
+							"computed": false,
+							"property": {
+								"type": "Identifier",
+								"name": "components"
+							}
+						},
+						"computed": true,
+						"property": {
+							"type": "Literal",
+							"value": "Component_1"
+						}
+					}
+				}
+			]
+		},
+		{
+			"type": "VariableDeclaration",
+			"kind": "var",
+			"declarations": [
+				{
+					"type": "VariableDeclarator",
+					"id": {
+						"type": "Identifier",
+						"name": "Component_2"
+					},
+					"init": {
+						"type": "MemberExpression",
+						"object": {
+							"type": "MemberExpression",
+							"object": {
+								"type": "Identifier",
+								"name": "Alumna"
+							},
+							"computed": false,
+							"property": {
+								"type": "Identifier",
+								"name": "components"
+							}
+						},
+						"computed": true,
+						"property": {
+							"type": "Literal",
+							"value": "Component_2"
+						}
+					}
+				},
+				{
+					"type": "VariableDeclarator",
+					"id": {
+						"type": "Identifier",
+						"name": "Component_3"
+					},
+					"init": {
+						"type": "MemberExpression",
+						"object": {
+							"type": "MemberExpression",
+							"object": {
+								"type": "Identifier",
+								"name": "Alumna"
+							},
+							"computed": false,
+							"property": {
+								"type": "Identifier",
+								"name": "components"
+							}
+						},
+						"computed": true,
+						"property": {
+							"type": "Literal",
+							"value": "Component_3"
+						}
+					}
+				}
+			]
+		},
+		{
+			"type": "IfStatement",
+			"test": {
+				"type": "Literal",
+				"value": true
+			},
+			"consequent": {
+				"type": "BlockStatement",
+				"body": [
+					{
+						"type": "VariableDeclaration",
+						"kind": "var",
+						"declarations": [
+							{
+								"type": "VariableDeclarator",
+								"id": {
+									"type": "Identifier",
+									"name": "Component_4"
+								},
+								"init": {
+									"type": "MemberExpression",
+									"object": {
+										"type": "MemberExpression",
+										"object": {
+											"type": "Identifier",
+											"name": "Alumna"
+										},
+										"computed": false,
+										"property": {
+											"type": "Identifier",
+											"name": "components"
+										}
+									},
+									"computed": true,
+									"property": {
+										"type": "Literal",
+										"value": "Component_4"
+									}
+								}
+							}
+						]
+					}
+				]
+			},
+			"alternate": null
+		},
+		{
+			"type": "IfStatement",
+			"test": {
+				"type": "Literal",
+				"value": true
+			},
+			"consequent": {
+				"type": "VariableDeclaration",
+				"kind": "var",
+				"declarations": [
+					{
+						"type": "VariableDeclarator",
+						"id": {
+							"type": "Identifier",
+							"name": "Component_5"
+						},
+						"init": {
+							"type": "MemberExpression",
+							"object": {
+								"type": "MemberExpression",
+								"object": {
+									"type": "Identifier",
+									"name": "Alumna"
+								},
+								"computed": false,
+								"property": {
+									"type": "Identifier",
+									"name": "components"
+								}
+							},
+							"computed": true,
+							"property": {
+								"type": "Literal",
+								"value": "Component_5"
+							}
+						}
+					}
+				]
+			},
+			"alternate": null
+		},
+		{
+			"type": "ForStatement",
+			"init": {
+				"type": "VariableDeclaration",
+				"kind": "let",
+				"declarations": [
+					{
+						"type": "VariableDeclarator",
+						"id": {
+							"type": "Identifier",
+							"name": "i"
+						},
+						"init": {
+							"type": "Literal",
+							"value": 0
+						}
+					}
+				]
+			},
+			"test": {
+				"type": "BinaryExpression",
+				"left": {
+					"type": "Identifier",
+					"name": "i"
+				},
+				"right": {
+					"type": "Literal",
+					"value": 99
+				},
+				"operator": "<"
+			},
+			"update": {
+				"type": "UpdateExpression",
+				"argument": {
+					"type": "Identifier",
+					"name": "i"
+				},
+				"operator": "++",
+				"prefix": false
+			},
+			"body": {
+				"type": "BlockStatement",
+				"body": [
+					{
+						"type": "VariableDeclaration",
+						"kind": "let",
+						"declarations": [
+							{
+								"type": "VariableDeclarator",
+								"id": {
+									"type": "Identifier",
+									"name": "Component_6"
+								},
+								"init": {
+									"type": "MemberExpression",
+									"object": {
+										"type": "MemberExpression",
+										"object": {
+											"type": "Identifier",
+											"name": "Alumna"
+										},
+										"computed": false,
+										"property": {
+											"type": "Identifier",
+											"name": "components"
+										}
+									},
+									"computed": true,
+									"property": {
+										"type": "Literal",
+										"value": "Component_6"
+									}
+								}
+							}
+						]
+					},
+					{
+						"type": "VariableDeclaration",
+						"kind": "let",
+						"declarations": [
+							{
+								"type": "VariableDeclarator",
+								"id": {
+									"type": "Identifier",
+									"name": "test"
+								},
+								"init": {
+									"type": "FunctionExpression",
+									"id": null,
+									"params": [
+										{
+											"type": "Identifier",
+											"name": "param"
+										}
+									],
+									"body": {
+										"type": "BlockStatement",
+										"body": [
+											{
+												"type": "VariableDeclaration",
+												"kind": "var",
+												"declarations": [
+													{
+														"type": "VariableDeclarator",
+														"id": {
+															"type": "Identifier",
+															"name": "Component_7"
+														},
+														"init": {
+															"type": "MemberExpression",
+															"object": {
+																"type": "MemberExpression",
+																"object": {
+																	"type": "Identifier",
+																	"name": "Alumna"
+																},
+																"computed": false,
+																"property": {
+																	"type": "Identifier",
+																	"name": "components"
+																}
+															},
+															"computed": true,
+															"property": {
+																"type": "Literal",
+																"value": "Component_7"
+															}
+														}
+													}
+												]
+											},
+											{
+												"type": "IfStatement",
+												"test": {
+													"type": "Literal",
+													"value": true
+												},
+												"consequent": {
+													"type": "BlockStatement",
+													"body": [
+														{
+															"type": "VariableDeclaration",
+															"kind": "var",
+															"declarations": [
+																{
+																	"type": "VariableDeclarator",
+																	"id": {
+																		"type": "Identifier",
+																		"name": "Component_8"
+																	},
+																	"init": {
+																		"type": "MemberExpression",
+																		"object": {
+																			"type": "MemberExpression",
+																			"object": {
+																				"type": "Identifier",
+																				"name": "Alumna"
+																			},
+																			"computed": false,
+																			"property": {
+																				"type": "Identifier",
+																				"name": "components"
+																			}
+																		},
+																		"computed": true,
+																		"property": {
+																			"type": "Literal",
+																			"value": "Component_8"
+																		}
+																	}
+																}
+															]
+														},
+														{
+															"type": "VariableDeclaration",
+															"kind": "var",
+															"declarations": [
+																{
+																	"type": "VariableDeclarator",
+																	"id": {
+																		"type": "Identifier",
+																		"name": "inside_func"
+																	},
+																	"init": {
+																		"type": "FunctionExpression",
+																		"id": null,
+																		"params": [
+																			{
+																				"type": "Identifier",
+																				"name": "another_param"
+																			}
+																		],
+																		"body": {
+																			"type": "BlockStatement",
+																			"body": [
+																				{
+																					"type": "VariableDeclaration",
+																					"kind": "var",
+																					"declarations": [
+																						{
+																							"type": "VariableDeclarator",
+																							"id": {
+																								"type": "Identifier",
+																								"name": "Component_9"
+																							},
+																							"init": {
+																								"type": "MemberExpression",
+																								"object": {
+																									"type": "MemberExpression",
+																									"object": {
+																										"type": "Identifier",
+																										"name": "Alumna"
+																									},
+																									"computed": false,
+																									"property": {
+																										"type": "Identifier",
+																										"name": "components"
+																									}
+																								},
+																								"computed": true,
+																								"property": {
+																									"type": "Literal",
+																									"value": "Component_9"
+																								}
+																							}
+																						}
+																					]
+																				}
+																			]
+																		},
+																		"async": false,
+																		"generator": false
+																	}
+																}
+															]
+														}
+													]
+												},
+												"alternate": {
+													"type": "VariableDeclaration",
+													"kind": "var",
+													"declarations": [
+														{
+															"type": "VariableDeclarator",
+															"id": {
+																"type": "Identifier",
+																"name": "Component_10"
+															},
+															"init": {
+																"type": "MemberExpression",
+																"object": {
+																	"type": "MemberExpression",
+																	"object": {
+																		"type": "Identifier",
+																		"name": "Alumna"
+																	},
+																	"computed": false,
+																	"property": {
+																		"type": "Identifier",
+																		"name": "components"
+																	}
+																},
+																"computed": true,
+																"property": {
+																	"type": "Literal",
+																	"value": "Component_10"
+																}
+															}
+														}
+													]
+												}
+											}
+										]
+									},
+									"async": true,
+									"generator": false
+								}
+							}
+						]
+					}
+				]
+			}
+		}
+	]
+}
