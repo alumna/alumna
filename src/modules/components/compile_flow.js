@@ -4,17 +4,19 @@
 
 Internal flow to read and compile one component
 and its subcomponents, when they exist.
+
 On each subcomponent (or sub-sub), this flow will
 be recursively re-created and executed.
 
 */
 
-import { Unitflow } 		from '@alumna/unitflow';
+import { Unitflow } 			from '@alumna/unitflow';
 
-import { read } 			from './read'
-import { subcomponents } 	from './subcomponents'
-import { compile_single } 	from './compile_single'
-import { cache } 			from './cache'
+import { read } 				from './read'
+import { subcomponents } 		from './subcomponents'
+import { compile_single } 		from './compile_single'
+import { translate_component } 	from './translate'
+import { cache } 				from './cache'
 
 
 
@@ -55,6 +57,18 @@ const compile_flow = async function ( component, route, state, parent_end ) {
 
 	state.components_per_route[ route ][ component ] = true;
 
+	/*
+
+	!! IMPORTANT MISSING FEATURE HERE !!
+
+	We must create a way to inform which compilation flow this is being called
+	For example, as stated on the first comment inside this function, when a
+	component changes, we must re-compile it EVEN if it's already defined on
+	state.components.
+
+	When a subcomponent is removed, we may also check 
+
+	*/
 	if ( state.components[ component ] != undefined )
 		return true;
 
@@ -74,9 +88,10 @@ const compile_flow = async function ( component, route, state, parent_end ) {
 	flow_instance.unit[ 'read' ] 			= read;
 	flow_instance.unit[ 'compile_single' ] 	= compile_single;
 	flow_instance.unit[ 'subcomponents' ] 	= subcomponents;
+	flow_instance.unit[ 'translate' ] 		= translate_component;
 	flow_instance.unit[ 'cache' ] 			= cache;
 
-	flow_instance.flow[ 'execution' ] 		= [ 'read', 'compile_single', 'subcomponents', 'cache' ];
+	flow_instance.flow[ 'execution' ] 		= [ 'read', 'compile_single', 'subcomponents', 'translate', 'cache' ];
 
 	return flow_instance.run( 'execution' );
 	

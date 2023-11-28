@@ -7,7 +7,6 @@ Also, state.app.code must have the 'app.js' code
 
 */
 
-import { existsSync } 	from 'fs';
 import { EOL } 			from 'os';
 import vm 				from 'vm';
 

@@ -32,14 +32,35 @@ export const compile_all = async function ( state, next, end ) {
 
 	const all_flows = []
 
+	/*
+		
+	The format for setting routes and the components on chosen areas is as follows:
+
+	app.route['/'] = {
+		'example_area_1': 'ExampleComponent1'
+		'example_area_2': 'ExampleComponent2'
+	}
+
+	app.route['/another-url'] = {
+		'example_area_1': 'ExampleComponent3'
+		'example_area_2': 'ExampleComponent4'
+	}
+
+	*/
+
+
+	// First, we iterate over each route
 	for ( const route in state.app.route ) {
 
 		state.components_per_route[ route ] = {}
 
+		// On each route, we get the object which contains each pair of {name_of_area}: {name_of_component}
 		const areas = state.app.route[ route ]
 
 		for ( const area in areas ) {
 
+			// Here we are reading one pair as {area}: {component}
+			// These variable names are used just to simplify the comprehension
 			const component = areas[ area ];
 
 			/*

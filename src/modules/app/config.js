@@ -6,7 +6,11 @@ It expects state to be an object with, at most,
 a 'config' property.
 
 In the app.config property, every possible
-configuration can be predefined and will be preserved
+configuration can be predefined and will be preserved,
+with the exception of the two managed properties:
+
+- state.app
+- state.errors
 
 */
 

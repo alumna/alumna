@@ -35,7 +35,7 @@
 							"type": "MemberExpression",
 							"object": {
 								"type": "Identifier",
-								"name": "Alumna"
+								"name": "Al"
 							},
 							"computed": false,
 							"property": {
@@ -68,7 +68,7 @@
 							"type": "MemberExpression",
 							"object": {
 								"type": "Identifier",
-								"name": "Alumna"
+								"name": "Al"
 							},
 							"computed": false,
 							"property": {
@@ -95,7 +95,7 @@
 							"type": "MemberExpression",
 							"object": {
 								"type": "Identifier",
-								"name": "Alumna"
+								"name": "Al"
 							},
 							"computed": false,
 							"property": {
@@ -137,7 +137,7 @@
 										"type": "MemberExpression",
 										"object": {
 											"type": "Identifier",
-											"name": "Alumna"
+											"name": "Al"
 										},
 										"computed": false,
 										"property": {
@@ -180,7 +180,7 @@
 								"type": "MemberExpression",
 								"object": {
 									"type": "Identifier",
-									"name": "Alumna"
+									"name": "Al"
 								},
 								"computed": false,
 								"property": {
@@ -258,7 +258,7 @@
 										"type": "MemberExpression",
 										"object": {
 											"type": "Identifier",
-											"name": "Alumna"
+											"name": "Al"
 										},
 										"computed": false,
 										"property": {
@@ -313,7 +313,7 @@
 																"type": "MemberExpression",
 																"object": {
 																	"type": "Identifier",
-																	"name": "Alumna"
+																	"name": "Al"
 																},
 																"computed": false,
 																"property": {
@@ -355,7 +355,7 @@
 																			"type": "MemberExpression",
 																			"object": {
 																				"type": "Identifier",
-																				"name": "Alumna"
+																				"name": "Al"
 																			},
 																			"computed": false,
 																			"property": {
@@ -410,7 +410,7 @@
 																									"type": "MemberExpression",
 																									"object": {
 																										"type": "Identifier",
-																										"name": "Alumna"
+																										"name": "Al"
 																									},
 																									"computed": false,
 																									"property": {
@@ -453,7 +453,7 @@
 																	"type": "MemberExpression",
 																	"object": {
 																		"type": "Identifier",
-																		"name": "Alumna"
+																		"name": "Al"
 																	},
 																	"computed": false,
 																	"property": {

@@ -3,7 +3,7 @@
 # Module specification:
 
 It expects that state.config.dir exists and is a
-valid directory. Default is is '.'
+valid directory. Default is '.'
 
 Also, it validates if 'app.js' exists inside this
 directory.

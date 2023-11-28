@@ -19,7 +19,7 @@ const find_in_tree = function ( element, params ) {
 
     if ( element.type === 'VariableDeclarator' ) {
         
-        if ( element.init?.object?.object?.name === 'Alumna' && element.init?.object?.property?.name === 'components' )
+        if ( element.init?.object?.object?.name === 'Al' && element.init?.object?.property?.name === 'components' )
             return params.found[ element.init.property.value ] = true;
         
         if ( element.init?.body?.body )
@@ -49,7 +49,7 @@ const subcomponents = async function ( state, next, end ) {
 
     tree.body.forEach( element => find_in_tree( element, params ) )
 
-    /* If no subcomponent found, move forward */
+    /* If no subcomponent was found, move forward */
     if ( Object.keys( params.found ).length == 0 )
     	return next();
 

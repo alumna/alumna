@@ -1,17 +1,19 @@
-import { Unitflow } 	from '@alumna/unitflow';
+import { Unitflow } 		from '@alumna/unitflow';
 
-// App units
-import { config }		from './modules/app/config';
-import { read }			from './modules/app/read';
-import { routes }		from './modules/app/routes';
-import { validations }	from './modules/app/validations';
-import { server }		from './modules/app/server';
+// App units (functions)
+import { config }			from './modules/app/config';
+import { read }				from './modules/app/read';
+import { routes }			from './modules/app/routes';
+import { validations }		from './modules/app/validations';
+import { server }			from './modules/app/server';
 
 // Components units
-import { compile_all }	from './modules/components/compile_all';
+import { compile_all }		from './modules/components/compile_all';
 
 // App code
-import { code }			from './modules/app/code';
+import { code }				from './modules/app/code';
+import { compile }			from './modules/app/compile';
+import { app_translate }	from './modules/app/translate';
 
 // The beginning
 export class Alumna {
@@ -36,11 +38,13 @@ export class Alumna {
 		this.library.unit[ 'server' ] 				= server
 
 		// # Read all informed components, and search for their subcomponents, creating an indexed map of components
-		// # Each Svelte component will be transformed to the Alumna format and WILL be cached on the web server ("liven") after its compilation and transformation
+		// # Each Svelte component will be transformed to the Alumna format and will be cached on the web server ("liven") *after* its compilation and transformation
 		this.library.unit[ 'components' ]			= compile_all
 
-		// # Compile the main app and save it as index.html with the js code inlined
-		//this.library.unit[ 'app_code' ]				= code
+		// # Compile the main app code
+		this.library.unit[ 'app_code' ]				= code
+		this.library.unit[ 'app_compile' ]			= compile
+		this.library.unit[ 'app_translate' ]		= app_translate
 
 		// # Serve them using @alumna/liven
 

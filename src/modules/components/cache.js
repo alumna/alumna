@@ -1,7 +1,6 @@
 export const cache = async function ( state, next, end ) {
 
-	const component = state.component
-	state.global.server.memory( '/components/' + component + '.html', state.global.components[ component ].source )
+	state.global.server.memory( '/components/' + state.component + '.js', state.global.components[ state.component ].compiled.js.code )
 
 	next();
 

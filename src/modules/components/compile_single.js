@@ -5,8 +5,6 @@
 */
 
 import * as svelte from 'svelte/compiler';
-import { writeFileSync } from 'fs';
-
 
 export const compile_single = async function ( state, next, end ) {
 
