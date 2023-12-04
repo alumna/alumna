@@ -57,7 +57,7 @@ export const server = async function ( state, next, end ) {
 	state.on_event = () => false;
 	state.server = await liven( server_config )
 
-	// Save the port now, in case it wasn't previously specified
+	// Save the port now, to the case when it wasn't previously specified
 	state.config.port = state.server.port
 
 	next();

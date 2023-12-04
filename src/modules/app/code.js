@@ -8,8 +8,8 @@ export const code = async function ( state, next, end ) {
 	<script>
 		let areas = {}
 
-		export const show = function (area, component) {
-			areas[area] = component
+		export const show = function (updated) {
+			areas = updated
 		}
 	</script>
 

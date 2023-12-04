@@ -14,7 +14,7 @@ with the exception of the two managed properties:
 
 */
 
-export const config = function ( state, next ) {
+export const app_config = function ( state, next ) {
 	
 	state.config = Object.assign({
 

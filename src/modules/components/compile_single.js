@@ -16,14 +16,14 @@ export const compile_single = async function ( state, next, end ) {
 		state.global.components[ component ].compiled = svelte.compile( source )
 
 		next();
-    }
-    catch ( error ) {
+	}
+	catch ( error ) {
 
-    	state.global.errors[ 'Component ' + component +  ' on route ' + route + ':' ] = error.name + ' on line ' + error.start?.line + ' position ' + error.pos;
+		state.global.errors[ 'Component ' + component +  ' on route ' + route + ':' ] = error.name + ' on line ' + error.start?.line + ' position ' + error.pos;
 
-    	end();
+		end();
 
-    	// state.global.end();
-    }
+		// state.global.end();
+	}
 
 }

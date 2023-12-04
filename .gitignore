@@ -9,6 +9,3 @@ node_modules/
 
 # VS Code directory
 .vscode
-
-# Distribution files
-dist

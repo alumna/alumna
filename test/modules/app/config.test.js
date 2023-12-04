@@ -1,4 +1,4 @@
-import { config } from './../../../src/modules/app/config.js';
+import { app_config } from './../../../src/modules/app/config.js';
 
 /*
 
@@ -21,7 +21,7 @@ describe( 'Applying the initial Alumna configuration', () => {
 			  next  = () => {},
 			  end   = () => {};
 		
-		await config( state, next, end )
+		await app_config( state, next, end )
 
 		expect( state ).toEqual({
 			config: { dir: '.' },
@@ -39,7 +39,7 @@ describe( 'Applying the initial Alumna configuration', () => {
 			  next  = () => {},
 			  end   = () => {};
 		
-		await config( state, next, end )
+		await app_config( state, next, end )
 
 		expect( state ).toEqual({
 			config: { dir: '/home/user/project/dir', test: 'property' },

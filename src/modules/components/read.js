@@ -21,14 +21,11 @@ export const read = async function ( state, next, end ) {
 	const full_path		= join( state.global.config.dir, relative_path );
 
 	if ( !existsSync( full_path ) ) {
-		
 		state.global.errors[ "Route: '" + state.route + "'" ] = 'Non-existent component file: ' + relative_path;
-		
 		return end();
 	}
 
 	state.global.components[ state.component ].source = readFileSync( full_path, 'utf8' )
-
 	next();
 
 }

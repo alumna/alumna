@@ -1,13 +1,17 @@
 import { code } from './../../../src/modules/app/code.js';
+import { app_compile } from './../../../src/modules/app/compile.js';
+import { app_translate } from './../../../src/modules/app/translate.js';
+
+import { writeFileSync, readFileSync } from 'fs';
 
 
 describe( 'Creating app base javascript code', () => {
 
-	test('1. Creating app base javascript code', async () => {
+	const state = { app: { areas: [ 'header', 'content' ] } },
+		  next  = () => {},
+		  end   = () => {};
 
-		const state = { app: { areas: [ 'header', 'content' ] } },
-			  next  = () => {},
-			  end   = () => {};
+	test('1. Creating app code', async () => {
 		
 		await code( state, next, end )
 
@@ -19,8 +23,8 @@ describe( 'Creating app base javascript code', () => {
 	<script>
 		let areas = {}
 
-		export const show = function (area, component) {
-			areas[area] = component
+		export const show = function (updated) {
+			areas = updated
 		}
 	</script>
 
@@ -29,6 +33,22 @@ describe( 'Creating app base javascript code', () => {
 				}
 			}
 		});
+
+	});
+
+	test('2. Compile app code', async () => {
+		
+		await app_compile( state, next, end )
+
+		expect( state.app.compile.compiled.js.code ).toEqual(readFileSync( './test/modules/app/code/compiled.js', 'UTF8' ));
+
+	});
+
+	test('3. Translate app code', async () => {
+		
+		await app_translate( state, next, end )
+
+		expect( state.app.compile.compiled.js.code ).toEqual(readFileSync( './test/modules/app/code/translated.js', 'UTF8' ));
 
 	});
 
