@@ -17,9 +17,6 @@ const Al = {
 	// Svelte internal libraries, used by components
 	lib,
 
-	// Navaid instance
-	nav: navaid(),
-
 	// Load component
 	load (url) {
 		return new Promise( res => {
@@ -75,6 +72,9 @@ const Al = {
 	},
 
 	start () {
+		// Create a router instance
+		Al.nav = new navaid();
+
 		// Identify the environment
 		const mobile = window && (window.cordova || window.location.protocol == 'file:')
 
@@ -85,10 +85,10 @@ const Al = {
 		Al.register()
 
 		// Start main Svelte instance
-		window.app = new App()
+		window.app = new App({ target: document.body })
 
 		// Start the router library
-		Al.nav( mobile ? '/' : undefined )
+		Al.nav.listen( mobile ? '/' : undefined )
 	}
 }
 

@@ -1,55 +1,45 @@
 {
-  "name": "@alumna/alumna",
-  "version": "3.0.0",
-  "description": "Alumna Framework: Development for Humans",
-  "type": "module",
-  "scripts": {
-    "test": "jest --coverage",
-    "clear_jest": "jest --clearCache",
-    "browser": "rollup --config other/rollup/browser.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/alumna/alumna.git"
-  },
-  "author": "Paulo Coghi",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/alumna/alumna/issues"
-  },
-  "jest": {
-    "coverageDirectory": "./coverage/",
-    "collectCoverage": true,
-    "collectCoverageFrom": [
-      "**/src/**",
-      "!**/docs/**",
-      "!**/node_modules/**",
-      "!**/other/**"
-    ],
-    "verbose": true,
-    "testEnvironment": "node"
-  },
-  "devDependencies": {
-    "@alumna/liven": "^1.4.0",
-    "@alumna/unitflow": "^1.0.1",
-    "@babel/core": "^7.23.3",
-    "@babel/plugin-transform-modules-commonjs": "^7.23.3",
-    "@rollup/plugin-commonjs": "^25.0.7",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@rollup/plugin-terser": "^0.4.4",
-    "get-port": "^7.0.0",
-    "jest": "^29.7.0",
-    "navaid": "^1.2.0",
-    "rollup": "^4.6.1",
-    "svelte": "^4.2.3"
-  },
-  "babel": {
-    "env": {
-      "test": {
-        "plugins": [
-          "@babel/plugin-transform-modules-commonjs"
-        ]
-      }
-    }
-  }
+	"name": "@alumna/alumna",
+	"version": "3.0.0",
+	"description": "Alumna Framework: Development for Humans",
+	"type": "module",
+	"scripts": {
+		"test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
+		"clear_jest": "node --experimental-vm-modules node_modules/jest/bin/jest.js --clearCache",
+		"browser": "rollup --config other/rollup/browser.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/alumna/alumna.git"
+	},
+	"author": "Paulo Coghi",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/alumna/alumna/issues"
+	},
+	"jest": {
+		"coverageDirectory": "./coverage/",
+		"collectCoverage": true,
+		"collectCoverageFrom": [
+			"**/src/**",
+			"!**/docs/**",
+			"!**/node_modules/**",
+			"!**/other/**"
+		],
+		"verbose": true,
+		"testEnvironment": "node",
+		"transform": {}
+	},
+	"devDependencies": {
+		"@alumna/liven": "^1.5.0",
+		"@alumna/unitflow": "^1.0.1",
+		"@rollup/plugin-commonjs": "^25.0.7",
+		"@rollup/plugin-node-resolve": "^15.2.3",
+		"@rollup/plugin-terser": "^0.4.4",
+		"get-port": "^7.0.0",
+		"jest": "^29.7.0",
+		"navaid": "^1.2.0",
+		"rollup": "^4.6.1",
+		"svelte": "^4.2.3"
+	}
 }

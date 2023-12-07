@@ -83,6 +83,9 @@ export const compile_all = async function ( state, next, end ) {
 
 	await Promise.all( all_flows )
 
+	if ( Object.keys(state.errors).length )
+		return end();
+
 	next();
 	
 }

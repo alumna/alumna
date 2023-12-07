@@ -9,14 +9,12 @@
 
 import { compile_flow } from './compile_flow'
 
-
 const find_in_tree = function ( element, params ) {
 
 	if ( element.type === 'VariableDeclaration' )
 		return element.declarations.forEach( child => find_in_tree( child, params ) )
 
 	if ( element.type === 'VariableDeclarator' ) {
-
 		if ( element.init?.object?.object?.name === 'Al' && element.init?.object?.property?.name === 'component' )
 			return params.found[ element.init.property.value ] = true;
 
@@ -41,7 +39,7 @@ const subcomponents = async function ( state, next, end ) {
 	const component = state.component
 	const tree      = state.global.components[ component ].compiled.ast.instance?.content?.body
 
-	// When there isn't a script content and body, just skip
+	// Just skip when there isn't a script content and body
 	if (!tree) return next();
 	
 	const route     = state.route

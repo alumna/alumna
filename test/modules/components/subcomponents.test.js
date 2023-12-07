@@ -1,5 +1,13 @@
-import { subcomponents } from './../../../src/modules/components/subcomponents.js';
-import * as compile_flow from './../../../src/modules/components/compile_flow.js';
+import { jest } from '@jest/globals';
+
+let calls = {}
+
+jest.unstable_mockModule('./../../../src/modules/components/compile_flow.js', () => ({
+	compile_flow: jest.fn(( subcomponent, route, state, parent_end ) => { calls[subcomponent] = { route }; calls.state = !!state.components['example'] }),
+}));
+
+// import { subcomponents } from './../../../src/modules/components/subcomponents.js';
+// import { compile_flow } from './../../../src/modules/components/compile_flow.js';
 import * as svelte from 'svelte/compiler';
 import { readFileSync } from 'fs';
 
@@ -7,12 +15,7 @@ describe( 'Valid case of subcomponents definition', () => {
 
 	test('1. Multiple subcomponents', async () => {
 
-		/* Mocking external functions/modukes */
-
-		let calls = {}
-
-		const mock = jest.spyOn( compile_flow, 'compile_flow' );
-		mock.mockImplementation( ( subcomponent, route, state, parent_end ) => { calls[subcomponent] = { route }; calls.state = !!state.components['example'] });
+		const { subcomponents } = await import('./../../../src/modules/components/subcomponents.js');
 
 		/* Preparing the contract to properly test the function */
 
@@ -51,31 +54,28 @@ describe( 'Valid case of subcomponents definition', () => {
 			'Component_13': true,
 		});
 
-		// expect( calls ).toEqual({
-		// 	'state': true,
-		// 	'Component_1': { route: '/' },
-		// 	'Component_2': { route: '/' },
-		// 	'Component_3': { route: '/' },
-		// 	'Component_4': { route: '/' },
-		// 	'Component_5': { route: '/' },
-		// 	'Component_6': { route: '/' },
-		// 	'Component_7': { route: '/' },
-		// 	'Component_8': { route: '/' },
-		// 	'Component_9': { route: '/' },
-		// 	'Component_10': { route: '/' },
-		// 	'Component_11': { route: '/' },
-		// 	'Component_12': { route: '/' },
-		// 	'Component_13': { route: '/' },
-		// });
+		expect( calls ).toEqual({
+			'state': true,
+			'Component_1': { route: '/' },
+			'Component_2': { route: '/' },
+			'Component_3': { route: '/' },
+			'Component_4': { route: '/' },
+			'Component_5': { route: '/' },
+			'Component_6': { route: '/' },
+			'Component_7': { route: '/' },
+			'Component_8': { route: '/' },
+			'Component_9': { route: '/' },
+			'Component_10': { route: '/' },
+			'Component_11': { route: '/' },
+			'Component_12': { route: '/' },
+			'Component_13': { route: '/' },
+		});
 
 	});
 
 	test('2. Components without JS code', async () => {
 
-		/* Mocking external functions/modukes */
-
-		const mock = jest.spyOn( compile_flow, 'compile_flow' );
-		mock.mockImplementation(() => {});
+		const { subcomponents } = await import('./../../../src/modules/components/subcomponents.js');
 
 		/* Preparing the contract to properly test the function */
 

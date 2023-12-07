@@ -18,7 +18,7 @@ import { join } 					from 'path';
 export const read = async function ( state, next, end ) {
 
 	const relative_path = state.component + '.html';
-	const full_path		= join( state.global.config.dir, relative_path );
+	const full_path		= join( state.global.config.dir, 'components/', relative_path );
 
 	if ( !existsSync( full_path ) ) {
 		state.global.errors[ "Route: '" + state.route + "'" ] = 'Non-existent component file: ' + relative_path;

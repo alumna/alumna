@@ -9,3 +9,9 @@ node_modules/
 
 # VS Code directory
 .vscode
+
+# lock files
+pnpm-lock.yaml
+
+# manual test files
+ignore.js

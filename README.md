@@ -1,8 +1,8 @@
 # Alumna Framework: Development for Humans
 
-![npm](https://img.shields.io/npm/v/@alumna/alumna.svg) [![Build Status](https://travis-ci.org/alumna/alumna.svg?branch=2.0)](https://travis-ci.org/alumna/alumna) [![codecov](https://codecov.io/gh/alumna/alumna/branch/2.0/graph/badge.svg)](https://codecov.io/gh/alumna/alumna) ![npm](https://img.shields.io/npm/dt/@alumna/alumna.svg) [![Join the community!](https://withspectrum.github.io/badge/badge.svg)](https://spectrum.chat/alumna)
+![npm](https://img.shields.io/npm/v/@alumna/alumna.svg) [![codecov](https://codecov.io/gh/alumna/alumna/branch/2.0/graph/badge.svg)](https://codecov.io/gh/alumna/alumna) ![npm](https://img.shields.io/npm/dt/@alumna/alumna.svg) [![Join the community!](https://withspectrum.github.io/badge/badge.svg)](https://spectrum.chat/alumna)
 
-Alumna is a **front-end framework** and its goal is to make universal app development as **human-friendly** as possible. Nevertheless, besides the easiness, we also consider high performance and safety.
+Alumna is a **front-end meta-framework** and its goal is to make universal app development as **human-friendly** as possible. Nevertheless, besides the easiness, we also consider high performance and safety.
 
 
 # ![alumna](other/media/alumna.png)

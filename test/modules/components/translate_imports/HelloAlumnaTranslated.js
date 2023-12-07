@@ -10,7 +10,7 @@ const {
 	insert,
 	noop,
 	safe_not_equal
-} = Al.shared;
+} = Al.lib;
 
 function add_css(target) {
 	append_styles(target, "svelte-ql8zzr", "@import 'https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@200&display=swap';.container.svelte-ql8zzr{height:50vw;display:flex;align-items:center;justify-content:center;font:200 5rem 'Source Sans Pro', sans-serif;color:#b8af9e}");

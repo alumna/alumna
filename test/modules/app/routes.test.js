@@ -63,8 +63,7 @@ describe( 'Reading routes from a fictitious app.js file', () => {
 		await routes( state, next, end )
 
 		expect( state.errors ).toEqual({
-			
-			'app.js': "Cannot set properties of undefined (setting '/') in src/app.js, line: 6"
+			'app.js': process.versions.bun ? "undefined is not an object (evaluating 'app.routes['/'] = {\n\t\t\t\t'content': 'HelloAlumna'\n\t\t\t}') in src/app.js, line:  undefined is not an object (evaluating 'app.routes['/'] = {" : "Cannot set properties of undefined (setting '/') in src/app.js, line: 6"
 		});
 
 	});

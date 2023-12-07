@@ -17,4 +17,6 @@ export const code = async function ( state, next, end ) {
 	`
 
 	state.app.compile = { source }
+
+	next();
 }

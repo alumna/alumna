@@ -1,7 +1,7 @@
 import { Unitflow } 		from '@alumna/unitflow';
 
 // App units (functions)
-import { app_config }		from './modules/app/app_config';
+import { app_config }		from './modules/app/config';
 import { read }				from './modules/app/read';
 import { routes }			from './modules/app/routes';
 import { validations }		from './modules/app/validations';
@@ -12,15 +12,14 @@ import { compile_all }		from './modules/components/compile_all';
 
 // App code generation
 import { code }				from './modules/app/code';
-import { app_compile }		from './modules/app/app_compile';
+import { app_compile }		from './modules/app/compile';
 import { app_translate }	from './modules/app/translate';
 import { dynamic_routing }	from './modules/app/dynamic_routing';
 import { cache }			from './modules/app/cache';
 import { save }				from './modules/app/save';
 
-// Serve units
+// Re-compiling function with rules when components change (notified by on_event signal)
 import { on_event }			from './modules/app/on_event';
-import { serve }			from './modules/app/serve';
 
 // The beginning
 export class Alumna {
@@ -54,7 +53,7 @@ export class Alumna {
 
 		// # Compile the main app code
 		this.library.unit[ 'app_code' ]				= code
-		this.library.unit[ 'app_compile' ]			= compile
+		this.library.unit[ 'app_compile' ]			= app_compile
 		this.library.unit[ 'app_translate' ]		= app_translate
 		this.library.unit[ 'dynamic_routing' ]		= dynamic_routing
 
@@ -70,25 +69,22 @@ export class Alumna {
 		// # Save the main app code, when running in build mode
 		this.library.unit[ 'save' ]					= save
 
-		// # Serve them using @alumna/liven
-		this.library.unit[ 'serve' ]				= serve
-
 		// # Bootstrap config
 		this.library.flow[ 'bootstrap' ]			= [ 'app_config' ]
 		this.library.run( 'bootstrap' )
 
 		// # Define the flows
-		this.library.flow[ 'dev' ]					= [ 'app_read', 'app_routes', 'app_validations', 'server', 'components', 'app_code', 'app_compile', 'app_translate', 'dynamic_routing', 'cache', 'on_event', 'serve' ]
-		this.library.flow[ 'refresh_app' ]			= [ 'app_read', 'app_routes', 'app_validations', 'app_code', 'app_compile', 'app_translate', 'dynamic_routing', 'cache' ]
-		this.library.flow[ 'refresh_component' ]	= [ 'app_read', 'app_routes', 'app_validations', 'app_code', 'app_compile', 'app_translate', 'dynamic_routing', 'cache' ]
-		this.library.flow[ 'refresh_all' ]			= [ 'app_read', 'app_routes', 'app_validations', 'app_code', 'app_compile', 'app_translate', 'dynamic_routing', 'cache' ]
+		this.library.flow[ 'dev' ]					= [ 'app_read', 'app_routes', 'app_validations', 'server', 'components', 'app_code', 'app_compile', 'app_translate', 'dynamic_routing', 'cache', 'on_event' ]
+		// this.library.flow[ 'refresh_app' ]			= [ 'app_read', 'app_routes', 'app_validations', 'app_code', 'app_compile', 'app_translate', 'dynamic_routing', 'cache' ]
+		// this.library.flow[ 'refresh_component' ]	= [ 'app_read', 'app_routes', 'app_validations', 'app_code', 'app_compile', 'app_translate', 'dynamic_routing', 'cache' ]
+		// this.library.flow[ 'refresh_all' ]			= [ 'app_read', 'app_routes', 'app_validations', 'components', 'app_code', 'app_compile', 'app_translate', 'dynamic_routing', 'cache' ]
 
 	}
 
 	async dev () {
 
 		// Dev mode flow
-		this.library.run( 'dev' )
+		return this.library.run( 'dev' )
 	}
 
 }

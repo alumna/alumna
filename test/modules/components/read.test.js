@@ -7,7 +7,7 @@ describe( 'Reading components', () => {
 
 		/* Arrange */
 
-		const source  = readFileSync( './test/modules/components/read/HelloAlumna.html', 'utf8' )
+		const source  = readFileSync( './test/modules/components/read/components/HelloAlumna.html', 'utf8' )
 		let end_calls = 0, next_calls = 0;
 
 		const state = {
