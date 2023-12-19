@@ -54,7 +54,7 @@ describe( 'Creating app base javascript code', () => {
 
 		const translated = readFileSync( './test/modules/app/code/translated.js', 'UTF8' )
 
-		expect( state.app.compile.compiled.js.code ).toEqual( normalize( translated ) );
+		expect( normalize( state.app.compile.compiled.js.code ) ).toEqual( normalize( translated ) );
 
 	});
 
