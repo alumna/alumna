@@ -2,6 +2,7 @@ import { compile_single } from './../../../src/modules/components/compile_single
 import { readFileSync } from 'fs';
 // import { readFileSync, writeFileSync } from 'fs';
 
+// Replace windows CRLF ( \r\n ) to LF ( \n )
 const normalize = str => str.replaceAll( '\r\n', '\n' )
 
 describe( 'Compiling the components', () => {
