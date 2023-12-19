@@ -1,5 +1,8 @@
 import { routes } from './../../../src/modules/app/routes.js';
 
+// Replace windows CRLF ( \r\n ) to LF ( \n )
+const normalize = str => str.replaceAll( '\r\n', '\n' )
+
 /*
 
 Contract of routes.js:
@@ -70,9 +73,7 @@ describe( 'Reading routes from a fictitious app.js file', () => {
 		if ( process.versions.bun )
 			expected = "undefined is not an object (evaluating 'app.routes['/'] = {\n\t\t\t\t'content': 'HelloAlumna'\n\t\t\t}') in src/app.js, line:  undefined is not an object (evaluating 'app.routes['/'] = {"
 
-		expect( state.errors ).toEqual({
-			'app.js': expected
-		});
+		expect( normalize( state.errors[ 'app.js' ] ) ).toEqual( normalize( expected ) );
 
 	});
 
