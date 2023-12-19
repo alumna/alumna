@@ -30,7 +30,6 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'pnpm'
-    - run: npm install -g pnpm
     - run: pnpm install -g codecov
     - run: pnpm install --frozen-lockfile
     - run: pnpm test
