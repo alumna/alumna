@@ -1,8 +1,3 @@
-# Alumna build files
-/alumna.js
-/cli.js
-/browser.js
-
 # Coverage directory used by tools like istanbul
 coverage
 
@@ -11,3 +6,10 @@ node_modules/
 
 # macOS contributros
 .DS_Store
+
+# VS Code directory
+.vscode
+
+# lock files
+# allow only pnpm pnpm-lock.yaml, ignoring package-lock.json
+package-lock.json

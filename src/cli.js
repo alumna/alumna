@@ -1,18 +1,12 @@
-import fs 			from 'fs';
-import mri			from 'mri';
+import { readFileSync } from 'fs';
+import mri				from 'mri';
 
 // Alumna Library
-import alumna		from './alumna.js';
-
-// Util to update the user's alumna.hjson, used in all modes
-import update		from './utils/updateOptions.js';
-
-// CLI to install and update modules
-import * as modules	from './cli/modules.js';
+import { Alumna }		from './alumna.js';
 
 // Command line help info
-import help 		from './help.md';
-import { version } 	from '../package.json';
+import help 			from './help.md';
+import { version } 		from '../package.json';
 
 
 
@@ -33,13 +27,7 @@ import { version } 	from '../package.json';
  * [ Dev mode ]
  *
  * Compile all components in src/components folder,
- * saving them into dev/components.
- *
- * Rsync everthing else (assets) in parallel.
- *
- * After it, the main "dev/app.js" file is generated
- * and a live-reload session is initiated, opening
- * the browser automatically.
+ * saving them in memory.
  * 
  * Everything is done without minification and
  * without tree-shaking, for speed in development.
@@ -63,32 +51,18 @@ import { version } 	from '../package.json';
 
 /* Getting command line arguments */
 const command = mri( process.argv.slice( 2 ), {
-
 	alias: {
 		h: 'help',
-		p: 'preview',
-		u: 'uncompressed',
 		v: 'version'
 	}
-} );
+});
 
-const read_options_and_run = function ( run ) {
-
-	// Check the existence of alumna.hjson config file
-	fs.readFile( 'alumna.hjson', 'utf8', ( err, data ) => {
-
-		if ( !err ) {
-
-			// Getting config data
-			update( data ).then( options => run( options, command ) );
-
-		} else {
-			
-			// This directory isn't an Alumna Project
-			console.log( 'Missing \'alumna.hjson\' file. It seems that this directory isn\'t an Alumna Project' );
-		}
-	} );
-
+const read_options = function () {
+	try {
+		return readFileSync( 'alumna.hjson', 'utf8' )
+	} catch ( e ) {
+		return false
+	}
 }
 
 if ( command.help || ( process.argv.length <= 2 && process.stdin.isTTY ) ) {
@@ -102,36 +76,37 @@ if ( command.help || ( process.argv.length <= 2 && process.stdin.isTTY ) ) {
 } else {
 
 	const task = command[ '_' ][ 0 ];
-
+	
 	switch ( task ) {
 
-		/* DEV MODE */
+		/* BUILD AND DEV MODE */
 		case "dev":
-		case "build":
+		case "build": {
+			const options = read_options();
 
-			read_options_and_run( alumna[ task ] );
+			if ( !options ) {
+				console.log( 'Missing \'alumna.hjson\' file. It seems that this directory isn\'t an Alumna Project' );
+				break;
+			}
 
+			const alumna = new Alumna({ dir: './src/' })
+			alumna[ task ]()
 			break;
-
+		}
 		/* NEW MODE */
-		case "new":
-
-			command[ '_' ].length == 2 ? alumna.newProject( command[ '_' ][ 1 ] ) : console.log( 'Use: alumna new <project_name>' );
+		case "new": {
+			if ( command[ '_' ].length != 2 ) {
+				console.log( 'Use: alumna new <project_name>' );
+				break;
+			}
 			
+			const alumna = new Alumna({ dir: command[ '_' ][ 1 ] })
+			alumna.new()
 			break;
-
-		/* NEW MODE */
-		case "install":
-		case "update":
-
-			read_options_and_run( modules.install );
-			
-			break;
-
+		}
+		/* UNRECOGNIZED COMMAND */
 		default:
-
 			console.error( 'Unrecognised command' + ( task ? ' ' + task : '' ) + '. Type alumna --help to see instructions' );
-
 			break;
 	}
 }

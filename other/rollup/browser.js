@@ -1,24 +1,17 @@
-import commonjs 	from 'rollup-plugin-commonjs';
-import resolve 		from 'rollup-plugin-node-resolve';
-import { terser } 	from 'rollup-plugin-terser';
+import { nodeResolve } 	from '@rollup/plugin-node-resolve';
+import terser 			from '@rollup/plugin-terser';
 
 export default {
 	input: 'src/browser/browser.js',
 
 	output: {
-		file: 'browser.js',
+		file: 'dist/browser.js',
 		format: 'iife',
-		name: 'Alumna',
+		name: 'Al',
 	},
 
 	plugins: [
-
-		resolve({
-			jsnext: true
-		}),
-
-		commonjs(),
-
+		nodeResolve({ jsnext: true }),
 		terser()
 	]
 };

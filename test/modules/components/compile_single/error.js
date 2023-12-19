@@ -1,0 +1,1 @@
+{"name":"ParseError","code":"parse-error","start":{"line":6,"column":10,"character":71},"end":{"line":6,"column":10,"character":71},"pos":71,"frame":"4: \n5: <script>\n6:   let name 'Alumna v3';\n              ^\n7: </script>"}
