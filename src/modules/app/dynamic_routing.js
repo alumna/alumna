@@ -10,7 +10,6 @@ Al.deps = ${JSON.stringify(components_per_route)}
 
 Al.routes = ${JSON.stringify(state.app.route)}
 `
-
 	next();
 
 };

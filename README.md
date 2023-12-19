@@ -19,4 +19,4 @@ Alumna is open-source (MIT), written in Javascript and based on [Svelte](https:/
 
 ## License
 
-Copyright (c) 2015-2021 Paulo Coghi and contributors. Released under an [MIT license](LICENSE.md).
+Copyright (c) 2015-2024 Paulo Coghi and contributors. Released under an [MIT license](LICENSE.md).

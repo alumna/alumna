@@ -19,7 +19,7 @@ export const server = async function ( state, next, end ) {
 		// be called.
 
 		// With it we can check if the referenced file is a component and if it's used
-		// by the application. When true, this funciton calls a flow with units that
+		// by the application. When true, this funciton calls a flow with units which
 		// recompile and update this component in memory, refreshing the app
 
 		// On future versions, we aim to only change the component data, without refreshing
@@ -35,8 +35,8 @@ export const server = async function ( state, next, end ) {
 		// Thus, if a component is deleted, it is also removed from memory, instead of
 		// being recompiled. Even in this case, the app is refreshed accordingly
 		
-		// More info on each parameter on https://github.com/alumna/liven
-		on_event ( event_data ) { return state.on_event( state, event_data ) }
+		// More info about each parameter available on https://github.com/alumna/liven
+		on_event ( event_data ) { return state.on_event( event_data ) }
 
 	}
 
@@ -52,8 +52,21 @@ export const server = async function ( state, next, end ) {
 		server_config.port = state.config.port
 	}
 
-	// Temporary placebo for "on_event" function
-	// It returns false to avoid unnecessary refresh signals from Liven
+	// Temporary placebo for "on_event" function that returns
+	// false to avoid unnecessary refresh signals from Liven
+	// --
+	// It's is made to be replaced later, in the end of the flow,
+	// with a proper "on_event" funciton.
+	// --
+	// The reason we are starting the liven server here is to
+	// allow the caching in memory of the compiled components
+	// at the same time as components are scanned, giving faster
+	// startup time to the development mode
+	// --
+	// Also, caching compiled components in memory eliminates
+	// disk/storage I/O, preserving the developer disk from stress
+	// in large projects, as well as an ultra-fast performance when
+	// developing and re-compiling components over-and-over
 	state.on_event = () => false;
 	state.server = await liven( server_config )
 

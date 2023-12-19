@@ -55,7 +55,7 @@ const compile_flow = async function ( component, route, state, parent_end ) {
 
 	*/
 
-	state.components_per_route[ route ][ component ] = true;
+	if (route) state.components_per_route[ route ][ component ] = true;
 
 	/*
 
@@ -66,7 +66,7 @@ const compile_flow = async function ( component, route, state, parent_end ) {
 	component changes, we must re-compile it EVEN if it's already defined on
 	state.components.
 
-	When a subcomponent is removed, we may also check 
+	When a subcomponent is removed, we may also check
 
 	*/
 	if ( state.components[ component ] != undefined )

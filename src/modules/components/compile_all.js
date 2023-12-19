@@ -34,7 +34,7 @@ export const compile_all = async function ( state, next, end ) {
 
 	/*
 		
-	The format for setting routes and the components on chosen areas is as follows:
+	The format for setting routes (and the components on chosen areas) is as the following example:
 
 	app.route['/'] = {
 		'example_area_1': 'ExampleComponent1'
@@ -72,7 +72,7 @@ export const compile_all = async function ( state, next, end ) {
 			3. At the end of the recursive processing, the global Alumna state will be valid and complete,
 			   without extra effort
 
-			Below, each promise is added to the "all_flows" array, allowing parallel and assynchronous execution
+			Below, each promise is added to the "all_flows" array, allowing parallel and asynchronous execution
 
 			*/
 			all_flows.push( compile_flow( component, route, state, end ) )

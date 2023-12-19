@@ -12,6 +12,4 @@ node_modules/
 
 # lock files
 pnpm-lock.yaml
-
-# manual test files
-ignore.js
+package-lock.json

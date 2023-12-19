@@ -47,14 +47,21 @@ const subcomponents = async function ( state, next, end ) {
 
 	tree.forEach( element => find_in_tree( element, params ) )
 
-	/* If no subcomponent was found, move forward */
-	if ( Object.keys( params.found ).length == 0 )
+	/* If no subcomponent was found, update the subcomponents property to an empty object[1] and, then, move forward */
+	/* [1] This is necessary for cases when the parent component previously had one or more subcomponents and those were later removed */
+	if ( Object.keys( params.found ).length == 0 ) {
+		state.global.components[ component ].subcomponents = {}
 		return next();
+	}
 
 	/* Otherwise, save them on subcomponents property... */
 	Object.assign( state.global.components[ component ].subcomponents, params.found )
 
-	/* ...and compile them recursively */
+	/* ...and skip their re-compilation when just providing their list for the parent component (route == undefined) */
+	if ( state.route === undefined )
+		return next();
+
+	/* ...or compile them recursively */
 	const subcomponents_flows = []
 
 	for ( let subcomponent in params.found )
