@@ -4,6 +4,8 @@ import { app_translate } from './../../../src/modules/app/translate.js';
 
 import { writeFileSync, readFileSync } from 'fs';
 
+// Replace windows CRLF ( \r\n ) to LF ( \n )
+const normalize = str => str.replaceAll( '\r\n', '\n' )
 
 describe( 'Creating app base javascript code', () => {
 
@@ -40,7 +42,9 @@ describe( 'Creating app base javascript code', () => {
 		
 		await app_compile( state, next, end )
 
-		expect( state.app.compile.compiled.js.code ).toEqual(readFileSync( './test/modules/app/code/compiled.js', 'UTF8' ));
+		const compiled = readFileSync( './test/modules/app/code/compiled.js', 'UTF8' )
+
+		expect( state.app.compile.compiled.js.code ).toEqual( normalize( compiled ) );
 
 	});
 
@@ -48,7 +52,9 @@ describe( 'Creating app base javascript code', () => {
 		
 		await app_translate( state, next, end )
 
-		expect( state.app.compile.compiled.js.code ).toEqual(readFileSync( './test/modules/app/code/translated.js', 'UTF8' ));
+		const translated = readFileSync( './test/modules/app/code/translated.js', 'UTF8' )
+
+		expect( state.app.compile.compiled.js.code ).toEqual( normalize( translated ) );
 
 	});
 
