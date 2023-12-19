@@ -2,6 +2,8 @@ import { compile_single } from './../../../src/modules/components/compile_single
 import { readFileSync } from 'fs';
 // import { readFileSync, writeFileSync } from 'fs';
 
+const normalize = str => str.replaceAll( '\r\n', '\n' )
+
 describe( 'Compiling the components', () => {
 
 	test('1. Component with no errors', async () => {
@@ -35,7 +37,7 @@ describe( 'Compiling the components', () => {
         /* Assertions */
 
         expect( state.global.errors ).toEqual( {} );
-        expect( state.global.components[ 'HelloAlumna' ].compiled.js.code ).toEqual( compiled );
+        expect( state.global.components[ 'HelloAlumna' ].compiled.js.code ).toEqual( normalize( compiled ) );
         expect( next_calls ).toBe( 1 );
         expect( end_calls ).toBe( 0 );
 
