@@ -1,6 +1,6 @@
 {
 	"name": "@alumna/alumna",
-	"version": "3.0.1-alpha-3",
+	"version": "3.0.1-alpha",
 	"description": "Alumna Framework: Development for Humans",
 	"type": "module",
 	"main": "alumna.js",

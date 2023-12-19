@@ -1,5 +1,9 @@
 # Alumna changelog
 
+## 3.0.1 - 2023-12-19
+
+* Alumna Frontend v3.0.1-alpha
+
 ## 3.0.0 - 2019-04-16
 
 * Altiva is now Alumna

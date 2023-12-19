@@ -1,11 +1,11 @@
-# Alumna Framework: Development for Humans
+# Alumna Fontend: Development for Humans
 
-![npm](https://img.shields.io/npm/v/@alumna/alumna.svg) [![codecov](https://codecov.io/gh/alumna/alumna/branch/2.0/graph/badge.svg)](https://codecov.io/gh/alumna/alumna) ![npm](https://img.shields.io/npm/dt/@alumna/alumna.svg) [![Join the community!](https://withspectrum.github.io/badge/badge.svg)](https://spectrum.chat/alumna)
+![npm](https://img.shields.io/npm/v/@alumna/alumna.svg) [![codecov](https://codecov.io/gh/alumna/alumna/branch/2.0/graph/badge.svg)](https://codecov.io/gh/alumna/alumna) ![npm](https://img.shields.io/npm/dt/@alumna/alumna.svg)
 
-Alumna is a **front-end meta-framework** and its goal is to make universal app development as **human-friendly** as possible. Nevertheless, besides the easiness, we also consider high performance and safety.
+Alumna is a **front-end meta-framework** and its goal is to make universal app development as **human-friendly** as possible, without compromising high performance and security.
 
 
-# ![alumna](other/media/alumna.png)
+# ![alumna](other/media/alumna.svg)
 
 Alumna is open-source (MIT), written in Javascript and based on [Svelte](https://svelte.technology/).
 
