@@ -11,5 +11,5 @@ node_modules/
 .vscode
 
 # lock files
-pnpm-lock.yaml
+# allow only pnpm pnpm-lock.yaml, ignoring package-lock.json
 package-lock.json
