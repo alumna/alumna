@@ -10,8 +10,8 @@ describe( 'Compiling the components', () => {
 
         /* Arrange */
         
-        const source    = normalize( readFileSync( './test/modules/components/compile_single/HelloAlumna.html', 'utf8' ) )
-        const compiled  = normalize( readFileSync( './test/modules/components/compile_single/HelloAlumna.js', 'utf8' ) )
+        const source    = readFileSync( './test/modules/components/compile_single/HelloAlumna.html', 'utf8' )
+        const compiled  = readFileSync( './test/modules/components/compile_single/HelloAlumna.js', 'utf8' )
 
         let end_calls = 0, next_calls = 0;
 
@@ -37,7 +37,7 @@ describe( 'Compiling the components', () => {
         /* Assertions */
 
         expect( state.global.errors ).toEqual( {} );
-        expect( state.global.components[ 'HelloAlumna' ].compiled.js.code ).toEqual( compiled );
+        expect( state.global.components[ 'HelloAlumna' ].compiled.js.code ).toEqual( normalize( compiled ) );
         expect( next_calls ).toBe( 1 );
         expect( end_calls ).toBe( 0 );
 
