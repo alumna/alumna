@@ -68,7 +68,7 @@ describe( 'Reading routes from a fictitious app.js file', () => {
 		let expected = "Cannot set properties of undefined (setting '/') in src/app.js, line: 6"
 
 		if ( process.platform === "win32" )
-			expected = "Cannot set properties of undefined (setting '/') in src/app.js, line: 6\r\n\t\t\tapp.routes['/'] = {\r\n\t\t\t                ^\r\nTypeError"
+			expected = "Cannot set properties of undefined (setting '/') in src/app.js, line: 6\r\n\t\t\tapp.routes['/'] = {\r\n\t\t\t                ^\nTypeError"
 
 		if ( process.versions.bun )
 			expected = "undefined is not an object (evaluating 'app.routes['/'] = {\n\t\t\t\t'content': 'HelloAlumna'\n\t\t\t}') in src/app.js, line:  undefined is not an object (evaluating 'app.routes['/'] = {"
