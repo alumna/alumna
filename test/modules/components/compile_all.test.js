@@ -18,7 +18,8 @@ describe( 'Mapping components from a ficticious (valid) app object', () => {
 			},
 			errors: {},
 			server: { memory: () => {} },
-			config: { dir: './test/modules/components/compile_all/' }
+			config: { dir: './test/modules/components/compile_all/' },
+			mode: 'dev'
 		};
 
 		const next  = () => {};

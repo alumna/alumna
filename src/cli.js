@@ -1,12 +1,15 @@
-import { readFileSync } from 'fs';
-import mri				from 'mri';
+import { readFileSync } 	from 'fs';
+import mri					from 'mri';
 
 // Alumna Library
-import { Alumna }		from './alumna.js';
+import { Alumna }			from './alumna.js';
 
 // Command line help info
-import help 			from './help.md';
-import { version } 		from '../package.json';
+import help 				from './help.md';
+import { version } 			from '../package.json';
+
+// Error processing
+import { process_errors }	from './modules/errors/process_errors';
 
 
 
@@ -75,9 +78,9 @@ if ( command.help || ( process.argv.length <= 2 && process.stdin.isTTY ) ) {
 
 } else {
 
-	const task = command[ '_' ][ 0 ];
+	const mode = command[ '_' ][ 0 ];
 	
-	switch ( task ) {
+	switch ( mode ) {
 
 		/* BUILD AND DEV MODE */
 		case "dev":
@@ -89,8 +92,20 @@ if ( command.help || ( process.argv.length <= 2 && process.stdin.isTTY ) ) {
 				break;
 			}
 
-			const alumna = new Alumna({ dir: './src/' })
-			alumna[ task ]()
+			const alumna = new Alumna({ dir: './src/', build_dir: './build/' })
+			await alumna[ mode ]()
+
+			// If there are errors, simply stop
+			// "process_errors" will automatically print the errors it founds inside the state object
+			if ( process_errors( alumna.library.state ) )
+				break;
+
+			if ( mode == "dev" )
+				console.log( 'Listening on http://localhost:' + alumna.library.state.config.port )
+
+			if ( mode == "build" )
+				console.log( 'Build completed successfully at the directory "build".' )
+
 			break;
 		}
 		/* NEW MODE */
@@ -106,7 +121,7 @@ if ( command.help || ( process.argv.length <= 2 && process.stdin.isTTY ) ) {
 		}
 		/* UNRECOGNIZED COMMAND */
 		default:
-			console.error( 'Unrecognised command' + ( task ? ' ' + task : '' ) + '. Type alumna --help to see instructions' );
+			console.error( 'Unrecognised command' + ( mode ? ' ' + mode : '' ) + '. Type alumna --help to see instructions' );
 			break;
 	}
 }

@@ -1,5 +1,5 @@
 import { EOL } 	from 'os';
-import { translate_imports } from './../utils/translate_imports'
+import { translate_imports } from './../utils/imports'
 
 export const translate_component = async function ( state, next, end ) {
 

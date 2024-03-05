@@ -17,6 +17,9 @@ import { subcomponents } 		from './subcomponents'
 import { compile_single } 		from './compile_single'
 import { translate_component } 	from './translate'
 import { cache } 				from './cache'
+import { imports } 				from './imports'
+import { minify } 				from './minify'
+import { save } 				from './save'
 
 
 
@@ -89,9 +92,20 @@ const compile_flow = async function ( component, route, state, parent_end ) {
 	flow_instance.unit[ 'compile_single' ] 	= compile_single;
 	flow_instance.unit[ 'subcomponents' ] 	= subcomponents;
 	flow_instance.unit[ 'translate' ] 		= translate_component;
+	// In dev mode, cache components in memory
 	flow_instance.unit[ 'cache' ] 			= cache;
 
-	flow_instance.flow[ 'execution' ] 		= [ 'read', 'compile_single', 'subcomponents', 'translate', 'cache' ];
+	// In build mode, obtain and translate imports from svelte internals,
+	// minify each component and save it in the build directory
+	flow_instance.unit[ 'imports' ] 		= imports;
+	flow_instance.unit[ 'minify' ] 			= minify;
+	flow_instance.unit[ 'save' ] 			= save;
+
+	if ( state.mode == 'build' )
+		flow_instance.flow[ 'execution' ] 	= [ 'read', 'compile_single', 'subcomponents', 'imports', 'translate', 'minify', 'save' ];
+	else
+		flow_instance.flow[ 'execution' ] 	= [ 'read', 'compile_single', 'subcomponents', 'translate', 'cache' ];
+
 
 	return flow_instance.run( 'execution' );
 	

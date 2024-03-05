@@ -21,7 +21,7 @@ export default {
 		virtual({ 'css-tree': readFileSync('./node_modules/css-tree/dist/csstree.esm.js', 'utf8') }),
 		nodeResolve({ jsnext: true }),
 		commonjs(),
-		terser()
+		// terser()
 	],
 
 	onwarn ( warning, warn ) {

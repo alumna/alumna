@@ -1,9 +1,6 @@
 // Router library
 import navaid 	from 'navaid';
 
-// Svelte Shared Internals
-import * as lib from 'svelte/internal';
-
 // Alumna minimal bootstrap library
 const Al = {
 	
@@ -13,9 +10,6 @@ const Al = {
 
 	// Component object
 	component: {},
-	
-	// Svelte internal libraries, used by components
-	lib,
 
 	// Load component
 	load (url) {

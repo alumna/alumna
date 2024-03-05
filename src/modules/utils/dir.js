@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, accessSync, constants, readdirSync } from 'fs';
 
-const ensure_dir = function ( dir ) {
+const ensure_dir = function ( dir, recursive = false ) {
 	// If directory doesn't exist, create it
-	if ( !existsSync( dir ) ) mkdirSync( dir, { mode:0o755 } );
+	if ( !existsSync( dir ) ) mkdirSync( dir, { recursive, mode: 0o755 } );
 
 	// It it exists, check its permissions
 	try { accessSync( dir, constants.R_OK | constants.W_OK ) } catch ( err ) { return false };
