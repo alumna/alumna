@@ -4,22 +4,25 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { INDEX_HTML } from './helpers/fixture.js';
 
-const fake_vendor = mkdtempSync(join(tmpdir(), 'alumna-fake-vendor-'));
-writeFileSync(join(fake_vendor, 'ok.js'), '1');
-
-jest.unstable_mockModule('../src/dev/vendor-svelte.js', () => ({
-	ensure_svelte_vendor: () => fake_vendor,
-	import_map: () => ({
-		imports: {
-			svelte: '/_alumna/svelte/index-client.js',
-			alumna: '/_alumna/runtime.js'
+jest.unstable_mockModule('../src/compile/vendor.js', () => ({
+	bundle_vendor: async ({ base }) => ({
+		files: { '_alumna/vendor/svelte.js': 'export const mount = () => {};' },
+		import_map: {
+			imports: {
+				svelte: (base || '') + '/_alumna/vendor/svelte.js',
+				alumna: (base || '') + '/_alumna/runtime.js'
+			}
 		}
 	}),
-	vendor_dir: () => fake_vendor,
-	vendor_ready: () => true,
-	svelte_version: () => '0',
-	find_bun: () => 'bun',
-	build_svelte_vendor: () => fake_vendor
+	is_package_installed: () => false,
+	minify_module: async (code, filename, opts = {}) => ({
+		code: 'min:' + code.slice(0, 8),
+		map: opts.sourcemap ? '{}' : null
+	})
+}));
+
+jest.unstable_mockModule('../src/add/install.js', () => ({
+	add_packages: (cwd, names) => ({ installer: 'test', names, cwd })
 }));
 
 const { Alumna } = await import('../src/alumna.js');
@@ -43,31 +46,38 @@ const hello = {
 	'src/components/Home.svelte': `<p class="x">hi</p><style>.x{color:red}</style>`
 };
 
-test('constructor defaults', () => {
-	const a = new Alumna();
+test('cli src, base, and sourcemap override the file', () => {
+	const defaults = new Alumna();
+	expect(defaults.config.src).toBe('src');
+	expect(defaults.config.build_dir).toBe('build');
+	const cwd = project(hello);
+	const a = new Alumna({ cwd, src: 'src', base: '/app', sourcemap: true });
 	expect(a.config.src).toBe('src');
-	expect(a.config.build_dir).toBe('build');
+	expect(a.config.base).toBe('/app');
+	expect(a.config.sourcemap).toBe(true);
+	const b = new Alumna({ cwd: '' });
+	expect(b.cli.cwd).toBe(process.cwd());
 });
 
-test('compile missing src', () => {
+test('compile missing src', async () => {
 	const a = new Alumna({ cwd: mkdtempSync(join(tmpdir(), 'alumna-empty-')) });
-	const compiled = a.compile({ dev: true });
+	const compiled = await a.compile({ dev: true });
 	expect(compiled.ok).toBe(false);
 	expect(compiled.errors.src).toMatch(/Missing src/);
 });
 
-test('compile missing index.html', () => {
+test('compile missing index.html', async () => {
 	const cwd = project({
 		'src/app.js': `app.areas = ['content']; app.route['/'] = { content: 'Home' };`
 	});
 	const a = new Alumna({ cwd });
-	expect(a.compile({ dev: true }).errors['index.html']).toMatch(/index.html/);
+	expect((await a.compile({ dev: true })).errors['index.html']).toMatch(/index.html/);
 });
 
 test('compile success, print helpers, memory_from, close', async () => {
 	const cwd = project(hello);
 	const a = new Alumna({ cwd });
-	const compiled = a.compile({ dev: true });
+	const compiled = await a.compile({ dev: true });
 	expect(compiled.ok).toBe(true);
 	const err = jest.spyOn(console, 'error').mockImplementation(() => {});
 	const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -78,11 +88,14 @@ test('compile success, print helpers, memory_from, close', async () => {
 	err.mockRestore();
 	warn.mockRestore();
 	const memory = a.memory_from({
-		files: { 'a.js': '1', '/b.js': '2', ...compiled.files }
+		files: { 'a.js': '1', '/b.js': '2', ...compiled.files },
+		import_map: compiled.import_map,
+		css_hrefs: compiled.css_hrefs
 	});
 	expect(memory.has('/a.js')).toBe(true);
 	expect(memory.has('/b.js')).toBe(true);
 	expect(memory.has('/_alumna/match.js')).toBe(true);
+	expect(memory.get('/_alumna/runtime.js').body).toMatch(/mount/);
 	await a.close();
 });
 
@@ -104,6 +117,16 @@ test('new prints for a named dir and for dot', async () => {
 		log.mockRestore();
 		process.chdir(prev);
 	}
+});
+
+test('add logs packages', async () => {
+	const cwd = mkdtempSync(join(tmpdir(), 'alumna-add-'));
+	const a = new Alumna({ cwd });
+	const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+	const result = await a.add([ 'marked' ]);
+	expect(result.names).toEqual([ 'marked' ]);
+	expect(log.mock.calls.join(' ')).toMatch(/Added marked/);
+	log.mockRestore();
 });
 
 test('dev fails on compile error', async () => {
@@ -156,6 +179,7 @@ test('build writes the tree and copies static files', async () => {
 	expect(existsSync(join(cwd, 'out/_alumna/match.js'))).toBe(true);
 	expect(readFileSync(join(cwd, 'out/hi.txt'), 'utf8')).toBe('static');
 	expect(readFileSync(join(cwd, 'out/alumna-manifest.json'), 'utf8')).toMatch(/Home/);
+	expect(readFileSync(join(cwd, 'out/_alumna/runtime.js'), 'utf8')).toMatch(/^min:/);
 	log.mockRestore();
 	warn.mockRestore();
 });
@@ -193,4 +217,46 @@ test('preview serves build/', async () => {
 	expect(html).toMatch(/html/);
 	await a.close();
 	log.mockRestore();
+});
+
+test('hjson base, title, port, and runtime rewrite', async () => {
+	const cwd = project({
+		...hello,
+		'alumna.hjson': 'base: /app\ntitle: Demo\nbuild_dir: dist\nsourcemap: true'
+	});
+	const a = new Alumna({ cwd });
+	expect(a.config.base).toBe('/app');
+	expect(a.config.title).toBe('Demo');
+	expect(a.config.build_dir).toBe('dist');
+	expect(a.config.sourcemap).toBe(true);
+	const compiled = await a.compile({ dev: true });
+	expect(compiled.ok).toBe(true);
+	expect(compiled.config.base).toBe('/app');
+	const memory = a.memory_from(compiled);
+	expect(memory.get('/_alumna/runtime.js').body).toMatch(/from '\/app\/_alumna\//);
+	expect(a.html(compiled)).toMatch(/Demo/);
+	expect(a.html(compiled)).toMatch(/\/app\/_alumna\/runtime\.js/);
+});
+
+test('cli port is required and overrides hjson', async () => {
+	const cwd = project({
+		...hello,
+		'alumna.hjson': 'port: 39990'
+	});
+	const a = new Alumna({ cwd, port: 39991 });
+	expect(a.config.port).toBe(39991);
+	expect(a.port_required()).toBe(true);
+	const b = new Alumna({ cwd });
+	expect(b.config.port).toBe(39990);
+	expect(b.port_required()).toBe(false);
+	const c = new Alumna({ cwd, port: Number('nope') });
+	expect(c.port_required()).toBe(false);
+});
+
+test('html() uses last_compiled when no argument', async () => {
+	const cwd = project(hello);
+	const a = new Alumna({ cwd });
+	expect(a.html()).toMatch(/importmap/);
+	a.last_compiled = await a.compile({ dev: true });
+	expect(a.html()).toMatch(/importmap/);
 });

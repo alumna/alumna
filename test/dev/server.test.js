@@ -258,6 +258,26 @@ test('missing accept header and a throw without stack', async () => {
 	}
 });
 
+test('base prefix: strip, 404 outside, SPA under base', async () => {
+	const { httpd, url } = await listen({
+		base: '/app',
+		memory: new Map([
+			[ '/index.html', { body: '<html>app</html>', type: 'text/html' } ],
+			[ '/hi.js', { body: 'ok', type: 'text/javascript' } ]
+		])
+	});
+	try {
+		expect((await request(url + '/app/hi.js')).body).toBe('ok');
+		expect((await request(url + '/app/')).body).toMatch(/app/);
+		expect((await request(url + '/app', { accept: 'text/html' })).body).toMatch(/app/);
+		expect((await request(url + '/other')).status).toBe(404);
+		expect((await request(url + '/app/page', { accept: 'text/html' })).body).toMatch(/app/);
+	}
+	finally {
+		await httpd.close();
+	}
+});
+
 test('html fallback without an index is 404', async () => {
 	const disk = mkdtempSync(join(tmpdir(), 'alumna-empty-disk-'));
 	mkdirSync(join(disk, 'empty-dir'));

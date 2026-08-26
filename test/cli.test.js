@@ -24,6 +24,7 @@ function io () {
 		Alumna: class {
 			constructor (config) { this.config = config; }
 			async new (target) { this.target = target; }
+			async add (names) { this.names = names; }
 			async dev () { return true; }
 			async build () { return true; }
 			async preview () { return true; }
@@ -46,6 +47,7 @@ test('parse_argv', () => {
 
 test('help_text includes the version', () => {
 	expect(help_text('1.2.3')).toMatch(/1\.2\.3/);
+	expect(help_text('1.2.3')).toMatch(/alumna add/);
 });
 
 test('is_cli_entry', () => {
@@ -95,6 +97,25 @@ test('new without a name', async () => {
 test('new with a name', async () => {
 	const mock = io();
 	await run_cli([ 'new', 'app' ], mock);
+	expect(mock.out.exit).toBeNull();
+});
+
+test('add without a package', async () => {
+	const mock = io();
+	await run_cli([ 'add' ], mock);
+	expect(mock.out.logs.join('')).toMatch(/Use: alumna add/);
+	expect(mock.out.exit).toBe(1);
+});
+
+test('add with packages', async () => {
+	const mock = io();
+	let seen;
+	mock.Alumna = class {
+		constructor () {}
+		async add (names) { seen = names; }
+	};
+	await run_cli([ 'add', 'marked', 'date-fns' ], mock);
+	expect(seen).toEqual([ 'marked', 'date-fns' ]);
 	expect(mock.out.exit).toBeNull();
 });
 

@@ -17,7 +17,7 @@ export default {
 		'^/_alumna/app\\.js$': '<rootDir>/test/runtime/mocks/app.js',
 		'^/_alumna/config\\.js$': '<rootDir>/test/runtime/mocks/config.js',
 		'^/_alumna/match\\.js$': '<rootDir>/src/compile/match.js',
-		'^/components/.+\\.js$': '<rootDir>/test/runtime/mocks/component.js',
-		'^/middlewares/.+\\.js$': '<rootDir>/test/runtime/mocks/middleware.js'
+	'/components/.+\\.js$': '<rootDir>/test/runtime/mocks/component.js',
+	'/middlewares/.+\\.js$': '<rootDir>/test/runtime/mocks/middleware.js'
 	}
 };

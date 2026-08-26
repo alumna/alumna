@@ -15,26 +15,56 @@ export function should_auto_start (meta_url) {
 	return typeof meta_url === 'string' && /\/_alumna\/runtime\.js(\?|#|$)/.test(meta_url);
 }
 
-// Load a component once. HEAD the CSS file; skip if the compile injects CSS.
+function asset (path) {
+	return base_prefix() + path;
+}
+
+function base_prefix () {
+	let base = config.base || '';
+	if (base === '/')
+		return '';
+	if (base.endsWith('/'))
+		base = base.slice(0, -1);
+	return base;
+}
+
+function app_pathname (pathname) {
+	const base = base_prefix();
+	if (!base)
+		return pathname;
+	if (pathname === base || pathname === base + '/')
+		return '/';
+	if (pathname.startsWith(base + '/'))
+		return pathname.slice(base.length);
+	return pathname;
+}
+
+function browser_pathname (pathname) {
+	return asset(app_pathname(pathname));
+}
+
+// Load a component once. Fetch CSS first so paint does not flash unstyled.
 async function load (name) {
 	if (loaded.has(name))
 		return loaded.get(name);
 
-	const href = '/components/' + name + '.css';
+	const href = asset('/components/' + name + '.css');
 	try {
-		const probe = await fetch(href, { method: 'HEAD' });
+		const probe = await fetch(href);
 		if (probe.ok) {
-			const link = document.createElement('link');
-			link.rel = 'stylesheet';
-			link.href = href;
-			document.head.appendChild(link);
+			const css = typeof probe.text === 'function' ? await probe.text() : '';
+			if (css) {
+				const style = document.createElement('style');
+				style.textContent = css;
+				document.head.appendChild(style);
+			}
 		}
 	}
 	catch {
 		// no external css — injected styles live in the module
 	}
 
-	const mod = await import('/components/' + name + '.js');
+	const mod = await import(asset('/components/' + name + '.js'));
 	loaded.set(name, mod.default);
 	return mod.default;
 }
@@ -61,16 +91,19 @@ function layout_ctor (route_def) {
 }
 
 export async function goto (path, { replace = false } = {}) {
-	const url = typeof path === 'string' ? path : String(path);
+	const raw = typeof path === 'string' ? path : String(path);
+	const url = new URL(raw, location.href);
+	url.pathname = browser_pathname(url.pathname);
+	const href = url.pathname + url.search + url.hash;
 	if (window.navigation) {
-		navigation.navigate(url, { history: replace ? 'replace' : 'push' });
+		navigation.navigate(href, { history: replace ? 'replace' : 'push' });
 		return;
 	}
 	if (replace)
-		history.replaceState(null, '', url);
+		history.replaceState(null, '', href);
 	else
-		history.pushState(null, '', url);
-	await show_url(new URL(url, location.href));
+		history.pushState(null, '', href);
+	await show_url(url);
 }
 
 export function redirect (path) {
@@ -79,7 +112,7 @@ export function redirect (path) {
 
 export async function prefetch (path) {
 	const url = new URL(path, location.href);
-	const hit = match_path(url.pathname, config.routes);
+	const hit = match_path(app_pathname(url.pathname), config.routes);
 	if (!hit)
 		return;
 	await load_all(config.deps[hit.pattern]);
@@ -98,7 +131,7 @@ function clone_route (state) {
 async function load_middleware (name) {
 	if (loaded_mw.has(name))
 		return loaded_mw.get(name);
-	const mod = await import('/middlewares/' + name + '.js');
+	const mod = await import(asset('/middlewares/' + name + '.js'));
 	loaded_mw.set(name, mod.default);
 	return mod.default;
 }
@@ -111,7 +144,7 @@ async function run_middleware (hit, url) {
 		return { ok: true };
 
 	const next_snap = {
-		path: url.pathname,
+		path: app_pathname(url.pathname),
 		pattern: hit.pattern,
 		params: { ...hit.params },
 		query: parse_query(url.search),
@@ -147,7 +180,8 @@ async function run_middleware (hit, url) {
 }
 
 async function show_url (url) {
-	const hit = match_path(url.pathname, config.routes);
+	const path = app_pathname(url.pathname);
+	const hit = match_path(path, config.routes);
 	if (!hit)
 		return;
 
@@ -163,7 +197,7 @@ async function show_url (url) {
 
 	await load_all(config.deps[hit.pattern]);
 
-	current.path = url.pathname;
+	current.path = path;
 	current.pattern = hit.pattern;
 	current.params = hit.params;
 	current.query = parse_query(url.search);
@@ -240,7 +274,7 @@ function bind_router () {
 
 function live_reload () {
 	try {
-		const source = new EventSource('/_alumna/live');
+		const source = new EventSource(asset('/_alumna/live'));
 		source.onmessage = () => location.reload();
 	}
 	catch {

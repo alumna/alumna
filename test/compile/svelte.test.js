@@ -55,15 +55,47 @@ test('resolve_browser_specifier maps known kinds', () => {
 	expect(resolve_browser_specifier('../../Evil.svelte', 'Home')).toBe('../../Evil.svelte');
 	expect(resolve_browser_specifier('./x.js', 'Home')).toBe('./x.js');
 	expect(resolve_browser_specifier('/abs.js', 'Home')).toBe('/abs.js');
+	expect(resolve_browser_specifier('alumna', 'Home', '/app')).toBe('/app/_alumna/runtime.js');
+	expect(resolve_browser_specifier('./Badge.svelte', 'Home', '/app')).toBe('/app/components/Badge.js');
+	expect(resolve_browser_specifier('marked', 'Home')).toBe('marked');
 });
 
-test('resolve_browser_specifier rejects bare npm specifiers', () => {
-	expect(() => resolve_browser_specifier('marked', 'Home')).toThrow(/alumna add marked/);
+test('resolve_browser_specifier rejects unknown protocol specifiers', () => {
+	expect(() => resolve_browser_specifier('node:fs', 'Home')).toThrow(/Cannot import/);
 });
 
-test('compile_component throws on bare npm import', () => {
-	expect(() => compile_component(
+test('compile_component keeps a bare npm specifier', () => {
+	const compiled = compile_component(
 		`<script>import { marked } from 'marked';</script><p/>`,
 		{ filename: 'A.svelte', id: 'A', dev: true }
-	)).toThrow(/alumna add marked/);
+	);
+	expect(compiled.js).toMatch(/from ['"]marked['"]/);
+});
+
+test('compile_component writes a sourcemap', () => {
+	const compiled = compile_component(
+		`<p class="x">hi</p><style>.x{color:red}</style>`,
+		{ filename: 'Home.svelte', id: 'Home', dev: false, sourcemap: true }
+	);
+	expect(compiled.map).toBeTruthy();
+	expect(compiled.js).toMatch(/sourceMappingURL=Home\.js\.map/);
+	expect(compiled.css_map).toBeTruthy();
+});
+
+test('compile_component without sourcemap leaves maps empty', () => {
+	const compiled = compile_component(
+		`<p>hi</p>`,
+		{ filename: 'Home.svelte', id: 'Home', dev: true, sourcemap: false }
+	);
+	expect(compiled.map).toBeNull();
+});
+
+test('compile_shell writes a sourcemap and css map', () => {
+	const compiled = compile_shell(
+		`<script>let areas = $state({}); export function show(next) { areas = next; }</script><p class="x">ok</p><style>.x{color:red}</style>`,
+		{ filename: 'App.svelte', dev: false, sourcemap: true }
+	);
+	expect(compiled.map).toBeTruthy();
+	expect(compiled.js).toMatch(/sourceMappingURL=app\.js\.map/);
+	expect(compiled.css_map).toBeTruthy();
 });

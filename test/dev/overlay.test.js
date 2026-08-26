@@ -16,3 +16,7 @@ test('overlay_html lists errors and escapes html', () => {
 test('overlay_html with no keys', () => {
 	expect(overlay_html({})).toMatch(/<ul><\/ul>/);
 });
+
+test('overlay_html uses base for live reload', () => {
+	expect(overlay_html({ x: 'y' }, '/app')).toMatch(/EventSource\("\/app\/_alumna\/live"\)/);
+});

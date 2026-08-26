@@ -3,6 +3,7 @@ import net from 'node:net';
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { join, extname, relative, resolve, sep } from 'node:path';
 import { mime } from './mime.js';
+import { normalize_base, strip_base } from '../utils/base.js';
 
 export async function pick_port (preferred, { required = false, tries = 100, probe } = {}) {
 	const is_open = probe || is_free;
@@ -99,14 +100,28 @@ export function end_live (clients) {
 	clients.clear();
 }
 
+function request_path (pathname, base) {
+	const prefix = normalize_base(base);
+	if (!prefix)
+		return pathname;
+	if (pathname === prefix || pathname === prefix + '/' || pathname.startsWith(prefix + '/'))
+		return strip_base(prefix, pathname);
+	return null;
+}
+
 // Memory first, then vendor, then disk/static, then SPA fallback to index.html.
-export function create_server ({ src_dir, disk_root, port, memory, vendor_dir }) {
+export function create_server ({ src_dir, disk_root, port, memory, vendor_dir, base }) {
 	const live_clients = new Set();
 
 	const server = http.createServer(async (req, res) => {
 		try {
 			const url = new URL(req.url, 'http://' + (req.headers.host || 'localhost'));
-			const pathname = decodeURIComponent(url.pathname);
+			const raw_path = decodeURIComponent(url.pathname);
+			const pathname = request_path(raw_path, base);
+			if (pathname === null) {
+				res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+				return res.end('Not found');
+			}
 
 			if (pathname === '/_alumna/live')
 				return sse(req, res, live_clients);

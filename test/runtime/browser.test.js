@@ -191,13 +191,13 @@ test('hover prefetch', async () => {
 	comment.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
 });
 
-test('css link on HEAD ok and fetch throw', async () => {
-	global.fetch = jest.fn(async () => ({ ok: true }));
+test('css style on GET ok, empty text, and fetch throw', async () => {
+	global.fetch = jest.fn(async () => ({ ok: true, text: async () => '.x{color:red}' }));
 	const runtime = await load_runtime();
 	window.history.replaceState(null, '', '/');
 	await runtime.start();
-	expect(document.head.querySelector('link[rel="stylesheet"]')).toBeTruthy();
-	global.fetch = jest.fn(async () => { throw new Error('offline'); });
+	expect(document.head.querySelector('style').textContent).toMatch(/color/);
+	global.fetch = jest.fn(async () => ({ ok: true }));
 	jest.resetModules();
 	jest.unstable_mockModule('svelte', () => ({
 		mount: (_App, opts) => ({ target: opts.target, show () {} })
@@ -205,6 +205,36 @@ test('css link on HEAD ok and fetch throw', async () => {
 	const again = await import('../../src/runtime/browser.js');
 	window.history.replaceState(null, '', '/');
 	await again.start();
+	global.fetch = jest.fn(async () => { throw new Error('offline'); });
+	jest.resetModules();
+	jest.unstable_mockModule('svelte', () => ({
+		mount: (_App, opts) => ({ target: opts.target, show () {} })
+	}));
+	const third = await import('../../src/runtime/browser.js');
+	window.history.replaceState(null, '', '/');
+	await third.start();
+});
+
+test('base prefixes assets and strips browser paths', async () => {
+	const runtime = await load_runtime();
+	const config = (await import('/_alumna/config.js')).default;
+	config.base = '/app';
+	window.history.replaceState(null, '', '/app/');
+	await runtime.start();
+	expect(runtime.route.path).toBe('/');
+	await runtime.goto('/about');
+	expect(runtime.route.path).toBe('/about');
+	expect(location.pathname).toBe('/app/about');
+	await runtime.prefetch('/app/about');
+	await runtime.prefetch('/app/nope');
+	config.base = '/app/';
+	window.history.replaceState(null, '', '/app');
+	await runtime.goto('/about');
+	config.base = '/';
+	window.history.replaceState(null, '', '/');
+	await runtime.goto('/about');
+	expect(runtime.route.path).toBe('/about');
+	config.base = '';
 });
 
 test('live reload when config.dev', async () => {

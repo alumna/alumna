@@ -1,10 +1,10 @@
 # Alumna 4.0 — Living Plan
 
-> **Status:** draft 1.5 — 2026-08-26. Decisions locked. **4.0.0-alpha.1 is in this repo.** Jest four-metric coverage is **100%** on `src/**`. Phase 2 language work is shipped. Docs rules are in §0.5. Coding and text rules are in §0.4.
+> **Status:** draft 1.9 — 2026-08-26. Decisions locked. **4.0.0-alpha.2** is the current slice (Phase 3 shipped). Jest four-metric coverage stays **100%** on `src/**`. Docs rules are in §0.5. Coding and text rules are in §0.4.
 >
 > **Purpose of this file:** source of truth for Alumna 4.0. Implementation follows this file, not chat history. This file also coordinates work across phases until a contributor guide exists.
 >
-> **How to continue in a new conversation:** *“Read `ALUMNA-4.0-PLAN.md` draft 1.5. Start from §0 (delivery + tests + next work). Follow §0.4 coding rules and §0.5 docs rules. Do not re-litigate the Decision Log unless I ask.”*
+> **How to continue in a new conversation:** *“Read `ALUMNA-4.0-PLAN.md` draft 1.9. Start from §0 (delivery + tests + next work). Follow §0.4 coding rules and §0.5 docs rules. Do not re-litigate the Decision Log unless I ask.”*
 
 Legend used throughout:
 
@@ -12,7 +12,7 @@ Legend used throughout:
 | --- | --- |
 | `[HISTORICAL]` | What previous Alumna versions actually did (verified in source) |
 | `[DECIDED]` | Locked (was `[PROPOSED]` / `[RECOMMENDED DEFAULT]` / an answered `[OPEN]`) |
-| `[SHIPPED]` | In `4.0.0-alpha.1` on disk, with the caveats listed in §0.1 |
+| `[SHIPPED]` | In `4.0.0-alpha.2` on disk, with the caveats listed in §0.1 |
 | `[ALTERNATIVE]` | A path we considered and rejected, kept so we do not re-litigate it |
 | `[DEFERRED]` | Intentionally not in the first 4.0.0 slice |
 | `[OPEN]` | None. All product questions in §12/§15 are answered. |
@@ -25,15 +25,15 @@ Alumna 4.0 is a from-scratch rebuild, **inspired by** 2.0/3.0, not a port. Every
 
 **Repo layout `[SHIPPED Q39]`:** this directory **is** Alumna 4.0.0. There is no `alumna-4.0/` subfolder. The archaeology trees (`alumna-2.0/`, `alumna-3.0/`, `alumna-3.0-feature-build/`) were deleted on 2026-08-26. Historical detail lives in §2 of this file and on GitHub.
 
-**Environment this alpha was built on:** Ubuntu 26.04 LXC, Node.js **26.7.0** (26.x becomes Active LTS shortly), Bun **1.4.0** at `~/.bun/bin/bun` (Rust rewrite; not always on `PATH`), sudo with no password. Alumna source is JS. `svelte@5.56.10`.
+**Environment this alpha was built on:** Ubuntu 26.04 LXC, Bun **1.4.0**, Node.js **26.7.0** (Jest only). Alumna source is JS. `svelte@5.56.10`. Rolldown **1.2.5** vendors Svelte and app libraries. Contributors use Bun (`bun install`, `bun src/cli.js`). Node is still required to run Jest.
 
 Any later change to product or process must edit this file and append the Decision Log or the revision log. At session end also follow §0.5.
 
-### 0.1 What 4.0.0-alpha.1 already delivered `[SHIPPED]`
+### 0.1 What 4.0.0-alpha.2 already delivered `[SHIPPED]`
 
-Package: `@alumna/alumna@4.0.0-alpha.1`. CLI: `node src/cli.js` (bin `alumna`).
+Package: `@alumna/alumna@4.0.0-alpha.2`. CLI for contributors: `bun src/cli.js` (bin `alumna`). Authors will install a **single binary**; npm is not the author install channel (README).
 
-**Commands that run:** `new`, `dev [--port]`, `build`, `preview [--port]`, `--help`, `--version`. `--ssg` prints a warning and still does a SPA build.
+**Commands that run:** `new`, `add`, `dev [--port]`, `build`, `preview`, `--help`, `--version`. `--ssg` prints a warning and still does a SPA build.
 
 **Author project (scaffold in `scaffold/`):**
 
@@ -46,25 +46,28 @@ src/static/
 
 **Route language that works today:** `app.areas`, `app.route`, `app.group` (prefix and `group:name`), comma aliases `'/, /home'`, params `:id`, `redirect`, **named layouts** (`app.layout.name = { component, areas }`, `layout: 'name'` on a route), **middlewares** (`export default` in `src/middlewares/*.js`, `middleware: ['auth']`, `app.middleware` global, async, before load). Array middleware form is rejected (Q30). VM sandbox + JSON clone out of the sandbox (Node 26 `deepEqual` is realm-strict).
 
-**Compiler:** route graph from `app.js` → only reachable `.svelte` files → `svelte/compiler` `generate:'client'` → Acorn rewrite of import/export specifiers → per-route `deps` → generated App shell with keyed `$state` areas, PascalCase dynamic tags, and snippet props for named layouts. `show({ layout, areas })` only writes changed constructors. Dev CSS **injected**; build CSS **external**. Unused components are not compiled. Middleware files are copied as ESM to `/middlewares/*.js`.
+**Compiler:** route graph from `app.js` → only reachable `.svelte` files → `svelte/compiler` `generate:'client'` → Acorn rewrite of import/export specifiers → per-route `deps` → generated App shell with keyed `$state` areas, PascalCase dynamic tags, and snippet props for named layouts. `show({ layout, areas })` only writes changed constructors. Dev CSS **injected**; build CSS **external** (fetched before mount). Unused components are not compiled. Middleware files are copied as ESM to `/middlewares/*.js`. Bare npm imports require `alumna add`; Rolldown emits hashed `/_alumna/vendor/` chunks. Svelte internals are tree-shaken from used `$` / named exports.
 
-**Runtime (`src/runtime/browser.js`):** `import()` + in-memory constructor cache, `Promise.all` of `deps[pattern]`, Navigation API with History fallback, `<a>` intercept, hover prefetch (`mouseover`), `goto` / `redirect` / `prefetch` / `route` object (`path`, `pattern`, `params`, `query`, `layout`). Public API vs boot: `start({ target })` and `boot_runtime(import.meta.url)` (auto-start only when the script URL is `/_alumna/runtime.js`). Middleware chain before load. SSE live reload only when `config.dev` is true.
+**Runtime (`src/runtime/browser.js`):** `import()` + in-memory constructor cache, `Promise.all` of `deps[pattern]`, Navigation API with History fallback, `<a>` intercept, hover prefetch (`mouseover`), `goto` / `redirect` / `prefetch` / `route` object (`path`, `pattern`, `params`, `query`, `layout`). Public API vs boot: `start({ target })` and `boot_runtime(import.meta.url)` (auto-start only when the script URL is `/_alumna/runtime.js`). Middleware chain before load. SSE live reload only when `config.dev` is true. `config.base` prefixes asset URLs and is stripped for route match.
 
-**Dev server:** in-process `node:http`, memory overlay, SPA fallback, `src/static` pass-through, `/_alumna/svelte/*` from generated vendor, `fs.watch` with the §17.3 table (`classify_watch`: ignore unused `.svelte` and new dirs; reload static/html; recompile used components / `app.js` / middlewares). Compile failure keeps the last good graph and serves an overlay page (`overlay_html`) plus SSE reload.
+**Dev server:** in-process `node:http`, memory overlay, SPA fallback, `src/static` pass-through, `fs.watch` with the §17.3 table (`classify_watch`: ignore unused `.svelte` and new dirs; reload static/html; recompile used components / `app.js` / middlewares). Compile failure keeps the last good graph and serves an overlay page (`overlay_html`) plus SSE reload. Optional `base` strips the prefix before lookup.
 
-**Svelte browser vendor:** first `dev`/`build` runs `bun build --splitting --target=browser` of `svelte` client + `internal/client` (+ disclose-version, flags/legacy) into `vendor/svelte/` (gitignored, stamped with svelte version). **Rolldown/OXC are not wired yet.** Bun is required for that first vendor step; after `vendor/` exists, Node is enough.
+**Svelte / library vendor:** Rolldown (Alumna dependency). First-run Bun for Svelte vendor is **gone**. Production minify of runtime, `match.js`, and vendor chunks. Hashed vendor filenames. Source maps in dev; optional in build (`sourcemap` in hjson).
+
+**Config:** optional `alumna.hjson` (`port`, `base`, `out`/`build`/`build_dir`, `title`, `sourcemap`, `ssg`). `--port` overrides `port`. `--port` busy is an error; hjson `port` busy auto-picks.
 
 **Build output:**
 
 ```
 build/
-  index.html                 # import map + runtime module
-  alumna-manifest.json       # areas, routes, deps (Architect-facing, from day one)
+  index.html                 # import map + runtime module (+ first-route CSS links)
+  alumna-manifest.json       # areas, routes, deps, base (Architect-facing)
   components/*.js + *.css
   _alumna/app.js
   _alumna/config.js
   _alumna/runtime.js
-  _alumna/svelte/            # copied vendor
+  _alumna/match.js
+  _alumna/vendor/            # hashed Svelte + app libraries
   <src/static copied first, generated files overwrite>
 ```
 
@@ -73,29 +76,36 @@ build/
 ```
 src/cli.js
 src/cli/run.js                # parse argv, help, boot
-src/alumna.js                 # Alumna class: new/dev/build/preview
+src/alumna.js                 # Alumna class: new/add/dev/build/preview
+src/add/install.js            # alumna add
+src/build/write.js            # SPA emit
+src/config/hjson.js           # alumna.hjson reader
+src/config/load.js
 src/compile/read-app.js       # vm.runInNewContext + JSON clone
 src/compile/validate.js       # routes, layouts, middleware names
 src/compile/match.js          # shared with the browser via /_alumna/match.js
 src/compile/graph.js
 src/compile/svelte.js
-src/compile/rewrite.js        # Acorn walk of import/export specifiers
+src/compile/rewrite.js        # Acorn walk of import/export specifiers + used exports
 src/compile/shell.js          # sequential + snippet layouts
 src/compile/project.js
+src/compile/vendor.js         # Rolldown: svelte tree-shake + app libraries + minify
 src/runtime/browser.js        # loader, router, middleware, start()
 src/dev/server.js
 src/dev/watch.js              # watch + classify_watch (§17.3)
 src/dev/overlay.js            # compile error page
 src/dev/html.js
+src/dev/defaults.js
 src/dev/mime.js
-src/dev/vendor-svelte.js
 src/new/copy.js
 src/utils/paths.js
+src/utils/base.js             # Q35 base path
+src/utils/bin.js              # find_bun for alumna add
 scaffold/
 test/**/*.test.js             # Jest, 100% four-metric on src/**
 ```
 
-**Verified in this session:** Jest **100%** statements/branches/functions/lines on `src/**` (218+ tests). S0: shared `nav` constructor stays at **one** `onMount` in both the sequential shell and a snippet layout (Svelte 5.56). Named layouts compile and `show({ layout, areas })`. Middlewares run before `load_all`. Watch ignores unused `.svelte`; compile errors become an overlay. Parser rewrite uses Acorn. **Not verified:** real-browser click-through (no Chromium/Firefox in the container).
+**Verified in this session:** Jest **100%** statements/branches/functions/lines on `src/**` (271 tests; 1471 / 1109 / 202 / 1439). Unused `_alumna/app.css` first-route branch removed (the App shell has no CSS). `.gitignore` ignores only repo-root `/build/`, so `src/build/write.js` is not hidden. **Not verified:** real-browser click-through (no Chromium/Firefox in the container).
 
 **Explicitly not in this slice:**
 
@@ -103,15 +113,17 @@ test/**/*.test.js             # Jest, 100% four-metric on src/**
 | --- | --- |
 | Named layouts + snippets (Q12–Q14) | **Shipped** (one level) |
 | Middleware execution (Q23, Q30) | **Shipped** (before load, async, `export default`) |
-| `alumna.hjson` (Q22) | Not read; `--port` only |
-| `alumna add` + app `package.json` (Q21) | Not implemented |
-| Rolldown/OXC, minify, hashed vendor chunks | Not implemented |
-| Configurable `base` (Q35) | Not implemented |
+| `alumna.hjson` (Q22) | **Shipped** (`port`, `base`, `out`, `title`, `sourcemap`, `ssg`) |
+| `alumna add` + app `package.json` (Q21) | **Shipped** |
+| Rolldown/OXC, minify, hashed vendor chunks | **Shipped** (Rolldown minify = Oxc; first-need Rolldown download is Phase 6) |
+| Configurable `base` (Q35) | **Shipped** |
+| Source maps | **Shipped** (dev on; build via hjson) |
 | `alumna.start({ target })` (Q40a) | **Shipped** (`start({ target })` + `boot_runtime`) |
 | Error overlay in the browser | **Shipped** (`overlay_html` on compile fail) |
 | Selective `on_event` recompile | **Shipped** (`classify_watch`) |
+| Import-map integrity | Not started (optional) |
 | SSG, `data()`, parametric prerender | Not started |
-| bun compile binary / npm publish | Not started |
+| bun compile binary / npm publish | Not started (Phase 6). README already describes the binary. |
 | Jest + coverage | **Shipped** (100% four-metric gate on current `src/`) |
 
 **Known debt to fix, not copy forward:**
@@ -120,7 +132,7 @@ test/**/*.test.js             # Jest, 100% four-metric on src/**
 2. ~~Dev watch recompiles everything~~ **Done.** `classify_watch` follows §17.3 (directory create ignored; unused `.svelte` ignored; static/html reload; used files recompile). Subcomponent-set *diff* vs always recompile a used file is still coarse: a used `.svelte` always recompiles the project, it does not yet recompile only that module.
 3. ~~Layout remount identity (S0)~~ **Done.** Proven; named layouts ship snippets.
 4. ~~Import map `'alumna'` auto-start~~ **Done.** `should_auto_start` / `boot_runtime`; `start({ target })` is public.
-5. Bun was not on default `PATH` in the LXC (`~/.bun/bin/bun`). `vendor-svelte.js` already probes that path.
+5. ~~Bun required for Svelte vendor~~ **Done.** Rolldown vendors Svelte. `find_bun` remains only as a helper for `alumna add` if Bun is on the machine.
 6. Sequential area tags must be PascalCase (`<Nav />`, not `<nav />`) so Svelte treats them as components. Fixed in `ident_from`.
 
 ### 0.2 Testing policy — Jest + 100% four-metric coverage `[DECIDED 2026-08-26]`
@@ -139,9 +151,12 @@ Alpha.1 tests started as `node:test` on `src/compile/*` only. **That is done.** 
 ```json
 "scripts": {
   "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
-  "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch"
+  "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
+  "cli": "bun src/cli.js"
 }
 ```
+
+Contributors run `bun install`, `bun src/cli.js`, `bun run test`. **`bun run test` still starts Node+Jest.** Verified 2026-08-26 on Bun 1.4.0: `bun --bun jest` fails (Web Streams vs `jest-environment-node`; jsdom worker SIGSEGV; coverage ~88%). `bun test` (bun:test) coverage is only funcs+lines, not the four-metric gate. Keep Jest on Node until one of those is fixed. See Q43.
 
 ```js
 // jest.config.js (sketch)
@@ -164,10 +179,13 @@ Turn the 100% `coverageThreshold` **on once the Jest port covers the existing al
 | Layer | How |
 | --- | --- |
 | `compile/*` | Port the 21 node:test cases to Jest; add missing branches (empty group, invalid middleware type, `/*` 404, rewrite of `svelte/*` vs `./x.svelte` vs bare npm specifier) |
-| `cli.js` | argv matrix: help, version, unknown flag, new/dev/build/preview, missing project |
+| `cli.js` | argv matrix: help, version, unknown flag, new/add/dev/build/preview, missing project |
 | `new/copy.js` | empty dir, `.`, invalid name, non-empty dest |
 | `dev/server.js` | ephemeral port, memory hit, static hit, SPA fallback, 404, SSE, HEAD for CSS |
-| `dev/vendor-svelte.js` | skip rebuild when `.version` matches; error when bun missing (mock spawn) |
+| `compile/vendor.js` | Rolldown: Svelte tree-shake, app libraries, minify, hashed chunks |
+| `add/install.js` | create `package.json`; bun add else npm install; invalid names |
+| `config/*` | hjson parse; `port` / `base` / `out` / `title` / `sourcemap` / `ssg` |
+| `utils/base.js` | normalize, prefix, strip |
 | `alumna.js` | compile errors print and return false; build writes the tree; preview refuses missing `build/` |
 | `runtime/browser.js` | jsdom: match, load cache, goto History path, click intercept, prefetch, redirect |
 
@@ -175,12 +193,11 @@ Turn the 100% `coverageThreshold` **on once the Jest port covers the existing al
 
 ### 0.3 What the next conversation should do (ordered)
 
-Do **not** restart archaeology. Do **not** re-ask Q1–Q41. Do **not** re-do S0; the spike passed.
+Do **not** restart archaeology. Do **not** re-ask Q1–Q41. Do **not** re-do S0; the spike passed. Do **not** re-do Phase 3.
 
-1. **Phase 3** (`alumna add`, Rolldown/OXC vendor for app libraries, minify, hashed chunks, `base`, source maps). Keep 100% Jest coverage.
-2. Optional polish: recompile **only** the changed used `.svelte` (today a used file still runs the full project compile); browser smoke of Hello if a browser is available.
-3. Then Phase 4 (SSG) when the author asks.
-4. At the end of the session, follow §0.5 (plan + changelog always; README only if authors need a change). Do not commit or push unless the author asks.
+1. Optional polish: recompile **only** the changed used `.svelte` (today a used file still runs the full project compile); browser smoke of Hello if a browser is available.
+2. Then Phase 4 (SSG) when the author asks.
+3. At the end of the session, follow §0.5 (plan + changelog always; README when authors need a change). Keep Jest 100%. Do not commit or push unless the author asks.
 
 ### 0.4 Coding and text rules `[DECIDED 2026-08-26]`
 
@@ -230,16 +247,18 @@ Follow these in every session. Alumna 4.0 is a new project. There is no retro-co
 
 - Always update this plan (`ALUMNA-4.0-PLAN.md`): status, what shipped, tree, next work, Decision Log / revision log when they change.
 - Always update `CHANGELOG.md` (what authors and we should remember from this session: product first, then a short docs/process line if that is all that changed).
-- Update `README.md` **only when it is necessary**: a new author-facing command, language, install step, or a fact in README that is now false. Do not grow README “because we worked.”
+- Update `README.md` when authors need it: a new command, language, install step, a false fact, or a feature that must be in the complete author docs. Do not put internals in README “because we worked.”
 
-**README.md is the documentation**
+**README.md is the documentation** `[DECIDED 2026-08-26]`
 
-- Keep it as short as possible. It will grow with the framework. Short is still the goal.
-- For now, README is the **whole** documentation. There is no docs site and no extra author guide.
-- When README is large enough that a person cannot scan it, add an **index** at the top (section names and anchors). Do not add an index while the file is still short.
+- README is the **whole** documentation. There is no docs site and no extra author guide.
+- README is **complete**: newcomers and advanced users can work from this file alone. Comprehensive in *what* it covers, not in how it talks.
+- Writing style: **concise, objective, straight to the point.** Simple English (§0.4). No filler.
+- README **always has an index** at the top (section names and anchors).
+- **Do not document npm as the way to install Alumna.** Alumna is a **single binary**. Authors do not need npm, Node, or Bun on `PATH` — not to run Alumna, and not for `alumna add`. `alumna add` talks to the npm registry for *app libraries*. That is not how you install Alumna. First `dev`/`build` may download Rolldown once. The Alumna binary already contains Bun’s installer (`BUN_BE_BUN=1`). See §3.5.
 - README has **two install blocks**:
-  - **Authors** (main, first): how to install Alumna and start an app.
-  - **Developers / contributors** (its own section, later in the file): how to clone this repo, install deps, and run tests.
+  - **Authors** (main, first): install the Alumna binary and start an app.
+  - **Developers / contributors** (later): clone this repo, **Bun** (`bun install`, `bun src/cli.js`). Node is still required to run Jest. That is not the author install path.
 - README must not contain information that authors do not need (internals, phase lists, Jest policy, archaeology).
 - A real contributor guide will come later. Until then, **this plan file** coordinates our work and its phases. Do not put that coordination into README.
 
@@ -744,7 +763,20 @@ You said you are fine bundling OXC / Rolldown / Vite / Vite+ and using them tran
 
 Per-component files stay separate. That is the on-demand model. We bundle **dependencies**, not the app.
 
-`[DECIDED Q6]` Native tools (Rolldown/OXC/…) are **not** something authors `npm install`. Alumna **downloads the right platform binary on first run** into a cache dir (like esbuild/prisma), whether Alumna itself was installed as a bun-compiled executable or (fallback) an npm package. The binary cache is Alumna’s problem, not the author’s.
+`[DECIDED Q6]` Native tools are **not** something authors `npm install`. Alumna **downloads the right platform binary on first need** into a cache dir (like esbuild/prisma), whether Alumna itself was installed as a bun-compiled executable or (fallback) an npm package. The binary cache is Alumna’s problem, not the author’s.
+
+**What to download (and what not):**
+
+| Tool | In the Alumna executable | First-need cache |
+| --- | --- | --- |
+| Alumna JS (bundled + minified) + `svelte/compiler` + scaffold | Yes | — |
+| **Rolldown** (NAPI / native) | No — bun-compile does not pack NAPI well | Yes, first `alumna dev` or `alumna build` |
+| **OXC as its own CLI** | No | **No.** Oxc minify/transform arrives *inside* Rolldown (`minify: true`). Do not ship a second Oxc binary in 4.0. |
+| Package installer for `alumna add` | **Yes.** Bun’s installer is already inside the bun-compiled Alumna file (`BUN_BE_BUN=1`). | **No** extra download. |
+
+`alumna setup` (Phase 6) prefetches the cache so a machine can go offline after that.
+
+**Ship-all-in-one vs download:** first-need cache is for **Rolldown only**. The Alumna download stays one file. Bun (runtime + package manager) is already inside that file because of `bun compile`. Rolldown is large, native, and NAPI — packing it into every Alumna update is the wrong default. A later GitHub “full” archive (Alumna + Rolldown for that OS) is allowed if offline-first install becomes a real request. It is not the 4.0.0 default.
 
 ### 3.5 Binary distribution of Alumna itself
 
@@ -764,7 +796,50 @@ Candidates you named, plus mature extras:
 
 `[DECIDED Q7]` **Primary distribution for 4.0.0: try `bun build --compile` first** so authors install and run Alumna **without npm as the channel**. The compiler/runtime must not be blocked on this — if bun compile is not ready, ship `@alumna/alumna` on npm as the fallback. **scriptc / Porffor / Perry AoT is a later optimization**, not a 4.0.0 requirement.
 
-Q37 clarified: **authors are not required to have Bun or Node** if they have the Alumna executable. Our *release pipeline* may use Bun. Alumna *source* is JavaScript. Node current LTS is what the npm fallback needs.
+Q37 clarified: **authors are not required to have Bun or Node on `PATH`** if they have the Alumna executable — including for `alumna add` (Q42). Our *release pipeline* and **contributor workflow** use Bun (Q43). Alumna *source* is JavaScript. Node current LTS is what the npm fallback needs, and what Jest still needs today.
+
+#### 3.5.1 Bundle Alumna itself before `bun compile` `[DECIDED 2026-08-26]`
+
+The author binary is not a zip of the git tree. **This step is required**, not optional polish. Release pipeline (Phase 6):
+
+1. **Rolldown** bundles Alumna’s ESM (CLI, compiler, `svelte/compiler`, Acorn, scaffold as embedded assets). Tree-shake. One JS file.
+2. **`minify: true`** on that file. Rolldown uses the **Oxc minifier** built into Rolldown. Same knob Alumna already uses on app vendor chunks. **No separate Oxc CLI.**
+3. **`bun build --compile`** that one JS file into the executable.
+
+Do not minify Alumna during development of Alumna. Minify is for the release artifact.
+
+**What cannot go into that JS file:** Rolldown’s native binding. Keep it as a first-need cache download. Dynamic `import('rolldown')` / NAPI load from the cache dir.
+
+#### 3.5.2 `alumna add` uses Bun’s installer inside the Alumna binary `[DECIDED Q42]`
+
+**Yes, this works.** A `bun build --compile` executable contains the full Bun runtime, including the package manager.
+
+There is **no public JS API** named `Bun.install()` today (Bun #16262, closed 2026-08-13: a JS-level package-manager API is still a separate request). The **supported** mechanism, documented since Bun **1.2.16** and verified by the Bun team on 1.3.14 and 1.4.0-canary:
+
+`alumna add` spawns **the same Alumna executable** (`process.execPath`) with `BUN_BE_BUN=1` and args `add --ignore-scripts <packages…>`, `cwd` = the app root.
+
+- `BUN_BE_BUN=1` makes the compiled file act as the `bun` CLI and ignore Alumna’s own entrypoint for that child process.
+- Official Bun docs: CLI tools can install packages this way **without** a second binary and **without** Bun on `PATH`.
+- Set the env var **only on that child**. Do not set it on `alumna dev` / `alumna build`.
+- Package names still reject a leading `-` so the child cannot become a different Bun command.
+
+If Bun later ships `Bun.install()` / `Bun.add()`, switch to the in-process call. Same strategy: the installer already in this binary; no extra download.
+
+**`[ALTERNATIVE]` rejected:** embed `@npmcli/arborist`. **`[ALTERNATIVE]` rejected:** Orogene / a second installer download. **`[ALTERNATIVE]` rejected:** write our own npm resolver.
+
+**`[DECIDED]` `alumna add` ignores lifecycle scripts** (`--ignore-scripts`). The tree is for the **browser** bundle.
+
+**Alpha (this repo, `bun src/cli.js`):** still spawn `bun add` or `npm install` if they exist on `PATH` when the process is not a compiled Alumna binary. The `BUN_BE_BUN` path is for the **compiled Alumna binary** (Phase 6). The npm `@alumna/alumna` contingency (if bun compile cannot ship) may keep using Node’s npm.
+
+#### 3.5.3 Contributor runtime is Bun `[DECIDED Q43]`
+
+**Authors** never install Bun or Node. **Contributors** do.
+
+Default contributor tool is **Bun** (`>= 1.4`): `bun install`, `bun src/cli.js`, later `bun build --compile`. That matches the author binary (Bun inside) and removes a second “install Node *and* Bun” story for people who work on Alumna.
+
+**Exception, today:** Jest 30 cannot run *inside* Bun 1.4.0 at our 100% four-metric gate. So Node (`>= 22`) stays a **test-only** contributor dependency (`bun run test` → Node+Jest). Do not switch `package.json` `"test"` to `bun --bun jest` or to `bun test` until that suite is green at 100% statements/branches/functions/lines. `bun test --coverage` reports only funcs and lines.
+
+Verified 2026-08-26: `bun src/cli.js --help` works.
 
 ---
 
@@ -1209,7 +1284,7 @@ Run: alumna add marked
 **`alumna add <pkg>`** (opinionated wrapper):
 
 1. Creates `package.json` if missing (Alumna-managed; authors should not edit it by hand, but it is fine if they do).
-2. Fetches the package (via bun, npm, or pnpm — whichever Alumna can drive; prefer whatever the Alumna binary already embeds, else a small registry client).
+2. Fetches the package **without Node/Bun/npm on `PATH`** (Q42). The compiled Alumna binary spawns itself with `BUN_BE_BUN=1` and `add --ignore-scripts`. Lifecycle scripts off.
 3. Writes a lockfile so builds are reproducible.
 
 **At compile / build**, Alumna (Rolldown) bundles each used library into **content-hashed shared chunks** under `/_alumna/vendor/` (e.g. `marked-a1b2c3.js`). If two components import `marked`, they share one chunk. Import map:
@@ -1226,7 +1301,7 @@ So: **`package.json` = Alumna’s shopping list / lockfile. `/_alumna/vendor/*` 
 
 Production:
 
-- OXC or Rolldown minify on emitted JS.
+- Rolldown `minify: true` (Oxc minifier) on emitted JS. No separate Oxc CLI.
 - `svelte/internal/client` is one hashed file, tree-shaken **if** we bundle it with the set of used runtime functions — 3.0-feature-build’s `app.imports` Map was this idea. With native ESM, tree-shaking `svelte/internal` only works if we **bundle that package**, not if we re-export the whole module. `[DECIDED]` Rolldown-bundle `svelte/internal/client` once per build, based on used exports collected from compiled output. That preserves 3.0’s “smallComponents” win without IIFE hacks.
 
 Dev: no minify, `dev: true` compile for runtime checks.
@@ -1409,7 +1484,7 @@ Each phase produces something you can run. We do not start phase N+1 with phase 
 | **S1. Native ESM component load** | **Mostly done.** Compile → import map → `import()` + `deps` `Promise.all`. Browser module-map cache not click-verified. |
 | **S2. Navigation API + History fallback** | **Code landed** in `runtime/browser.js`. Not browser-verified in the implementing container. |
 | **S3. svelte/compiler generate client+server** | **Not started** (SSG). Client compile works. |
-| **S4. Rolldown as a library** | **Not started.** Alpha.1 uses `bun build` for Svelte internals only. |
+| **S4. Rolldown as a library** | **Shipped 2026-08-26.** Rolldown API vendors Svelte (used exports) and app libraries into hashed ESM chunks. Production minify (`minify: true` = Oxc). First-need native Rolldown download is Phase 6. |
 | **S5. scriptc hello** | **Not started** (Phase 6). bun compile is the first binary attempt. |
 
 ### Phase 1 — SPA vertical slice (“Hello Alumna 4”) `[SHIPPED]` as `4.0.0-alpha.1`
@@ -1435,17 +1510,21 @@ Still to do:
 - ~~Split public `alumna` module vs auto-boot~~ **Done** (`start({ target })`, `boot_runtime`)
 - ~~Parser-based import rewrite~~ **Done** (Acorn)
 
-Phase 2 language work is **shipped** for 4.0.0-alpha.1. Next is Phase 3.
+Phase 2 language work is **shipped** for 4.0.0-alpha.1. Phase 3 is **shipped** as `4.0.0-alpha.2`.
 
-### Phase 3 — Production quality SPA
+### Phase 3 — Production quality SPA `[SHIPPED]` as `4.0.0-alpha.2`
 
-- Rolldown/OXC vendor bundling for npm imports (`alumna add`)
-- Tree-shaken `svelte/internal` (today: bun-split full client runtime, not export-union tree-shake)
-- Minify, hashed shared chunks, import-map integrity optional
-- CSS strategy (Q3): injected-dev / external-build **already behaves**; confirm ordering and no FOUC
-- Base path (`/app/` hosted) (Q35)
-- Source maps in dev, optional in build
-- Keep 100% Jest coverage as a merge gate
+Shipped 2026-08-26 (details in §0.1):
+
+- ~~Rolldown/OXC vendor bundling for npm imports (`alumna add`)~~ **Done**
+- ~~Tree-shaken Svelte client runtime~~ **Done** (used `$` / named exports; not a full bun-split runtime)
+- ~~Minify, hashed shared chunks~~ **Done**. Import-map integrity hashes still optional / not started
+- ~~CSS strategy (Q3): injected-dev / external-build; no FOUC~~ **Done** (fetch CSS before mount)
+- ~~Base path (`/app/` hosted) (Q35)~~ **Done**
+- ~~Source maps in dev, optional in build~~ **Done**
+- ~~Keep 100% Jest coverage as a merge gate~~ **Done**
+
+Leftover from this phase (not a blocker): import-map integrity; first-need Rolldown download (Phase 6).
 
 ### Phase 4 — SSG + hydration
 
@@ -1464,11 +1543,12 @@ Phase 2 language work is **shipped** for 4.0.0-alpha.1. Next is Phase 3.
 
 ### Phase 6 — Distribution
 
-- Try **`bun build --compile`** as the 4.0.0 channel (authors install/run Alumna, no npm).
-- First-run download of Rolldown/OXC into a cache dir.
+- Rolldown-bundle + `minify: true` (Oxc **inside Rolldown**) Alumna itself into one JS file, then **`bun build --compile`**. Required. See §3.5.1.
+- First-need download of **Rolldown** into a cache dir. **Not** a separate Oxc binary. Optional `alumna setup` to prefetch Rolldown. See Q6.
+- `alumna add` uses **Bun’s installer inside the same binary** (`BUN_BE_BUN=1`, `--ignore-scripts`). No extra installer download. No Node/Bun on `PATH`. See §3.5.2 / Q42.
 - **npm `@alumna/alumna`** only if bun compile cannot ship.
 - scriptc / AoT later as an optimization, not a gate.
-- Docs as short as 2.0’s `structure.md` + `routes.md` should have been.
+- Docs: README is the complete author documentation (index, binary install, no npm as the Alumna install channel; first-need Rolldown).
 
 ### Explicitly not scheduled until you ask
 
@@ -1492,7 +1572,7 @@ Full table is in §15. Narrative answers that needed more than a yes/no:
 
 **Q4 / TypeScript.** Alumna = JS. Components may use `<script lang="ts">` and import `.ts` modules because Svelte 5 + OXC already strip types. No `tsc`. Advertise “works, not typechecked.” Drop it if the graph ever gets messy. Not in Hello.
 
-**Q6 / Q7 / Q37 / distribution.** Try `bun build --compile` so 4.0.0 is an executable, not an npm install. Native bundler binaries download on first run into a cache. npm `@alumna/alumna` is the fallback. scriptc AoT is later. Authors need neither Bun nor Node if they have the Alumna binary. Our CI may use Bun. Source is JS.
+**Q6 / Q7 / Q37 / Q42 / Q43 / distribution.** Rolldown-bundle and minify Alumna to one JS file (`minify: true` = Oxc inside Rolldown), then `bun build --compile`. Native **Rolldown** downloads on first `dev`/`build`. No separate Oxc CLI. `alumna add` uses Bun’s installer **inside the same binary** (`BUN_BE_BUN=1`; there is no `Bun.install()` JS API yet). npm `@alumna/alumna` is the fallback. scriptc AoT is later. **Contributors use Bun.** Node is still required to run Jest (Bun 1.4.0 cannot host that suite at 100% four-metric). Source is JS.
 
 **Q19 / store.** No built-in store. Optional `src/store.svelte.js` with `$state`, imported like any module. Comment in Hello; do not generate the file.
 
@@ -1510,9 +1590,9 @@ Full table is in §15. Narrative answers that needed more than a yes/no:
 - `src/app.js` VM-evaluated; 2.0 vocabulary + **one-level named layouts** (`layout` is a reserved route key); snippets as areas; sequential default; no nested layouts; `app.group`; comma aliases; `:id` params.
 - Native ESM `import()`, import maps, parallel `deps` load. No eval, no IIFE, no `Al.lib`.
 - Navigation API + History fallback. HTTPS origins. Capacitor-friendly, not Cordova-special.
-- Hidden Rolldown/OXC (first-run download). Dev server rewritten inside Alumna (Pulsa/Liven ideas, not those packages).
+- Hidden Rolldown (first-need download). Oxc minify via Rolldown, not a second binary. Dev server rewritten inside Alumna (Pulsa/Liven ideas, not those packages).
 - CLI: `new`, `dev`, `build`, `preview`, `add`. Zero config; optional `alumna.hjson`.
-- Distribution: **bun compile first**, npm fallback, scriptc later.
+- Distribution: Rolldown-bundle + Oxc-minify Alumna → **bun compile**. `alumna add` = `BUN_BE_BUN=1` on that same file. npm fallback. scriptc later. Authors need no JS runtime on `PATH`, including for `add` (Q42). Contributors use Bun (Q43); Node remains for Jest only.
 - SPA first. SSG next (`--ssg` / hjson). Manifest from day one. Architect deferred.
 - Middlewares: `export default`, async, `middleware: ['auth']` only, run before load.
 - No Unitflow, no directory router, no author-facing Vite, no built-in store/api, no `window.app`.
@@ -1539,11 +1619,11 @@ Full table is in §15. Narrative answers that needed more than a yes/no:
 | `on_event.js` | `[SHIPPED]` `classify_watch` + overlay; not a per-module HMR patch |
 | `dynamic_routing.js` string inject | `[SHIPPED]` `config.js` ESM export |
 | `code.js` sequential `svelte:component` | `[SHIPPED]` `shell.js` `{#if}` + PascalCase `{@const C}` |
-| `bundle_and_minify.js` esbuild spawn (linux-x64 only, 3-arg/2-param mismatch) | Rolldown API for vendor + minify, multi-arch |
+| `bundle_and_minify.js` esbuild spawn (linux-x64 only, 3-arg/2-param mismatch) | `[SHIPPED]` Rolldown in `compile/vendor.js` (vendor + minify, multi-arch) |
 | Component `save.js` `slice(0, last_slash - 1)` + non-recursive `ensure_dir` | Normal `path.dirname` + `mkdir recursive` |
 | Scaffold `index.html` still `/dev.js` after “build” | Emit `build/index.html` pointing at the boot file + import map |
-| `altiva.hjson` middlewares map | `middleware:` in `app.js` |
-| `modules/` + `altiva install` | `alumna add` + vendor chunks |
+| `altiva.hjson` middlewares map | `[SHIPPED]` `middleware:` in `app.js` + optional `alumna.hjson` |
+| `modules/` + `altiva install` | `[SHIPPED]` `alumna add` + vendor chunks |
 | `rsyncAssets` | copy `src/static` → `build/` |
 | `fetchival` | optional, probably not |
 | `Store` | user `$state` module |
@@ -1562,8 +1642,8 @@ All `[PROPOSED]` items in the body were accepted on 2026-08-26 unless listed as 
 | 2026-08-26 | Q3 | CSS injected in dev, external files in build, SSG `<head>` links. |
 | 2026-08-26 | Q4 | Alumna = JS. Component TS welcome if cheap (Svelte 5 + OXC, no `tsc`). Not in Hello. Drop if it gets hard. |
 | 2026-08-26 | Q5 | `.svelte` only. |
-| 2026-08-26 | Q6 | First-run download of native Rolldown/OXC binaries into a cache. Not an author `npm install`. |
-| 2026-08-26 | Q7 | Primary: try `bun build --compile` for 4.0.0 (no npm channel). npm package is contingency. scriptc AoT later. Binary is not a blocker for writing the compiler. |
+| 2026-08-26 | Q6 | First-need download of native **Rolldown** into a cache. Not an author `npm install`. **No separate Oxc CLI** — Oxc minify/transform is Rolldown’s. Optional `alumna setup` to prefetch. A later “full” OS archive is allowed; not the 4.0.0 default. |
+| 2026-08-26 | Q7 | Primary: Rolldown-bundle + minify Alumna to one JS file, then `bun build --compile` for 4.0.0 (no npm channel). npm package is contingency. scriptc AoT later. Binary is not a blocker for writing the compiler. |
 | 2026-08-26 | Q8 | `alumna build` = SPA; `--ssg` or hjson `ssg: true`. |
 | 2026-08-26 | Q9 | `src/static`. Copy, no rsync. |
 | 2026-08-26 | Q10 | Pure apps: no `package.json`. `alumna add` creates one. |
@@ -1593,7 +1673,9 @@ All `[PROPOSED]` items in the body were accepted on 2026-08-26 unless listed as 
 | 2026-08-26 | Q34 | Prefetch on hover: on, known routes. |
 | 2026-08-26 | Q35 | Configurable `base` (hjson). |
 | 2026-08-26 | Q36 | SSG output `/about/index.html`. |
-| 2026-08-26 | Q37 | Authors are not required to have Bun or Node if they have the Alumna binary. npm fallback needs Node current LTS. Alumna source is JS. CI may use Bun. |
+| 2026-08-26 | Q37 | Authors are not required to have Bun or Node on `PATH` if they have the Alumna binary. npm fallback needs Node current LTS. Alumna source is JS. Contributors use Bun (Q43). |
+| 2026-08-26 | Q42 | `alumna add` needs no Node/Bun/npm on `PATH`. **Chosen:** spawn the compiled Alumna executable with `BUN_BE_BUN=1` and `add --ignore-scripts` (Bun docs since 1.2.16; no JS `Bun.install()` yet). Not arborist. Not Orogene. Not a second installer download. |
+| 2026-08-26 | Q43 | Contributor default runtime is **Bun** (`bun install`, `bun src/cli.js`, bun-compile). Node stays **test-only** until Jest runs on Bun at 100% four-metric (verified Bun 1.4.0 + Jest 30 cannot). |
 | 2026-08-26 | Q38 | Alumna CLI is JS. Architect is a separate app built *with* Alumna. |
 | 2026-08-26 | Q39 | This directory is the 4.0.0 root. Archaeology folders deleted. Plan kept. |
 | 2026-08-26 | Q21 | Confirmed: `package.json` is Alumna’s lockfile for app libraries; `/_alumna/vendor/` is what the browser loads. |
@@ -1605,6 +1687,8 @@ All `[PROPOSED]` items in the body were accepted on 2026-08-26 unless listed as 
 | 2026-08-26 | — | Manifest from day one. Architect fully deferred. `layout` reserved key accepted. |
 | 2026-08-26 | Q39 | Executed: this directory is the 4.0 root; archaeology folders deleted. |
 | 2026-08-26 | — | **Jest** is the test runner going forward (not `node:test`). Coverage must report **statements, branches, functions, and lines**. **100% on all four** is the gate once the basic roadmap (Phase 1 + Phase 2 + Jest port) is in. Until then, every session that touches `src/` expands coverage and prints the four-metric report. See §0.2. |
+| 2026-08-26 | — | README is the **complete** documentation (newcomers and advanced). Concise, objective. Always an index. Authors install a **single binary**; do not document npm as the Alumna install channel. `alumna add` may use the npm registry for app libraries. |
+| 2026-08-26 | — | Phase 3 shipped as `4.0.0-alpha.2`: `alumna add`, Rolldown vendor, minify, hashed chunks, `alumna.hjson`, `base`, sourcemaps, CSS-before-mount. |
 
 ---
 
@@ -1622,6 +1706,10 @@ All `[PROPOSED]` items in the body were accepted on 2026-08-26 unless listed as 
 | 2026-08-26 | 1.3 | Coding and text rules (§0.4). Jest port started. |
 | 2026-08-26 | 1.4 | Jest **100%** four-metric on `src/**`. Acorn rewrite. Runtime `start({ target })` vs auto-boot. **S0 passed** (sequential + snippets). One-level named layouts. Middleware execution before load. Watch `classify_watch` + compile overlay. Next: Phase 3. |
 | 2026-08-26 | 1.5 | Docs rules (§0.5): at session end always update this plan and CHANGELOG (when the product changed); update README only when authors need it. README is the whole author documentation, stay short, add an index only when it is large, two install blocks (authors vs developers). Contributor guide later; this plan coordinates phases. |
+| 2026-08-26 | 1.6 | README rules tightened: complete docs for newcomers and advanced users; concise speaking; **always** an index; **no npm as Alumna install** (single binary). Phase 3 shipped as `4.0.0-alpha.2` (add, Rolldown, minify, hash, hjson, base, sourcemaps, CSS-before-mount). Next: optional polish, then Phase 4 when asked. |
+| 2026-08-26 | 1.7 | Distribution: authors need no JS runtime on `PATH`, including for `alumna add` (Q42). Bundle+minify Alumna with Rolldown (`minify: true` / Oxc) then bun-compile. First-need Rolldown cache; no separate Oxc CLI. Reject arborist-in-binary and Orogene as 4.0 defaults. |
+| 2026-08-26 | 1.8 | Q42 locked: `alumna add` uses Bun’s installer **inside** the compiled binary (`BUN_BE_BUN=1`). No extra installer. §3.5.1 confirmed: Rolldown-bundle + built-in Oxc minify, then bun-compile. |
+| 2026-08-26 | 1.9 | Q43: contributors use Bun as the default runtime. Node remains for Jest only (`bun --bun jest` fails on Bun 1.4.0). `package.json` `"cli"` is `bun src/cli.js`. |
 
 ---
 
@@ -1681,4 +1769,4 @@ In 4.0 English: validate map → compile graph → rewrite + bundle vendor → e
 
 ---
 
-*End of draft 1.5. Decisions locked. Phase 2 language work is on disk. Next conversation: Phase 3 (`alumna add`, Rolldown/OXC, minify, `base`). Follow §0.5 at session end. Do not re-read the archaeology folders; they are gone. Do not re-do S0.*
+*End of draft 1.9. Decisions locked. Phase 3 is on disk (`4.0.0-alpha.2`). Contributors use Bun; Jest still runs on Node. Next conversation: optional polish, then Phase 4 (SSG) when the author asks. Follow §0.5 at session end. Keep Jest 100%. Do not re-read archaeology. Do not re-do S0 or Phase 3.*

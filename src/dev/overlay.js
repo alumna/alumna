@@ -1,3 +1,5 @@
+import { normalize_base } from '../utils/base.js';
+
 function escape_html (value) {
 	return String(value)
 		.replace(/&/g, '&amp;')
@@ -7,7 +9,7 @@ function escape_html (value) {
 }
 
 // Full-page overlay so a failed compile does not keep a silent last page.
-export function overlay_html (errors) {
+export function overlay_html (errors, base) {
 	const items = Object.keys(errors).map(key => {
 		return '<li><strong>' + escape_html(key) + '</strong>: ' + escape_html(errors[key]) + '</li>';
 	}).join('');
@@ -17,6 +19,6 @@ export function overlay_html (errors) {
 		+ '#alumna-overlay{padding:24px;max-width:52rem}h1{color:#ff6b6b;font-size:1.25rem}'
 		+ 'li{margin:0.5rem 0}</style></head><body><div id="alumna-overlay">'
 		+ '<h1>Alumna could not compile</h1><ul>' + items + '</ul></div>'
-		+ '<script>try{new EventSource("/_alumna/live").onmessage=function(){location.reload()}}catch(e){}</script>'
+		+ '<script>try{new EventSource("' + escape_html((normalize_base(base) || '') + '/_alumna/live') + '").onmessage=function(){location.reload()}}catch(e){}</script>'
 		+ '</body></html>';
 }

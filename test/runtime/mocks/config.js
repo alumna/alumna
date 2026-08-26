@@ -1,5 +1,5 @@
 const config = {
-	dev: false,
+	base: '',
 	areas: [ 'nav', 'content' ],
 	routes: {
 		'/': { areas: { nav: 'Nav', content: 'Home' }, redirect: null, layout: null },

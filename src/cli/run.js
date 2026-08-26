@@ -53,6 +53,9 @@ alumna new .                 In current (empty) directory
 # compile and start live-reload development mode
 alumna dev [--port 3030]
 
+# add a library for use in components
+alumna add <package>
+
 # production SPA build
 alumna build
 
@@ -105,6 +108,16 @@ export async function run_cli (argv, io = {}) {
 				return;
 			}
 			await alumna.new(args[1]);
+			return;
+		}
+
+		if (command === 'add') {
+			if (args.length < 2) {
+				log('Use: alumna add <package> [package...]');
+				exit(1);
+				return;
+			}
+			await alumna.add(args.slice(1));
 			return;
 		}
 

@@ -5,11 +5,18 @@ import { validate_app } from './validate.js';
 import { walk_component_graph, deps_for_entries } from './graph.js';
 import { compile_component, compile_shell } from './svelte.js';
 import { generate_shell_source } from './shell.js';
+import { collect_import_uses, merge_svelte_uses, is_bare_library } from './rewrite.js';
+import { bundle_vendor, is_package_installed } from './vendor.js';
+import { normalize_base, with_base } from '../utils/base.js';
 
 function write_compiled (files, js_path, css_path, compiled, warnings, warning_prefix) {
 	files[js_path] = compiled.js;
+	if (compiled.map)
+		files[js_path + '.map'] = compiled.map;
 	if (compiled.css)
 		files[css_path] = compiled.css;
+	if (compiled.css_map)
+		files[css_path + '.map'] = compiled.css_map;
 	for (const warning of compiled.warnings)
 		warnings.push(warning_prefix + warning.message);
 }
@@ -29,10 +36,42 @@ function serialize_routes (routes) {
 }
 
 function fail (errors) {
-	return { ok: false, errors, warnings: [], files: {}, config: null };
+	return { ok: false, errors, warnings: [], files: {}, config: null, import_map: null, css_hrefs: [] };
 }
 
-export function compile_project ({ src_dir, dev = true }) {
+function collect_libraries (components) {
+	const libraries = new Set();
+	for (const id of Object.keys(components)) {
+		const specs = components[id].imports;
+		for (let i = 0; i < specs.length; i++) {
+			if (is_bare_library(specs[i]))
+				libraries.add(specs[i]);
+		}
+	}
+	return [ ...libraries ];
+}
+
+function css_hrefs_for (files, deps, path, base) {
+	const hrefs = [];
+	const names = deps[path] || [];
+	for (let i = 0; i < names.length; i++) {
+		const key = 'components/' + names[i] + '.css';
+		if (files[key])
+			hrefs.push(with_base(base, '/' + key));
+	}
+	return hrefs;
+}
+
+export async function compile_project ({
+	src_dir,
+	dev = true,
+	project_root,
+	base = '',
+	sourcemap = false,
+	bundle_vendor: bundle_fn
+} = {}) {
+	if (!src_dir)
+		return fail({ 'app.js': 'Missing "app.js" file' });
 	const app_file = join(src_dir, 'app.js');
 	if (!existsSync(app_file))
 		return fail({ 'app.js': 'Missing "app.js" file' });
@@ -53,9 +92,28 @@ export function compile_project ({ src_dir, dev = true }) {
 	if (graph.errors.length)
 		return fail(Object.fromEntries(graph.errors.map((message, i) => [ 'components#' + (i + 1), message ])));
 
+	const root = project_root || join(src_dir, '..');
+	const prefix = normalize_base(base);
+	const libraries = collect_libraries(graph.components);
+	const missing = libraries.filter(spec => !is_package_installed(root, spec));
+	if (missing.length) {
+		const errors = {};
+		for (let i = 0; i < missing.length; i++) {
+			const spec = missing[i];
+			errors[spec] = '"' + spec + '" is not installed.\nRun: alumna add ' + spec;
+		}
+		return fail(errors);
+	}
+
 	const files = {};
 	const warnings = [];
 	const css_mode = dev ? 'injected' : 'external';
+	const want_map = !!(dev || sourcemap);
+	const svelte_uses = new Map();
+
+	function note_uses (code) {
+		merge_svelte_uses(svelte_uses, collect_import_uses(code).svelte);
+	}
 
 	for (const id of Object.keys(graph.components)) {
 		const node = graph.components[id];
@@ -64,9 +122,12 @@ export function compile_project ({ src_dir, dev = true }) {
 				filename: node.file,
 				id,
 				dev,
-				css: css_mode
+				css: css_mode,
+				sourcemap: want_map,
+				base: prefix
 			});
 			write_compiled(files, 'components/' + id + '.js', 'components/' + id + '.css', compiled, warnings, id + '.svelte: ');
+			note_uses(compiled.js);
 		}
 		catch (error) {
 			return fail({ [id + '.svelte']: error.message });
@@ -78,9 +139,11 @@ export function compile_project ({ src_dir, dev = true }) {
 		const shell = compile_shell(shell_source, {
 			filename: 'alumna/App.svelte',
 			dev,
-			css: css_mode
+			css: css_mode,
+			sourcemap: want_map
 		});
 		write_compiled(files, '_alumna/app.js', '_alumna/app.css', shell, warnings, 'App.svelte: ');
+		note_uses(shell.js);
 	}
 	catch (error) {
 		return fail({ 'App.svelte': error.message });
@@ -109,8 +172,26 @@ export function compile_project ({ src_dir, dev = true }) {
 		files['middlewares/' + name + '.js'] = readFileSync(file, 'utf8');
 	}
 
+	let vendor;
+	try {
+		vendor = await (bundle_fn || bundle_vendor)({
+			svelte_uses,
+			libraries,
+			project_root: root,
+			base: prefix,
+			minify: !dev,
+			sourcemap: want_map
+		});
+	}
+	catch (error) {
+		return fail({ vendor: error.message });
+	}
+
+	Object.assign(files, vendor.files);
+
 	const config = {
 		dev,
+		base: prefix,
 		areas: app.areas,
 		routes: serialize_routes(validated.routes),
 		layouts: validated.layouts,
@@ -126,6 +207,8 @@ export function compile_project ({ src_dir, dev = true }) {
 		warnings,
 		files,
 		config,
+		import_map: vendor.import_map,
+		css_hrefs: css_hrefs_for(files, deps, '/', prefix),
 		app,
 		routes: validated.routes,
 		graph
