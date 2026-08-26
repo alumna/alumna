@@ -151,6 +151,8 @@ test('dev serves, recompiles, and close', async () => {
 	expect(html).toMatch(/importmap/);
 	writeFileSync(join(cwd, 'src/components/Home.svelte'), '<p>next</p>');
 	await new Promise(resolve => setTimeout(resolve, 200));
+	const home_js = await (await fetch('http://127.0.0.1:' + port + '/components/Home.js')).text();
+	expect(home_js).toMatch(/next/);
 	writeFileSync(join(cwd, 'src/static/hi.txt'), 'hi2');
 	await new Promise(resolve => setTimeout(resolve, 200));
 	writeFileSync(join(cwd, 'src/components/Unused.svelte'), '<p>no</p>');

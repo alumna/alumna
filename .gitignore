@@ -6,3 +6,12 @@ coverage/
 .alumna-cache/
 .DS_Store
 test/.tmp-s0/
+
+# Alumna development uses Bun only. Keep bun.lock in git.
+package-lock.json
+npm-shrinkwrap.json
+yarn.lock
+pnpm-lock.yaml
+pnpm-workspace.yaml
+.pnpm-store/
+.yarn/

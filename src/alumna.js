@@ -1,10 +1,10 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { compile_project } from './compile/project.js';
+import { compile_project, update_components } from './compile/project.js';
 import { create_project } from './new/copy.js';
 import { inject_html } from './dev/html.js';
 import { create_server, pick_port } from './dev/server.js';
-import { watch_src, classify_watch } from './dev/watch.js';
+import { watch_src, classify_watch, changed_used_ids } from './dev/watch.js';
 import { overlay_html } from './dev/overlay.js';
 import { mime } from './dev/mime.js';
 import { alumna_root } from './utils/paths.js';
@@ -172,7 +172,16 @@ export class Alumna {
 				return;
 			}
 
-			const next = await this.compile({ dev: true });
+			const next = action === 'update'
+				? await update_components(this.last_compiled, {
+					src_dir: this.src_dir(),
+					ids: changed_used_ids(files, this.last_compiled),
+					dev: true,
+					project_root: this.config.cwd,
+					base: this.config.base,
+					sourcemap: this.config.sourcemap
+				})
+				: await this.compile({ dev: true });
 			if (!next.ok) {
 				this.print_errors(next.errors);
 				memory.set('/index.html', {

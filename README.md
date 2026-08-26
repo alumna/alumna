@@ -328,17 +328,21 @@ SSG (`--ssg` / `ssg: true`), HMR that keeps component state, and a public binary
 
 This section is for work on Alumna itself, not for installing Alumna as an author.
 
-Need **Bun 1.4 or newer**. `bun install` and `bun src/cli.js` are the default. Node.js 22 or newer is still required to **run tests** (Jest). That split is temporary: Jest 30 does not run inside Bun 1.4 at 100% coverage.
+Need **Bun 1.4 or newer**. `bun install` and `bun src/cli.js` are the default. Do not use npm, yarn, or pnpm to install this repository. To run **all tests** you also need:
+
+- **Node.js 22 or newer** (Jest). That split is temporary: Jest 30 does not run inside Bun 1.4 at 100% coverage.
+- **Playwright Chromium** (real-browser tests). After `bun install`, run once: `bunx playwright install --with-deps chromium`. That command needs apt/sudo for OS libraries. Headless is enough; no display. Firefox is optional.
 
 ```
 git clone <this-repo>
 cd alumna
 bun install
+bunx playwright install --with-deps chromium
 bun run test
 bun src/cli.js new my-app
 ```
 
-Tests must stay at 100% statements, branches, functions, and lines on `src/**`.
+Tests must stay at 100% statements, branches, functions, and lines on `src/**`. Cover both unit tests and integration / real-browser tests.
 
 ## License
 

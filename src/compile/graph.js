@@ -55,10 +55,14 @@ export function parse_component_imports (source, filename) {
 	return collect_imports_from_ast(ast);
 }
 
-export function walk_component_graph (src_dir, entry_ids) {
-	const components = {};
+// Walk from entry_ids. Re-read those ids. Keep other nodes in `existing`.
+export function walk_component_graph (src_dir, entry_ids, existing) {
+	const components = existing ? Object.assign({}, existing) : {};
 	const errors = [];
 	const queue = [ ...entry_ids ];
+
+	for (let i = 0; i < entry_ids.length; i++)
+		delete components[entry_ids[i]];
 
 	while (queue.length) {
 		const id = queue.pop();
@@ -83,22 +87,26 @@ export function walk_component_graph (src_dir, entry_ids) {
 		}
 
 		const children = [];
-		for (const spec of specs) {
-			if (!spec.endsWith('.svelte') && !spec.endsWith('.svelte.js'))
-				continue;
-			const resolved = resolve_component_import(id, spec);
-			if (resolved.error) {
-				errors.push(resolved.error);
-				continue;
-			}
-			children.push(resolved.id);
-			queue.push(resolved.id);
-		}
-
+		enqueue_svelte_children(id, specs, children, errors, queue);
 		components[id] = { id, file, source, imports: specs, children };
 	}
 
 	return { components, errors };
+}
+
+function enqueue_svelte_children (from_id, specs, children, errors, queue) {
+	for (let i = 0; i < specs.length; i++) {
+		const spec = specs[i];
+		if (!spec.endsWith('.svelte') && !spec.endsWith('.svelte.js'))
+			continue;
+		const resolved = resolve_component_import(from_id, spec);
+		if (resolved.error) {
+			errors.push(resolved.error);
+			continue;
+		}
+		children.push(resolved.id);
+		queue.push(resolved.id);
+	}
 }
 
 export function deps_for_entries (components, entry_ids) {

@@ -1,5 +1,11 @@
 # Alumna changelog
 
+## 4.0.0-alpha.3 — 2026-08-26
+
+- `alumna dev` recompiles only the changed used `.svelte` file. It also compiles new child components and removes unused ones. Route deps update when the child list changes. Vendor chunks rebuild only when library or Svelte imports change.
+- Tests must cover unit tests and integration / real-browser tests. Contributors need Playwright Chromium for the full suite: `bun install`, then `bunx playwright install --with-deps chromium`.
+- Alumna development uses Bun only. Commit `bun.lock`. Rolldown is a contributor devDependency (authors get it on first run later).
+
 ## 4.0.0-alpha.2 — 2026-08-26
 
 Production-quality SPA slice (Phase 3).

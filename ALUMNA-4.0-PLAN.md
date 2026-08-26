@@ -1,10 +1,10 @@
 # Alumna 4.0 — Living Plan
 
-> **Status:** draft 1.9 — 2026-08-26. Decisions locked. **4.0.0-alpha.2** is the current slice (Phase 3 shipped). Jest four-metric coverage stays **100%** on `src/**`. Docs rules are in §0.5. Coding and text rules are in §0.4.
+> **Status:** draft 1.12 — 2026-08-26. Decisions locked. **4.0.0-alpha.2** is the current slice (Phase 3 shipped; used-`.svelte` incremental compile shipped). The SPA surface is enough to start Phase 4 (SSG). Jest four-metric coverage stays **100%** on `src/**`. Tests must cover both unit (bottom-up) and integration / real-browser e2e (top-down). Contributors use **Bun only**. Docs rules are in §0.5. Coding and text rules are in §0.4.
 >
 > **Purpose of this file:** source of truth for Alumna 4.0. Implementation follows this file, not chat history. This file also coordinates work across phases until a contributor guide exists.
 >
-> **How to continue in a new conversation:** *“Read `ALUMNA-4.0-PLAN.md` draft 1.9. Start from §0 (delivery + tests + next work). Follow §0.4 coding rules and §0.5 docs rules. Do not re-litigate the Decision Log unless I ask.”*
+> **How to continue in a new conversation:** *“Read `ALUMNA-4.0-PLAN.md` draft 1.12. Start from §0 (delivery + tests + next work). Follow §0.2 (unit + integration + Chromium e2e), §0.4 coding rules, and §0.5 docs rules. Do not re-litigate the Decision Log unless I ask.”*
 
 Legend used throughout:
 
@@ -25,7 +25,7 @@ Alumna 4.0 is a from-scratch rebuild, **inspired by** 2.0/3.0, not a port. Every
 
 **Repo layout `[SHIPPED Q39]`:** this directory **is** Alumna 4.0.0. There is no `alumna-4.0/` subfolder. The archaeology trees (`alumna-2.0/`, `alumna-3.0/`, `alumna-3.0-feature-build/`) were deleted on 2026-08-26. Historical detail lives in §2 of this file and on GitHub.
 
-**Environment this alpha was built on:** Ubuntu 26.04 LXC, Bun **1.4.0**, Node.js **26.7.0** (Jest only). Alumna source is JS. `svelte@5.56.10`. Rolldown **1.2.5** vendors Svelte and app libraries. Contributors use Bun (`bun install`, `bun src/cli.js`). Node is still required to run Jest.
+**Environment this alpha was built on:** Ubuntu 26.04 LXC, Bun **1.4.0**, Node.js **26.7.0** (Jest). Alumna source is JS. `svelte@5.56.10`. Rolldown **1.2.5** vendors Svelte and app libraries (contributor **devDependency**; authors get a first-need download in Phase 6). Contributors use **Bun only** (`bun install`, `bunx`, `bun src/cli.js`). Commit `bun.lock`. Node is still required to run Jest. **The full suite also needs Playwright Chromium** (`bunx playwright install --with-deps chromium` after `bun install`). See §0.2.
 
 Any later change to product or process must edit this file and append the Decision Log or the revision log. At session end also follow §0.5.
 
@@ -50,7 +50,7 @@ src/static/
 
 **Runtime (`src/runtime/browser.js`):** `import()` + in-memory constructor cache, `Promise.all` of `deps[pattern]`, Navigation API with History fallback, `<a>` intercept, hover prefetch (`mouseover`), `goto` / `redirect` / `prefetch` / `route` object (`path`, `pattern`, `params`, `query`, `layout`). Public API vs boot: `start({ target })` and `boot_runtime(import.meta.url)` (auto-start only when the script URL is `/_alumna/runtime.js`). Middleware chain before load. SSE live reload only when `config.dev` is true. `config.base` prefixes asset URLs and is stripped for route match.
 
-**Dev server:** in-process `node:http`, memory overlay, SPA fallback, `src/static` pass-through, `fs.watch` with the §17.3 table (`classify_watch`: ignore unused `.svelte` and new dirs; reload static/html; recompile used components / `app.js` / middlewares). Compile failure keeps the last good graph and serves an overlay page (`overlay_html`) plus SSE reload. Optional `base` strips the prefix before lookup.
+**Dev server:** in-process `node:http`, memory overlay, SPA fallback, `src/static` pass-through, `fs.watch` with the §17.3 table (`classify_watch`: ignore unused `.svelte` and new dirs; reload static/html; **update** a used `.svelte` with `update_components`; full `recompile` for `app.js` / middlewares / other files). A used `.svelte` change recompiles that module only. New children are compiled. Unreachable children are dropped. Route `deps` update when the child list changes. Vendor chunks rebuild only when library or Svelte imports change. Compile failure keeps the last good graph and serves an overlay page (`overlay_html`) plus SSE reload. Optional `base` strips the prefix before lookup.
 
 **Svelte / library vendor:** Rolldown (Alumna dependency). First-run Bun for Svelte vendor is **gone**. Production minify of runtime, `match.js`, and vendor chunks. Hashed vendor filenames. Source maps in dev; optional in build (`sourcemap` in hjson).
 
@@ -88,11 +88,11 @@ src/compile/graph.js
 src/compile/svelte.js
 src/compile/rewrite.js        # Acorn walk of import/export specifiers + used exports
 src/compile/shell.js          # sequential + snippet layouts
-src/compile/project.js
+src/compile/project.js        # compile_project + update_components (used .svelte only)
 src/compile/vendor.js         # Rolldown: svelte tree-shake + app libraries + minify
 src/runtime/browser.js        # loader, router, middleware, start()
 src/dev/server.js
-src/dev/watch.js              # watch + classify_watch (§17.3)
+src/dev/watch.js              # watch + classify_watch (§17.3) + changed_used_ids
 src/dev/overlay.js            # compile error page
 src/dev/html.js
 src/dev/defaults.js
@@ -105,7 +105,7 @@ scaffold/
 test/**/*.test.js             # Jest, 100% four-metric on src/**
 ```
 
-**Verified in this session:** Jest **100%** statements/branches/functions/lines on `src/**` (271 tests; 1471 / 1109 / 202 / 1439). Unused `_alumna/app.css` first-route branch removed (the App shell has no CSS). `.gitignore` ignores only repo-root `/build/`, so `src/build/write.js` is not hidden. **Not verified:** real-browser click-through (no Chromium/Firefox in the container).
+**Verified in this session:** Jest **100%** statements/branches/functions/lines on `src/**` (288 tests; 1588 / 1163 / 214 / 1552). Used `.svelte` watch path recompiles that module only (`update_components`), including a changed child list and rebuilt `deps`. **Not verified:** real-browser click-through (Playwright Chromium is not installed in this container yet).
 
 **Explicitly not in this slice:**
 
@@ -120,7 +120,7 @@ test/**/*.test.js             # Jest, 100% four-metric on src/**
 | Source maps | **Shipped** (dev on; build via hjson) |
 | `alumna.start({ target })` (Q40a) | **Shipped** (`start({ target })` + `boot_runtime`) |
 | Error overlay in the browser | **Shipped** (`overlay_html` on compile fail) |
-| Selective `on_event` recompile | **Shipped** (`classify_watch`) |
+| Selective `on_event` recompile | **Shipped** (`classify_watch` + per-module `update_components`) |
 | Import-map integrity | Not started (optional) |
 | SSG, `data()`, parametric prerender | Not started |
 | bun compile binary / npm publish | Not started (Phase 6). README already describes the binary. |
@@ -129,7 +129,7 @@ test/**/*.test.js             # Jest, 100% four-metric on src/**
 **Known debt to fix, not copy forward:**
 
 1. ~~`rewrite.js` regex~~ **Done.** Acorn parse + specifier walk (`ranges: true`).
-2. ~~Dev watch recompiles everything~~ **Done.** `classify_watch` follows §17.3 (directory create ignored; unused `.svelte` ignored; static/html reload; used files recompile). Subcomponent-set *diff* vs always recompile a used file is still coarse: a used `.svelte` always recompiles the project, it does not yet recompile only that module.
+2. ~~Dev watch recompiles everything~~ **Done.** `classify_watch` follows §17.3. A used `.svelte` change calls `update_components`: recompile that module; compile new children; drop unreachable children; refresh route `deps`; rebundle vendor only when library or Svelte imports change.
 3. ~~Layout remount identity (S0)~~ **Done.** Proven; named layouts ship snippets.
 4. ~~Import map `'alumna'` auto-start~~ **Done.** `should_auto_start` / `boot_runtime`; `start({ target })` is public.
 5. ~~Bun required for Svelte vendor~~ **Done.** Rolldown vendors Svelte. `find_bun` remains only as a helper for `alumna add` if Bun is on the machine.
@@ -139,7 +139,7 @@ test/**/*.test.js             # Jest, 100% four-metric on src/**
 
 Alpha.1 tests started as `node:test` on `src/compile/*` only. **That is done.** Jest is the runner. Four-metric `coverageThreshold` is **on** at 100%.
 
-**From the next conversation on:** keep the gate. New `src/` code does not land without tests that keep statements, branches, functions, and lines at 100%.
+**From the next conversation on:** keep the gate. New `src/` code does not land without tests that keep statements, branches, functions, and lines at 100%. Also keep both test directions in §0.2 item 9 (unit + integration / Chromium e2e).
 
 1. **Jest** is the test runner. The author needs its coverage report — not a line-only summary. We will report **statements, branches (logic), functions, and lines**, all four, on every test run.
 2. **100% on all four metrics** is the merge gate. Phase 1 + Phase 2 + Jest are in. SSG, Architect, and bun-compile (Phases 4–6) land after, still under 100%.
@@ -191,13 +191,25 @@ Turn the 100% `coverageThreshold` **on once the Jest port covers the existing al
 
 8. 2.0’s `test/generators/maincode` cases remain the **route-language spec**. Port any still-missing cases into Jest (`validate.test.js`).
 
+9. **Both directions** `[DECIDED 2026-08-26]`. Every session that adds or changes behavior must keep **both**:
+   - **Bottom-up (unit):** one function or module at a time (`compile/*`, `match.js`, `classify_watch`, …).
+   - **Top-down:** integration of the real CLI, HTTP server, compiler, and Rolldown; and **real-browser e2e** (Playwright + Chromium) for author-visible flows (Hello, click, navigation, live reload, overlay).
+   
+   jsdom is not a real browser. It is fine for unit tests of `runtime/browser.js`. It does not replace Chromium.
+   
+   100% four-metric coverage stays. Browser tests do not replace unit tests. Pure helpers need unit tests. Author-visible runtime and UI also need integration, and Chromium when a real page is involved.
+   
+   **Today:** unit tests and some integration tests (CLI, `alumna dev` HTTP, real Rolldown) are in. Real-browser e2e is **not** in yet. It is required from now on as soon as Chromium is available, and for every later author-visible change.
+
+10. **Contributor machine for the full suite:** Bun (CLI and package manager), Node (Jest only), Playwright Chromium (e2e). Order: `bun install`, then `bunx playwright install --with-deps chromium` once (apt/sudo for OS libraries). `@playwright/test` is already a devDependency; `bunx` runs that local CLI. Do not use `npx`. Firefox is optional. Headless Chromium is enough (no display). See README Developers.
+
 ### 0.3 What the next conversation should do (ordered)
 
-Do **not** restart archaeology. Do **not** re-ask Q1–Q41. Do **not** re-do S0; the spike passed. Do **not** re-do Phase 3.
+Do **not** restart archaeology. Do **not** re-ask Q1–Q41. Do **not** re-do S0; the spike passed. Do **not** re-do Phase 3. Do **not** re-do used-`.svelte` incremental compile.
 
-1. Optional polish: recompile **only** the changed used `.svelte` (today a used file still runs the full project compile); browser smoke of Hello if a browser is available.
-2. Then Phase 4 (SSG) when the author asks.
-3. At the end of the session, follow §0.5 (plan + changelog always; README when authors need a change). Keep Jest 100%. Do not commit or push unless the author asks.
+1. **Phase 4 (SSG).** Start it. The SPA compiler, route `deps`, external CSS, import map, `--ssg` flag, and client runtime are enough to try the first slice. First slice: static paths only (Q24), no `data()` (Q25), `generate:'server'`, per-route HTML (`/about/index.html`), hydrate then SPA. See §9.
+2. Real-browser Hello (Playwright + Chromium) as soon as Chromium is installed on this machine. After that, keep Chromium e2e in the suite for author-visible flows.
+3. At the end of the session, follow §0.5 (plan + changelog always; README when authors or contributors need a change). Keep Jest 100%. Cover both test directions (§0.2). Do not commit or push unless the author asks.
 
 ### 0.4 Coding and text rules `[DECIDED 2026-08-26]`
 
@@ -237,6 +249,19 @@ Follow these in every session. Alumna 4.0 is a new project. There is no retro-co
 
 - When the same logic appears in more than one place, unify it if that is simpler. The shared code does not have to live in the same file.
 
+**Tests** `[DECIDED 2026-08-26]`
+
+- In every session, keep both directions from §0.2: unit tests (bottom-up) and integration / real-browser e2e (top-down).
+- 100% four-metric coverage stays. jsdom is not a real browser.
+
+**Package manager** `[DECIDED 2026-08-26]`
+
+- Contributors use **Bun only**: `bun install`, `bunx`, `bun src/cli.js`. Do not use npm, yarn, or pnpm to install this repo.
+- Commit `bun.lock`. Ignore npm / yarn / pnpm lockfiles.
+- Use `bunx`, not `npx`.
+- Node is only for Jest (`bun run test` starts Node).
+- Rolldown is a **devDependency**. Contributors get it from `bun install`. The author binary must **not** embed Rolldown’s native binding (dynamic import from a first-need cache, Phase 6). Moving it to `devDependencies` does not by itself stop `bun build --compile` from bundling a static `import 'rolldown'`.
+
 **Git**
 
 - Do not commit or push unless the author asks.
@@ -258,7 +283,7 @@ Follow these in every session. Alumna 4.0 is a new project. There is no retro-co
 - **Do not document npm as the way to install Alumna.** Alumna is a **single binary**. Authors do not need npm, Node, or Bun on `PATH` — not to run Alumna, and not for `alumna add`. `alumna add` talks to the npm registry for *app libraries*. That is not how you install Alumna. First `dev`/`build` may download Rolldown once. The Alumna binary already contains Bun’s installer (`BUN_BE_BUN=1`). See §3.5.
 - README has **two install blocks**:
   - **Authors** (main, first): install the Alumna binary and start an app.
-  - **Developers / contributors** (later): clone this repo, **Bun** (`bun install`, `bun src/cli.js`). Node is still required to run Jest. That is not the author install path.
+  - **Developers / contributors** (later): clone this repo, **Bun only** (`bun install`, `bunx`, `bun src/cli.js`). Node is still required to run Jest. That is not the author install path.
 - README must not contain information that authors do not need (internals, phase lists, Jest policy, archaeology).
 - A real contributor guide will come later. Until then, **this plan file** coordinates our work and its phases. Do not put that coordination into README.
 
@@ -808,7 +833,7 @@ The author binary is not a zip of the git tree. **This step is required**, not o
 
 Do not minify Alumna during development of Alumna. Minify is for the release artifact.
 
-**What cannot go into that JS file:** Rolldown’s native binding. Keep it as a first-need cache download. Dynamic `import('rolldown')` / NAPI load from the cache dir.
+**What cannot go into that JS file:** Rolldown’s native binding. Keep it as a first-need cache download. Dynamic `import('rolldown')` / NAPI load from the cache dir. In this repo Rolldown is a **devDependency** (contributors still get it from `bun install`). `dependencies` vs `devDependencies` does **not** control `bun build --compile`: a static `import { rolldown } from 'rolldown'` still pulls it in. Phase 6 must externalize that import.
 
 #### 3.5.2 `alumna add` uses Bun’s installer inside the Alumna binary `[DECIDED Q42]`
 
@@ -835,7 +860,7 @@ If Bun later ships `Bun.install()` / `Bun.add()`, switch to the in-process call.
 
 **Authors** never install Bun or Node. **Contributors** do.
 
-Default contributor tool is **Bun** (`>= 1.4`): `bun install`, `bun src/cli.js`, later `bun build --compile`. That matches the author binary (Bun inside) and removes a second “install Node *and* Bun” story for people who work on Alumna.
+Default contributor tool is **Bun** (`>= 1.4`): `bun install`, `bunx`, `bun src/cli.js`, later `bun build --compile`. That matches the author binary (Bun inside). Do not use npm / yarn / pnpm to develop Alumna. Commit `bun.lock` only.
 
 **Exception, today:** Jest 30 cannot run *inside* Bun 1.4.0 at our 100% four-metric gate. So Node (`>= 22`) stays a **test-only** contributor dependency (`bun run test` → Node+Jest). Do not switch `package.json` `"test"` to `bun --bun jest` or to `bun test` until that suite is green at 100% statements/branches/functions/lines. `bun test --coverage` reports only funcs and lines.
 
@@ -1492,7 +1517,7 @@ Each phase produces something you can run. We do not start phase N+1 with phase 
 Shipped 2026-08-26 (details in §0.1). Remaining Phase 1 hygiene:
 
 - ~~Jest port + coverage on existing modules (§0.2)~~ **Done** (100%)
-- Browser smoke of Hello (open `alumna dev`, confirm “Welcome to Alumna!”) — still no Chromium in this container
+- Browser smoke of Hello (open `alumna dev`, confirm “Welcome to Alumna!”) — waiting on Playwright Chromium in this container (§0.2)
 - ~~Preview integration test~~ **Done** (`test/alumna.test.js`)
 - ~~Do not treat regex `rewrite.js` as finished~~ **Done** (Acorn)
 
@@ -1505,7 +1530,7 @@ Still to do:
 - ~~Jest 100% four-metric gate on the then-current `src/`~~ **Done**
 - ~~Layouts (after S0)~~ **Done** (one-level named layouts + sequential default)
 - ~~Middleware **execution**~~ **Done** (sync+async, before load, `export default`)
-- ~~Watch selectivity (§17.3)~~ **Done** (`classify_watch`; used-file compile is still whole-project)
+- ~~Watch selectivity (§17.3)~~ **Done** (`classify_watch` + `update_components` per used `.svelte`)
 - ~~Component-missing and compile-error overlay~~ **Done** (`overlay_html`)
 - ~~Split public `alumna` module vs auto-boot~~ **Done** (`start({ target })`, `boot_runtime`)
 - ~~Parser-based import rewrite~~ **Done** (Acorn)
@@ -1528,11 +1553,13 @@ Leftover from this phase (not a blocker): import-map integrity; first-need Rolld
 
 ### Phase 4 — SSG + hydration
 
-- `generate: 'server'` path
-- Per-route HTML
-- `data()` hook or a simpler static-only SSG (Q25)
-- `alumna build --route` for one-route rebuild
+**Ready to start.** The SPA compiler (`compile_project`), route `deps`, external CSS, import map, `--ssg` / hjson `ssg`, and client runtime are enough to try the first slice. Client compile (`generate:'client'`) works. Server compile does not exist yet.
+
+- `generate: 'server'` path (S3)
+- Per-route HTML (`/about/index.html`, Q36)
+- Static paths only (Q24). No `data()` in this slice (Q25; shape reserved)
 - Hydration that then continues as SPA
+- `alumna build --route` for one-route rebuild can wait if the first slice is simpler
 
 ### Phase 5 — Selective rebuild (Architect-facing)
 
@@ -1616,7 +1643,7 @@ Full table is in §15. Narrative answers that needed more than a yes/no:
 | `subcomponents.js` AST walk of `Al.component[` | `[SHIPPED]` `graph.js` via `parse({ modern: true })` |
 | `compile_flow` + Unitflow | `[SHIPPED]` `project.js` + `svelte.js` (plain async, no Unitflow) |
 | `server.js` Liven `memory()` | `[SHIPPED]` `dev/server.js` |
-| `on_event.js` | `[SHIPPED]` `classify_watch` + overlay; not a per-module HMR patch |
+| `on_event.js` | `[SHIPPED]` `classify_watch` + `update_components`; not a per-module HMR patch |
 | `dynamic_routing.js` string inject | `[SHIPPED]` `config.js` ESM export |
 | `code.js` sequential `svelte:component` | `[SHIPPED]` `shell.js` `{#if}` + PascalCase `{@const C}` |
 | `bundle_and_minify.js` esbuild spawn (linux-x64 only, 3-arg/2-param mismatch) | `[SHIPPED]` Rolldown in `compile/vendor.js` (vendor + minify, multi-arch) |
@@ -1689,6 +1716,10 @@ All `[PROPOSED]` items in the body were accepted on 2026-08-26 unless listed as 
 | 2026-08-26 | — | **Jest** is the test runner going forward (not `node:test`). Coverage must report **statements, branches, functions, and lines**. **100% on all four** is the gate once the basic roadmap (Phase 1 + Phase 2 + Jest port) is in. Until then, every session that touches `src/` expands coverage and prints the four-metric report. See §0.2. |
 | 2026-08-26 | — | README is the **complete** documentation (newcomers and advanced). Concise, objective. Always an index. Authors install a **single binary**; do not document npm as the Alumna install channel. `alumna add` may use the npm registry for app libraries. |
 | 2026-08-26 | — | Phase 3 shipped as `4.0.0-alpha.2`: `alumna add`, Rolldown vendor, minify, hashed chunks, `alumna.hjson`, `base`, sourcemaps, CSS-before-mount. |
+| 2026-08-26 | — | Tests must cover **both directions**: unit (bottom-up) and integration + real-browser e2e (top-down). jsdom is not a real browser. Playwright Chromium is a contributor requirement for the full suite. See §0.2. |
+| 2026-08-26 | — | SPA surface is enough to start Phase 4 (SSG). First slice: static paths, no `data()`, server compile, per-route HTML, hydrate then SPA. |
+| 2026-08-26 | — | Contributor package manager is **Bun only**. Commit `bun.lock`. Ignore npm / yarn / pnpm lockfiles. Use `bunx`, not `npx`. |
+| 2026-08-26 | — | Rolldown is a **devDependency** in this repo. Authors get a first-need download (Phase 6). `devDependencies` does not stop bun-compile from bundling a static `import 'rolldown'`; that import must be externalized. |
 
 ---
 
@@ -1710,6 +1741,9 @@ All `[PROPOSED]` items in the body were accepted on 2026-08-26 unless listed as 
 | 2026-08-26 | 1.7 | Distribution: authors need no JS runtime on `PATH`, including for `alumna add` (Q42). Bundle+minify Alumna with Rolldown (`minify: true` / Oxc) then bun-compile. First-need Rolldown cache; no separate Oxc CLI. Reject arborist-in-binary and Orogene as 4.0 defaults. |
 | 2026-08-26 | 1.8 | Q42 locked: `alumna add` uses Bun’s installer **inside** the compiled binary (`BUN_BE_BUN=1`). No extra installer. §3.5.1 confirmed: Rolldown-bundle + built-in Oxc minify, then bun-compile. |
 | 2026-08-26 | 1.9 | Q43: contributors use Bun as the default runtime. Node remains for Jest only (`bun --bun jest` fails on Bun 1.4.0). `package.json` `"cli"` is `bun src/cli.js`. |
+| 2026-08-26 | 1.10 | Used `.svelte` watch path recompiles that module only (`update_components`). Child-list change updates route `deps`. Vendor rebuilds only when imports change. Browser smoke still blocked (no Chromium/Firefox). Next: Phase 4 (SSG) when asked. |
+| 2026-08-26 | 1.11 | Tests: unit + integration + Chromium e2e required from now on (§0.2 / §0.4). Playwright Chromium is a contributor requirement. Phase 4 (SSG) is ready to start (SPA surface is enough). Next: SSG first slice, then Hello in Chromium when installed. |
+| 2026-08-26 | 1.12 | Contributor package manager is **Bun only** (`bun install`, `bunx`). Commit `bun.lock`; ignore npm/yarn/pnpm lockfiles. Rolldown is a devDependency (first-need download for authors is still Phase 6; a static import still needs to be externalized for bun-compile). Playwright: `bun install` then `bunx playwright install --with-deps chromium`. |
 
 ---
 
@@ -1769,4 +1803,4 @@ In 4.0 English: validate map → compile graph → rewrite + bundle vendor → e
 
 ---
 
-*End of draft 1.9. Decisions locked. Phase 3 is on disk (`4.0.0-alpha.2`). Contributors use Bun; Jest still runs on Node. Next conversation: optional polish, then Phase 4 (SSG) when the author asks. Follow §0.5 at session end. Keep Jest 100%. Do not re-read archaeology. Do not re-do S0 or Phase 3.*
+*End of draft 1.12. Decisions locked. Phase 3 is on disk (`4.0.0-alpha.2`). Used `.svelte` incremental compile is on disk. Contributors use Bun only, Node (Jest), and Playwright Chromium (`bunx`). Next conversation: Phase 4 (SSG) first slice. Follow §0.2 both test directions and §0.5 at session end. Keep Jest 100%. Do not re-read archaeology. Do not re-do S0 or Phase 3.*

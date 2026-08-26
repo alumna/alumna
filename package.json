@@ -9,6 +9,9 @@
 		"type": "git",
 		"url": "git://github.com/alumna/alumna.git"
 	},
+	"bugs": {
+		"url": "https://github.com/alumna/alumna/issues"
+	},
 	"bin": {
 		"alumna": "./src/cli.js"
 	},
@@ -30,16 +33,15 @@
 		"bun": ">=1.4.0",
 		"node": ">=22"
 	},
+	"packageManager": "bun@1.4.0",
 	"dependencies": {
 		"acorn": "^8.18.0",
-		"rolldown": "^1.2.5",
 		"svelte": "^5.56.10"
 	},
-	"bugs": {
-		"url": "https://github.com/alumna/alumna/issues"
-	},
 	"devDependencies": {
+		"@playwright/test": "^1.62.1",
 		"jest": "^30.4.2",
-		"jest-environment-jsdom": "^30.4.1"
+		"jest-environment-jsdom": "^30.4.1",
+		"rolldown": "^1.2.5"
 	}
 }

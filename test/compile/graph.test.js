@@ -5,6 +5,8 @@ import {
 	deps_for_entries,
 	read_component_source
 } from '../../src/compile/graph.js';
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { make_dir } from '../helpers/fixture.js';
 
 test('resolves sibling svelte imports', () => {
@@ -108,4 +110,17 @@ test('read_component_source missing file', () => {
 test('read_component_source existing file', () => {
 	const src_dir = make_dir({ 'components/Hello.svelte': '<p>hi</p>' });
 	expect(read_component_source(src_dir, 'Hello').source).toBe('<p>hi</p>');
+});
+
+test('walk_component_graph re-reads entries and keeps other nodes', () => {
+	const src_dir = make_dir({
+		'components/Home.svelte': `<script>import Badge from './Badge.svelte';</script><p>one</p>`,
+		'components/Badge.svelte': `<span>ok</span>`
+	});
+	const first = walk_component_graph(src_dir, [ 'Home' ]);
+	writeFileSync(join(src_dir, 'components/Home.svelte'), `<script>import Badge from './Badge.svelte';</script><p>two</p>`);
+	const second = walk_component_graph(src_dir, [ 'Home' ], first.components);
+	expect(second.components.Badge).toBe(first.components.Badge);
+	expect(second.components.Home).not.toBe(first.components.Home);
+	expect(second.components.Home.source).toMatch(/two/);
 });

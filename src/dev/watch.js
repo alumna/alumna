@@ -16,10 +16,28 @@ function used_ids (compiled) {
 		: {};
 }
 
-// Decide ignore, reload (static/html), or recompile. Matches the §17.3 table.
+export function changed_used_ids (files, compiled) {
+	const used = used_ids(compiled);
+	const ids = [];
+	const seen = new Set();
+	for (let i = 0; i < files.length; i++) {
+		const rel = String(files[i]).replace(/\\/g, '/');
+		if (!rel.startsWith('components/') || !rel.endsWith('.svelte'))
+			continue;
+		const id = rel.slice(11, -7);
+		if (!used[id] || seen.has(id))
+			continue;
+		seen.add(id);
+		ids.push(id);
+	}
+	return ids;
+}
+
+// ignore / reload / update (used .svelte only) / recompile. Matches §17.3.
 export function classify_watch (files, compiled, src_dir) {
 	const used = used_ids(compiled);
 	let reload = false;
+	let update = false;
 
 	for (let i = 0; i < files.length; i++) {
 		const rel = String(files[i]).replace(/\\/g, '/');
@@ -40,13 +58,15 @@ export function classify_watch (files, compiled, src_dir) {
 		if (rel.startsWith('components/') && rel.endsWith('.svelte')) {
 			const id = rel.slice(11, -7);
 			if (used[id])
-				return 'recompile';
+				update = true;
 			continue;
 		}
 
 		return 'recompile';
 	}
 
+	if (update)
+		return 'update';
 	return reload ? 'reload' : 'ignore';
 }
 
