@@ -1,0 +1,43 @@
+{
+	"name": "@alumna/alumna",
+	"version": "4.0.0-alpha.1",
+	"description": "Alumna: an opinionated meta-framework for Svelte 5 apps",
+	"type": "module",
+	"license": "MIT",
+	"author": "Paulo Coghi",
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/alumna/alumna.git"
+	},
+	"bin": {
+		"alumna": "./src/cli.js"
+	},
+	"exports": {
+		".": "./src/alumna.js"
+	},
+	"files": [
+		"src",
+		"scaffold",
+		"LICENSE.md",
+		"README.md"
+	],
+	"scripts": {
+		"test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
+		"test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
+		"cli": "node src/cli.js"
+	},
+	"engines": {
+		"node": ">=22"
+	},
+	"dependencies": {
+		"acorn": "^8.18.0",
+		"svelte": "^5.56.10"
+	},
+	"bugs": {
+		"url": "https://github.com/alumna/alumna/issues"
+	},
+	"devDependencies": {
+		"jest": "^30.4.2",
+		"jest-environment-jsdom": "^30.4.1"
+	}
+}
