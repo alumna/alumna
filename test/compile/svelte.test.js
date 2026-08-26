@@ -1,8 +1,13 @@
 import {
 	compile_component,
 	compile_shell,
-	resolve_browser_specifier
+	resolve_browser_specifier,
+	resolve_server_specifier,
+	file_url_from,
+	file_url_from_alumna,
+	server_relative_import
 } from '../../src/compile/svelte.js';
+import { alumna_root } from '../../src/utils/paths.js';
 
 test('compile_component rewrites child imports and injects css in dev', () => {
 	const compiled = compile_component(
@@ -98,4 +103,58 @@ test('compile_shell writes a sourcemap and css map', () => {
 	expect(compiled.map).toBeTruthy();
 	expect(compiled.js).toMatch(/sourceMappingURL=app\.js\.map/);
 	expect(compiled.css_map).toBeTruthy();
+});
+
+test('compile_component generate server rewrites svelte to a file url', () => {
+	const compiled = compile_component(
+		`<p>hi</p>`,
+		{
+			filename: 'Home.svelte',
+			id: 'Home',
+			dev: false,
+			generate: 'server',
+			resolve: spec => resolve_server_specifier(spec, 'Home', { project_root: alumna_root })
+		}
+	);
+	expect(compiled.js).toMatch(/internal\/server/);
+	expect(compiled.map).toBeNull();
+});
+
+test('compile_shell generate server uses resolve', () => {
+	const compiled = compile_shell(
+		`<script>let areas = $state({}); export function show(next) { areas = next; }</script><p>ok</p>`,
+		{
+			filename: 'App.svelte',
+			dev: false,
+			generate: 'server',
+			resolve: spec => resolve_server_specifier(spec, '', { project_root: alumna_root })
+		}
+	);
+	expect(compiled.js).toMatch(/file:/);
+});
+
+test('resolve_server_specifier maps known kinds', () => {
+	expect(resolve_server_specifier('svelte/internal/server', 'Home')).toMatch(/^file:/);
+	expect(resolve_server_specifier('alumna', 'Home')).toBe('../alumna.js');
+	expect(resolve_server_specifier('alumna', '')).toBe('./alumna.js');
+	expect(resolve_server_specifier('./Badge.svelte', 'Home')).toBe('./Badge.js');
+	expect(resolve_server_specifier('./Nav.svelte', 'layouts/Dash')).toBe('./Nav.js');
+	expect(resolve_server_specifier('../Home.svelte', 'layouts/Dash')).toBe('../Home.js');
+	expect(resolve_server_specifier('../../Evil.svelte', 'Home')).toBe('../../Evil.svelte');
+	expect(resolve_server_specifier('./x.js', 'Home')).toBe('./x.js');
+	expect(resolve_server_specifier('/abs.js', 'Home')).toBe('/abs.js');
+	expect(resolve_server_specifier('acorn', 'Home', { project_root: alumna_root })).toMatch(/^file:/);
+});
+
+test('resolve_server_specifier rejects unknown and missing libraries', () => {
+	expect(() => resolve_server_specifier('node:fs', 'Home')).toThrow(/Cannot import/);
+	expect(() => resolve_server_specifier('node:fs', '')).toThrow(/from App/);
+	expect(() => resolve_server_specifier('marked', 'Home')).toThrow(/during SSG/);
+	expect(() => resolve_server_specifier('no-such-pkg', 'Home', { project_root: alumna_root })).toThrow(/during SSG/);
+	expect(() => file_url_from_alumna('svelte/does-not-exist-xyz')).toThrow(/for SSG/);
+	expect(() => file_url_from(alumna_root, 'no-such-pkg')).toThrow(/during SSG/);
+});
+
+test('server_relative_import prefixes a bare relative path', () => {
+	expect(server_relative_import('Home', 'components')).toBe('./');
 });

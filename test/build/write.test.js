@@ -45,6 +45,16 @@ test('write_build without static_dir', () => {
 		runtime: 'r',
 		match: 'm',
 		manifest: '{}',
+		pages: { 'about/index.html': 'about' }
+	});
+	expect(readFileSync(join(out, 'about/index.html'), 'utf8')).toBe('about');
+	write_build({
+		out,
+		html: 'h',
+		files: {},
+		runtime: 'r',
+		match: 'm',
+		manifest: '{}',
 		static_dir: join(out, 'missing-static')
 	});
 });

@@ -59,6 +59,9 @@ alumna add <package>
 # production SPA build
 alumna build
 
+# production SSG + hydration (static paths)
+alumna build --ssg
+
 # serve the build directory
 alumna preview [--port 4040]
 `.trim();
@@ -68,7 +71,6 @@ export async function run_cli (argv, io = {}) {
 	const version = io.version || pkg_version;
 	const log = io.log || console.log;
 	const error = io.error || console.error;
-	const warn = io.warn || console.warn;
 	const exit = io.exit || (code => process.exit(code));
 	const Alumna = io.Alumna || DefaultAlumna;
 	const cwd = io.cwd || process.cwd();
@@ -97,7 +99,8 @@ export async function run_cli (argv, io = {}) {
 	const command = args[0];
 	const alumna = new Alumna({
 		cwd,
-		port: Number.isFinite(flags.port) ? flags.port : undefined
+		port: Number.isFinite(flags.port) ? flags.port : undefined,
+		ssg: flags.ssg || undefined
 	});
 
 	try {
@@ -128,8 +131,6 @@ export async function run_cli (argv, io = {}) {
 		}
 
 		if (command === 'build') {
-			if (flags.ssg)
-				warn('SSG is not in this alpha. Running a SPA build.');
 			if (!await alumna.build())
 				exit(1);
 			return;

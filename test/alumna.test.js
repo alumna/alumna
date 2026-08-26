@@ -262,3 +262,74 @@ test('html() uses last_compiled when no argument', async () => {
 	a.last_compiled = await a.compile({ dev: true });
 	expect(a.html()).toMatch(/importmap/);
 });
+
+test('compile with no args and html extra opts', async () => {
+	const cwd = project(hello);
+	const a = new Alumna({ cwd });
+	const compiled = await a.compile();
+	expect(compiled.ok).toBe(true);
+	expect(a.html(compiled, { css_hrefs: [ '/x.css' ], ssg: true, import_map: { imports: {} } })).toMatch(/x\.css/);
+});
+
+test('build ssg writes per-route html and spa shell', async () => {
+	const cwd = project({
+		'src/app.js': `
+			app.areas = [ 'content' ];
+			app.route['/'] = { content: 'Home' };
+			app.route['/about'] = { content: 'About' };
+			app.route['/users/:id'] = { content: 'User' };
+			app.route['/old'] = { redirect: '/about' };
+		`,
+		'src/index.html': INDEX_HTML,
+		'src/components/Home.svelte': `<p>Welcome home</p>`,
+		'src/components/About.svelte': `<p>About page</p>`,
+		'src/components/User.svelte': `<p>User</p>`
+	});
+	const a = new Alumna({ cwd, ssg: true });
+	const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+	const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+	expect(await a.build()).toBe(true);
+	expect(readFileSync(join(cwd, 'build/index.html'), 'utf8')).toMatch(/Welcome home/);
+	expect(readFileSync(join(cwd, 'build/index.html'), 'utf8')).toMatch(/data-alumna-ssg/);
+	expect(readFileSync(join(cwd, 'build/about/index.html'), 'utf8')).toMatch(/About page/);
+	expect(existsSync(join(cwd, 'build/users'))).toBe(false);
+	expect(readFileSync(join(cwd, 'build/_alumna/spa.html'), 'utf8')).not.toMatch(/data-alumna-ssg/);
+	expect(readFileSync(join(cwd, 'build/alumna-manifest.json'), 'utf8')).toMatch(/"ssg": true/);
+	expect(log.mock.calls.join(' ')).toMatch(/SSG wrote/);
+	log.mockRestore();
+	warn.mockRestore();
+});
+
+test('hjson ssg true and only param routes keep a spa index', async () => {
+	const cwd = project({
+		...hello,
+		'src/app.js': `
+			app.areas = [ 'content' ];
+			app.route['/users/:id'] = { content: 'Home' };
+		`,
+		'alumna.hjson': 'ssg: true'
+	});
+	const a = new Alumna({ cwd });
+	expect(a.config.ssg).toBe(true);
+	const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+	expect(await a.build()).toBe(true);
+	expect(readFileSync(join(cwd, 'build/index.html'), 'utf8')).not.toMatch(/data-alumna-ssg/);
+	expect(existsSync(join(cwd, 'build/_alumna/spa.html'))).toBe(true);
+	log.mockRestore();
+});
+
+test('build ssg fails when render throws', async () => {
+	const cwd = project({
+		...hello,
+		'src/components/Home.svelte': `<script>if (typeof window === 'undefined') throw new Error('ssg-boom');</script><p>x</p>`
+	});
+	const a = new Alumna({ cwd, ssg: true });
+	const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+	const err = jest.spyOn(console, 'error').mockImplementation(() => {});
+	const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+	expect(await a.build()).toBe(false);
+	expect(err.mock.calls.join(' ')).toMatch(/ssg/);
+	log.mockRestore();
+	err.mockRestore();
+	warn.mockRestore();
+});

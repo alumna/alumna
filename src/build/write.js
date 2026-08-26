@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync, existsSync, cpSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-export function write_build ({ out, html, files, runtime, match, manifest, static_dir }) {
+export function write_build ({ out, html, files, runtime, match, manifest, static_dir, pages }) {
 	mkdirSync(out, { recursive: true });
 
 	if (static_dir && existsSync(static_dir))
@@ -13,6 +13,14 @@ export function write_build ({ out, html, files, runtime, match, manifest, stati
 		const file = join(out, path);
 		mkdirSync(dirname(file), { recursive: true });
 		writeFileSync(file, files[path]);
+	}
+
+	if (pages) {
+		for (const path of Object.keys(pages)) {
+			const file = join(out, path);
+			mkdirSync(dirname(file), { recursive: true });
+			writeFileSync(file, pages[path]);
+		}
 	}
 
 	mkdirSync(join(out, '_alumna'), { recursive: true });

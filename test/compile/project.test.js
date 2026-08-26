@@ -38,6 +38,7 @@ test('compiles a route component and its child', async () => {
 	expect(compiled.config.deps['/about']).toEqual([ 'About' ]);
 	expect(compiled.files['components/Home.js']).toMatch(/\/components\/Badge\.js/);
 	expect(compiled.config.base).toBe('');
+	expect(compiled.config.ssg).toBe(false);
 	expect(compiled.files['components/Home.js.map']).toBeTruthy();
 });
 

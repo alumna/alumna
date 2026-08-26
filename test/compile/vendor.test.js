@@ -26,6 +26,13 @@ const {
 	minify_module
 } = await import('../../src/compile/vendor.js');
 
+beforeEach(() => {
+	captured.length = 0;
+	generate.mockReset();
+	generate.mockResolvedValue({ output: [] });
+	close.mockClear();
+});
+
 test('vendor_entry_name and svelte_entry_name', () => {
 	expect(vendor_entry_name('@scope/pkg')).toBe('scope-pkg');
 	expect(vendor_entry_name('a/b')).toBe('a-b');
@@ -67,7 +74,7 @@ test('is_package_installed', () => {
 	expect(is_package_installed(process.cwd(), 'definitely-not-a-pkg-xyz')).toBe(false);
 });
 
-test('bundle_vendor empty maps only alumna', async () => {
+test('bundle_vendor empty maps only alumna when svelte emit is empty', async () => {
 	const out = await bundle_vendor({
 		svelte_uses: new Map(),
 		libraries: [],
@@ -80,6 +87,29 @@ test('bundle_vendor empty maps only alumna', async () => {
 	expect(out.files).toEqual({});
 	const empty = await bundle_vendor({});
 	expect(empty.import_map.imports.alumna).toBe('/_alumna/runtime.js');
+});
+
+test('bundle_vendor always maps svelte for the runtime', async () => {
+	generate.mockResolvedValueOnce({
+		output: [
+			{
+				type: 'chunk',
+				isEntry: true,
+				name: 'svelte-index',
+				fileName: 'svelte-index-aaa.js',
+				code: 'export const mount = 1;'
+			}
+		]
+	});
+	const out = await bundle_vendor({
+		svelte_uses: new Map(),
+		libraries: [],
+		project_root: process.cwd(),
+		base: '',
+		minify: false,
+		sourcemap: false
+	});
+	expect(out.import_map.imports.svelte).toBe('/_alumna/vendor/svelte-index-aaa.js');
 });
 
 test('bundle_vendor svelte + libraries + assets + maps', async () => {
@@ -150,6 +180,7 @@ test('bundle_vendor svelte + libraries + assets + maps', async () => {
 	expect(svelte_opts.plugins[0].resolveId(spec)).toBe(spec);
 	expect(svelte_opts.plugins[0].resolveId('other')).toBeUndefined();
 	expect(svelte_opts.plugins[0].load(spec)).toMatch(/from_html/);
+	expect(svelte_opts.plugins[0].load('\0alumna-svelte:svelte')).toMatch(/mount/);
 	expect(svelte_opts.plugins[0].load('other')).toBeUndefined();
 	const lib_opts = captured.find(opts => typeof opts.external === 'function');
 	expect(lib_opts.external('svelte')).toBe(true);

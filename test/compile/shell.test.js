@@ -2,10 +2,12 @@ import { generate_shell_source } from '../../src/compile/shell.js';
 
 test('sequential areas use ident names', () => {
 	const source = generate_shell_source([ 'nav', 'content' ]);
-	expect(source).toContain("areas['nav']");
+	expect(source).toContain("use_areas['nav']");
 	expect(source).toContain('<Nav />');
 	expect(source).toContain('<Content />');
 	expect(source).toContain('export function show(next)');
+	expect(source).toContain('$derived');
+	expect(source).toContain('$props()');
 	expect(source).toContain('{:else}');
 });
 
@@ -15,7 +17,7 @@ test('named layouts emit snippets for layout areas', () => {
 	});
 	expect(source).toContain('{#snippet nav()}');
 	expect(source).toContain('{#snippet content()}');
-	expect(source).toContain('{#if Layout}');
+	expect(source).toContain('{#if use_layout}');
 });
 
 test('snippet names skip invalid identifiers', () => {
@@ -25,10 +27,16 @@ test('snippet names skip invalid identifiers', () => {
 	expect(source).not.toContain('{#snippet nav-bar()}');
 });
 
+test('null layouts skip snippets', () => {
+	const source = generate_shell_source([ 'content' ], null);
+	expect(source).toContain('use_areas');
+	expect(source).not.toContain('{#snippet');
+});
+
 test('non-ident area names are cleaned', () => {
 	const source = generate_shell_source([ 'nav-bar', '2col', "a'b", 'a\\b' ]);
 	expect(source).toContain('<Nav_bar />');
 	expect(source).toContain('<C_2col />');
-	expect(source).toContain("areas['a\\'b']");
-	expect(source).toContain("areas['a\\\\b']");
+	expect(source).toContain("use_areas['a\\'b']");
+	expect(source).toContain("use_areas['a\\\\b']");
 });

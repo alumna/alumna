@@ -14,6 +14,11 @@ async function load_runtime () {
 		mount: (_App, opts) => ({
 			target: opts.target,
 			show (map) { shown.push({ ...map }); }
+		}),
+		hydrate: (_App, opts) => ({
+			target: opts.target,
+			props: opts.props,
+			show (map) { shown.push({ ...map, hydrated: true }); }
 		})
 	}));
 	return import('../../src/runtime/browser.js');
@@ -200,7 +205,8 @@ test('css style on GET ok, empty text, and fetch throw', async () => {
 	global.fetch = jest.fn(async () => ({ ok: true }));
 	jest.resetModules();
 	jest.unstable_mockModule('svelte', () => ({
-		mount: (_App, opts) => ({ target: opts.target, show () {} })
+		mount: (_App, opts) => ({ target: opts.target, show () {} }),
+		hydrate: (_App, opts) => ({ target: opts.target, show () {} })
 	}));
 	const again = await import('../../src/runtime/browser.js');
 	window.history.replaceState(null, '', '/');
@@ -208,7 +214,8 @@ test('css style on GET ok, empty text, and fetch throw', async () => {
 	global.fetch = jest.fn(async () => { throw new Error('offline'); });
 	jest.resetModules();
 	jest.unstable_mockModule('svelte', () => ({
-		mount: (_App, opts) => ({ target: opts.target, show () {} })
+		mount: (_App, opts) => ({ target: opts.target, show () {} }),
+		hydrate: (_App, opts) => ({ target: opts.target, show () {} })
 	}));
 	const third = await import('../../src/runtime/browser.js');
 	window.history.replaceState(null, '', '/');
@@ -268,7 +275,8 @@ test('live reload when config.dev', async () => {
 	window.EventSource = Boom;
 	jest.resetModules();
 	jest.unstable_mockModule('svelte', () => ({
-		mount: (_App, opts) => ({ target: opts.target, show () {} })
+		mount: (_App, opts) => ({ target: opts.target, show () {} }),
+		hydrate: (_App, opts) => ({ target: opts.target, show () {} })
 	}));
 	const { start } = await import('../../src/runtime/browser.js');
 	const config2 = (await import('/_alumna/config.js')).default;
@@ -341,4 +349,47 @@ test('no middleware names skips the chain', async () => {
 	await runtime.start();
 	expect(runtime.route.path).toBe('/');
 	config.middleware = keep;
+});
+
+test('ssg hydrates when the target has data-alumna-ssg', async () => {
+	const runtime = await load_runtime();
+	document.body.setAttribute('data-alumna-ssg', '');
+	window.history.replaceState(null, '', '/');
+	await runtime.start();
+	expect(shown.some(item => item.hydrated)).toBe(true);
+	document.body.removeAttribute('data-alumna-ssg');
+});
+
+test('ssg hydrates without props on a redirect url', async () => {
+	const runtime = await load_runtime();
+	document.body.setAttribute('data-alumna-ssg', '');
+	window.history.replaceState(null, '', '/old');
+	await runtime.start();
+	expect(runtime.route.path).toBe('/about');
+	document.body.removeAttribute('data-alumna-ssg');
+});
+
+test('ssg hydrates without props when the path does not match', async () => {
+	const runtime = await load_runtime();
+	document.body.setAttribute('data-alumna-ssg', '');
+	window.history.replaceState(null, '', '/missing');
+	await runtime.start();
+	document.body.removeAttribute('data-alumna-ssg');
+});
+
+test('load skips css fetch when a stylesheet link exists', async () => {
+	const link = document.createElement('link');
+	link.rel = 'stylesheet';
+	link.setAttribute('href', '/components/Home.css');
+	document.head.appendChild(link);
+	const other = document.createElement('link');
+	other.rel = 'preload';
+	other.setAttribute('href', '/components/Nav.css');
+	document.head.appendChild(other);
+	global.fetch = jest.fn(async () => ({ ok: false }));
+	const runtime = await load_runtime();
+	window.history.replaceState(null, '', '/');
+	await runtime.start();
+	const hrefs = global.fetch.mock.calls.map(call => call[0]);
+	expect(hrefs).not.toContain('/components/Home.css');
 });

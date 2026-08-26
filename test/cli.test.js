@@ -48,6 +48,7 @@ test('parse_argv', () => {
 test('help_text includes the version', () => {
 	expect(help_text('1.2.3')).toMatch(/1\.2\.3/);
 	expect(help_text('1.2.3')).toMatch(/alumna add/);
+	expect(help_text('1.2.3')).toMatch(/--ssg/);
 });
 
 test('is_cli_entry', () => {
@@ -128,10 +129,16 @@ test('dev success and failure', async () => {
 	expect(mock.out.exit).toBe(1);
 });
 
-test('build with ssg warning and failure', async () => {
+test('build with ssg flag and failure', async () => {
 	const mock = io();
+	let seen;
+	mock.Alumna = class {
+		constructor (config) { seen = config; }
+		async build () { return true; }
+	};
 	await run_cli([ 'build', '--ssg' ], mock);
-	expect(mock.out.warns.join('')).toMatch(/SSG/);
+	expect(seen.ssg).toBe(true);
+	expect(mock.out.warns.join('')).toBe('');
 	mock.Alumna = class { constructor () {} async build () { return false; } };
 	await run_cli([ 'build' ], mock);
 	expect(mock.out.exit).toBe(1);

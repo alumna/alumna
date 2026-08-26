@@ -100,6 +100,37 @@ export function end_live (clients) {
 	clients.clear();
 }
 
+export function disk_file (disk_root, pathname) {
+	if (!disk_root)
+		return null;
+	if (pathname === '/' || pathname === '/index.html') {
+		const file = join(disk_root, 'index.html');
+		return existsSync(file) && statSync(file).isFile() ? file : null;
+	}
+	const direct = safe_join(disk_root, pathname);
+	if (direct && existsSync(direct) && statSync(direct).isFile())
+		return direct;
+	if (extname(pathname))
+		return null;
+	const rel = pathname.replace(/\/+$/, '') + '/index.html';
+	const index = safe_join(disk_root, rel);
+	if (index && existsSync(index) && statSync(index).isFile())
+		return index;
+	return null;
+}
+
+export function spa_file (disk_root) {
+	if (!disk_root)
+		return null;
+	const spa = join(disk_root, '_alumna', 'spa.html');
+	if (existsSync(spa) && statSync(spa).isFile())
+		return spa;
+	const index = join(disk_root, 'index.html');
+	if (existsSync(index) && statSync(index).isFile())
+		return index;
+	return null;
+}
+
 function request_path (pathname, base) {
 	const prefix = normalize_base(base);
 	if (!prefix)
@@ -138,9 +169,8 @@ export function create_server ({ src_dir, disk_root, port, memory, vendor_dir, b
 			}
 
 			if (disk_root) {
-				const disk_path = pathname === '/' ? '/index.html' : pathname;
-				const file = safe_join(disk_root, disk_path);
-				if (file && existsSync(file) && statSync(file).isFile())
+				const file = disk_file(disk_root, pathname);
+				if (file)
 					return send_file(res, file, req.method);
 			}
 
@@ -158,14 +188,12 @@ export function create_server ({ src_dir, disk_root, port, memory, vendor_dir, b
 
 			const wants_html = (req.headers.accept || '').includes('text/html');
 			if (wants_html && !extname(pathname)) {
-				const html = memory.get('/index.html');
-				if (html)
-					return send_bytes(res, html.body, html.type, req.method);
-				if (disk_root) {
-					const file = join(disk_root, 'index.html');
-					if (existsSync(file) && statSync(file).isFile())
-						return send_file(res, file, req.method);
-				}
+				const spa_mem = memory.get('/_alumna/spa.html') || memory.get('/index.html');
+				if (spa_mem)
+					return send_bytes(res, spa_mem.body, spa_mem.type, req.method);
+				const file = spa_file(disk_root);
+				if (file)
+					return send_file(res, file, req.method);
 			}
 
 			res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });

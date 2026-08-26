@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import http from 'node:http';
 import net from 'node:net';
-import { create_server, pick_port, safe_join, notify_live, end_live } from '../../src/dev/server.js';
+import { create_server, pick_port, safe_join, notify_live, end_live, disk_file, spa_file } from '../../src/dev/server.js';
 
 async function listen (opts = {}) {
 	const httpd = create_server({
@@ -293,4 +293,65 @@ test('html fallback without an index is 404', async () => {
 	finally {
 		await httpd.close();
 	}
+});
+
+test('disk_file and spa_file helpers', () => {
+	expect(disk_file(null, '/')).toBeNull();
+	expect(spa_file(null)).toBeNull();
+	const disk = mkdtempSync(join(tmpdir(), 'alumna-disk-ssg-'));
+	expect(disk_file(disk, '/')).toBeNull();
+	writeFileSync(join(disk, 'index.html'), 'home');
+	writeFileSync(join(disk, 'app.js'), 'js');
+	mkdirSync(join(disk, 'about'));
+	writeFileSync(join(disk, 'about', 'index.html'), 'about');
+	mkdirSync(join(disk, '_alumna'));
+	writeFileSync(join(disk, '_alumna', 'spa.html'), 'spa');
+	expect(disk_file(disk, '/').endsWith('index.html')).toBe(true);
+	expect(disk_file(disk, '/index.html').endsWith('index.html')).toBe(true);
+	expect(disk_file(disk, '/app.js').endsWith('app.js')).toBe(true);
+	expect(disk_file(disk, '/about').endsWith('about/index.html')).toBe(true);
+	expect(disk_file(disk, '/about/').endsWith('about/index.html')).toBe(true);
+	expect(disk_file(disk, '/nope.css')).toBeNull();
+	expect(disk_file(disk, '/missing')).toBeNull();
+	expect(spa_file(disk).endsWith('spa.html')).toBe(true);
+});
+
+test('preview serves directory index and spa fallback', async () => {
+	const disk = mkdtempSync(join(tmpdir(), 'alumna-disk-ssg2-'));
+	writeFileSync(join(disk, 'index.html'), 'home-ssg');
+	mkdirSync(join(disk, 'about'));
+	writeFileSync(join(disk, 'about', 'index.html'), 'about-ssg');
+	mkdirSync(join(disk, '_alumna'));
+	writeFileSync(join(disk, '_alumna', 'spa.html'), 'spa-shell');
+	const { httpd, url } = await listen({ memory: new Map(), disk_root: disk });
+	try {
+		expect((await request(url + '/')).body).toBe('home-ssg');
+		expect((await request(url + '/about')).body).toBe('about-ssg');
+		expect((await request(url + '/about/')).body).toBe('about-ssg');
+		expect((await request(url + '/users/1', { accept: 'text/html' })).body).toBe('spa-shell');
+	}
+	finally {
+		await httpd.close();
+	}
+});
+
+test('memory spa.html is the html fallback', async () => {
+	const { httpd, url } = await listen({
+		memory: new Map([
+			[ '/index.html', { body: 'home', type: 'text/html' } ],
+			[ '/_alumna/spa.html', { body: 'spa', type: 'text/html' } ]
+		])
+	});
+	try {
+		expect((await request(url + '/gone', { accept: 'text/html' })).body).toBe('spa');
+	}
+	finally {
+		await httpd.close();
+	}
+});
+
+test('spa_file falls back to index.html', () => {
+	const disk = mkdtempSync(join(tmpdir(), 'alumna-spa-idx-'));
+	writeFileSync(join(disk, 'index.html'), 'home');
+	expect(spa_file(disk).endsWith('index.html')).toBe(true);
 });

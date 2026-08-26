@@ -1,11 +1,35 @@
+import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { rolldown } from 'rolldown';
 import { alumna_root } from '../utils/paths.js';
 import { with_base } from '../utils/base.js';
+import { collect_import_uses, merge_svelte_uses } from './rewrite.js';
 
 const SVELTE_VIRTUAL = '\0alumna-svelte:';
 const INLINE_VIRTUAL = '\0alumna-inline:';
+
+// Compiled components import svelte/internal/client. The runtime always
+// imports { mount, hydrate } from 'svelte'. Without this, the import map
+// has no 'svelte' entry and Chromium fails to boot.
+let runtime_svelte_uses_cache = null;
+
+function runtime_svelte_uses () {
+	if (!runtime_svelte_uses_cache) {
+		runtime_svelte_uses_cache = collect_import_uses(
+			readFileSync(join(alumna_root, 'src/runtime/browser.js'), 'utf8')
+		).svelte;
+	}
+	return runtime_svelte_uses_cache;
+}
+
+function svelte_uses_for_bundle (svelte_uses) {
+	const uses = new Map();
+	if (svelte_uses)
+		merge_svelte_uses(uses, svelte_uses);
+	merge_svelte_uses(uses, runtime_svelte_uses());
+	return uses;
+}
 
 export function is_package_installed (project_root, spec) {
 	try {
@@ -100,9 +124,6 @@ function files_from_output (output, base, sourcemap) {
 }
 
 async function bundle_svelte ({ svelte_uses, base, minify, sourcemap }) {
-	if (!svelte_uses || !svelte_uses.size)
-		return { files: {}, entries: {} };
-
 	const input = {};
 	const sources = {};
 	for (const [ spec, rec ] of svelte_uses) {
@@ -165,14 +186,13 @@ export async function bundle_vendor ({
 	};
 
 	try {
-		const svelte = await bundle_svelte({ svelte_uses, base, minify, sourcemap });
+		const uses = svelte_uses_for_bundle(svelte_uses);
+		const svelte = await bundle_svelte({ svelte_uses: uses, base, minify, sourcemap });
 		Object.assign(files, svelte.files);
-		if (svelte_uses) {
-			for (const spec of svelte_uses.keys()) {
-				const url = svelte.entries[svelte_entry_name(spec)];
-				if (url)
-					imports[spec] = url;
-			}
+		for (const spec of uses.keys()) {
+			const url = svelte.entries[svelte_entry_name(spec)];
+			if (url)
+				imports[spec] = url;
 		}
 
 		const libs = await bundle_libraries({ libraries, project_root, base, minify, sourcemap });

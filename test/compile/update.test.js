@@ -310,3 +310,18 @@ test('update_components compiles two changed ids', async () => {
 	expect(next.files['components/Home.js']).toMatch(/h2/);
 	expect(next.files['components/About.js']).toMatch(/a2/);
 });
+
+test('update_components keeps the ssg flag', async () => {
+	const src_dir = make_dir({
+		'app.js': `
+			app.areas = [ 'content' ];
+			app.route['/'] = { content: 'Home' };
+		`,
+		'components/Home.svelte': `<p>home</p>`
+	});
+	const prev = await compile(src_dir, { ssg: true });
+	expect(prev.config.ssg).toBe(true);
+	writeFileSync(join(src_dir, 'components/Home.svelte'), `<p>next</p>`);
+	const next = await update_components(prev, { src_dir, ids: [ 'Home' ] });
+	expect(next.config.ssg).toBe(true);
+});

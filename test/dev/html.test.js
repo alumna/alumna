@@ -1,4 +1,4 @@
-import { inject_html } from '../../src/dev/html.js';
+import { inject_html, with_ssg_marker, insert_body } from '../../src/dev/html.js';
 
 test('injects import map and boot before </head>', () => {
 	const out = inject_html('<html><head></head><body></body></html>');
@@ -53,4 +53,33 @@ test('keeps an existing boot script and adds the import map', () => {
 test('keeps an existing boot script with single quotes', () => {
 	const src = `<head><script type="module" src='/_alumna/runtime.js'></script><script type="importmap">{}</script></head>`;
 	expect(inject_html(src)).toBe(src);
+});
+
+test('ssg marker, body, preload, and extra head', () => {
+	const out = inject_html('<html><head></head><body></body></html>', {
+		ssg: true,
+		body: '<p>hi</p>',
+		head: '<!--head-->',
+		preload_hrefs: [ '/_alumna/app.js' ]
+	});
+	expect(out).toMatch(/data-alumna-ssg/);
+	expect(out).toMatch(/<p>hi<\/p>/);
+	expect(out).toMatch(/modulepreload/);
+	expect(out).toMatch(/<!--head-->/);
+	const with_class = inject_html('<head></head><body class="app"></body>', { ssg: true });
+	expect(with_class).toMatch(/<body class="app" data-alumna-ssg>/);
+});
+
+test('ssg marker is not duplicated and insert_body no-ops', () => {
+	expect(with_ssg_marker('<body data-alumna-ssg></body>')).toBe('<body data-alumna-ssg></body>');
+	expect(with_ssg_marker('<p>x</p>')).toBe('<p>x</p>');
+	expect(insert_body('<p>x</p>', '')).toBe('<p>x</p>');
+	expect(insert_body('<p>x</p>', '<b>y</b>')).toMatch(/<body data-alumna-ssg><b>y<\/b><\/body>/);
+});
+
+test('ssg with an existing boot script still inserts body', () => {
+	const src = '<head><script type="module" src="/_alumna/runtime.js"></script></head><body></body>';
+	const out = inject_html(src, { ssg: true, body: '<p>x</p>' });
+	expect(out).toMatch(/data-alumna-ssg/);
+	expect(out).toMatch(/<p>x<\/p>/);
 });

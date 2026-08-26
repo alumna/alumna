@@ -2,9 +2,13 @@
 
 ## 4.0.0-alpha.3 — 2026-08-26
 
+- `alumna build --ssg` and `alumna.hjson` `ssg: true` prerender static routes (no `:param`, no `*`, no redirects). Output is `build/index.html` for `/` and `build/about/index.html` for `/about`, plus `build/_alumna/spa.html` for unknown paths. The first paint hydrates, then the app is a SPA.
+- The vendor import map always includes `svelte` (`mount` and `hydrate`) so the browser can boot the runtime.
+- Chromium e2e covers Hello (`alumna dev`) and SSG hydrate then a click to `/about`.
 - `alumna dev` recompiles only the changed used `.svelte` file. It also compiles new child components and removes unused ones. Route deps update when the child list changes. Vendor chunks rebuild only when library or Svelte imports change.
 - Tests must cover unit tests and integration / real-browser tests. Contributors need Playwright Chromium for the full suite: `bun install`, then `bunx playwright install --with-deps chromium`.
 - Alumna development uses Bun only. Commit `bun.lock`. Rolldown is a contributor devDependency (authors get it on first run later).
+- Plan (not in this alpha yet): which routes SSG. Route middleware skips SSG unless `ssg: true`. Param routes need `prerender: [{ param: value }, ...]`. Optional `ssg: false` / `ssg: true`.
 
 ## 4.0.0-alpha.2 — 2026-08-26
 

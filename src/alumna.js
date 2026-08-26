@@ -13,6 +13,7 @@ import { normalize_base } from './utils/base.js';
 import { add_packages } from './add/install.js';
 import { minify_module } from './compile/vendor.js';
 import { write_build } from './build/write.js';
+import { render_ssg } from './compile/ssg.js';
 
 const RUNTIME_JS = readFileSync(join(alumna_root, 'src/runtime/browser.js'), 'utf8');
 const MATCH_JS = readFileSync(join(alumna_root, 'src/compile/match.js'), 'utf8');
@@ -33,7 +34,8 @@ export class Alumna {
 			build_dir: config.build_dir,
 			port: config.port,
 			base: config.base,
-			sourcemap: config.sourcemap
+			sourcemap: config.sourcemap,
+			ssg: config.ssg
 		};
 		this.httpd = null;
 		this.stop_watch = null;
@@ -51,7 +53,7 @@ export class Alumna {
 			base: normalize_base(this.cli.base ?? file.base),
 			sourcemap: this.cli.sourcemap ?? file.sourcemap,
 			title: file.title || '',
-			ssg: file.ssg
+			ssg: this.cli.ssg || file.ssg
 		};
 		return this.config;
 	}
@@ -79,7 +81,7 @@ export class Alumna {
 		return result;
 	}
 
-	async compile ({ dev }) {
+	async compile ({ dev, ssg } = {}) {
 		this.merge_config();
 		const src_dir = this.src_dir();
 		if (!existsSync(src_dir))
@@ -91,17 +93,22 @@ export class Alumna {
 			dev,
 			project_root: this.config.cwd,
 			base: this.config.base,
-			sourcemap: this.config.sourcemap
+			sourcemap: this.config.sourcemap,
+			ssg: ssg ?? this.config.ssg
 		});
 	}
 
-	html (compiled) {
+	html (compiled, extra = {}) {
 		const c = compiled || this.last_compiled;
 		return inject_html(readFileSync(join(this.src_dir(), 'index.html'), 'utf8'), {
-			import_map: c && c.import_map,
+			import_map: extra.import_map || (c && c.import_map),
 			base: this.config.base,
-			css_hrefs: (c && c.css_hrefs) || [],
-			title: this.config.title
+			css_hrefs: extra.css_hrefs || (c && c.css_hrefs) || [],
+			title: this.config.title,
+			preload_hrefs: extra.preload_hrefs,
+			body: extra.body,
+			head: extra.head,
+			ssg: extra.ssg
 		});
 	}
 
@@ -206,7 +213,8 @@ export class Alumna {
 	}
 
 	async build () {
-		const compiled = await this.compile({ dev: false });
+		const want_ssg = this.config.ssg;
+		const compiled = await this.compile({ dev: false, ssg: want_ssg });
 		if (!compiled.ok) {
 			this.print_errors(compiled.errors);
 			return false;
@@ -218,16 +226,44 @@ export class Alumna {
 			this.config.base
 		);
 		const match = (await minify_module(MATCH_JS, 'match.js')).code;
+		const spa_html = this.html(compiled);
+		let html = spa_html;
+		let pages;
+		let prerender = [];
+
+		if (want_ssg) {
+			const ssg = await render_ssg({
+				compiled,
+				src_html: readFileSync(join(this.src_dir(), 'index.html'), 'utf8'),
+				title: this.config.title,
+				base: this.config.base,
+				project_root: this.config.cwd
+			});
+			if (!ssg.ok) {
+				this.print_errors(ssg.errors);
+				return false;
+			}
+			this.print_warnings(ssg.warnings);
+			pages = Object.assign({ '_alumna/spa.html': spa_html }, ssg.pages);
+			if (pages['index.html']) {
+				html = pages['index.html'];
+				delete pages['index.html'];
+			}
+			prerender = ssg.prerender;
+		}
 
 		write_build({
 			out: join(this.config.cwd, this.config.build_dir),
-			html: this.html(compiled),
+			html,
+			pages,
 			files: compiled.files,
 			runtime,
 			match,
 			manifest: JSON.stringify({
-				version: '4.0.0-alpha.2',
+				version: '4.0.0-alpha.3',
 				base: this.config.base,
+				ssg: !!want_ssg,
+				prerender,
 				areas: compiled.config.areas,
 				routes: compiled.config.routes,
 				deps: compiled.config.deps
@@ -235,7 +271,10 @@ export class Alumna {
 			static_dir: join(this.src_dir(), 'static')
 		});
 
-		console.log('Build completed successfully at the directory "' + this.config.build_dir + '".');
+		if (want_ssg)
+			console.log('Build completed successfully at the directory "' + this.config.build_dir + '". SSG wrote ' + prerender.length + ' page(s).');
+		else
+			console.log('Build completed successfully at the directory "' + this.config.build_dir + '".');
 		return true;
 	}
 

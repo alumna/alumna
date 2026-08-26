@@ -57,7 +57,7 @@ function collect_libraries (components) {
 	return [ ...libraries ];
 }
 
-function css_hrefs_for (files, deps, path, base) {
+export function css_hrefs_for (files, deps, path, base) {
 	const hrefs = [];
 	const names = deps[path] || [];
 	for (let i = 0; i < names.length; i++) {
@@ -192,6 +192,7 @@ export async function compile_project ({
 	project_root,
 	base = '',
 	sourcemap = false,
+	ssg = false,
 	bundle_vendor: bundle_fn
 } = {}) {
 	if (!src_dir)
@@ -291,6 +292,7 @@ export async function compile_project ({
 	const config = {
 		dev,
 		base: prefix,
+		ssg: !!ssg,
 		areas: app.areas,
 		routes: serialize_routes(validated.routes),
 		layouts: validated.layouts,
@@ -369,6 +371,7 @@ export async function update_components (prev, {
 	const config = {
 		dev,
 		base: prefix,
+		ssg: !!prev.config.ssg,
 		areas: prev.config.areas,
 		routes: prev.config.routes,
 		layouts,

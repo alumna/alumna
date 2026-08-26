@@ -1,4 +1,4 @@
-import { mount } from 'svelte';
+import { mount, hydrate } from 'svelte';
 import App from '/_alumna/app.js';
 import config from '/_alumna/config.js';
 import { match_path, parse_query } from '/_alumna/match.js';
@@ -43,25 +43,36 @@ function browser_pathname (pathname) {
 	return asset(app_pathname(pathname));
 }
 
+function has_stylesheet (href) {
+	const nodes = document.getElementsByTagName('link');
+	for (let i = 0; i < nodes.length; i++) {
+		if (nodes[i].rel === 'stylesheet' && nodes[i].getAttribute('href') === href)
+			return true;
+	}
+	return false;
+}
+
 // Load a component once. Fetch CSS first so paint does not flash unstyled.
 async function load (name) {
 	if (loaded.has(name))
 		return loaded.get(name);
 
 	const href = asset('/components/' + name + '.css');
-	try {
-		const probe = await fetch(href);
-		if (probe.ok) {
-			const css = typeof probe.text === 'function' ? await probe.text() : '';
-			if (css) {
-				const style = document.createElement('style');
-				style.textContent = css;
-				document.head.appendChild(style);
+	if (!has_stylesheet(href)) {
+		try {
+			const probe = await fetch(href);
+			if (probe.ok) {
+				const css = typeof probe.text === 'function' ? await probe.text() : '';
+				if (css) {
+					const style = document.createElement('style');
+					style.textContent = css;
+					document.head.appendChild(style);
+				}
 			}
 		}
-	}
-	catch {
-		// no external css — injected styles live in the module
+		catch {
+			// no external css — injected styles live in the module
+		}
 	}
 
 	const mod = await import(asset('/components/' + name + '.js'));
@@ -282,9 +293,32 @@ function live_reload () {
 	}
 }
 
+function ssg_target (target) {
+	return !!(target && typeof target.hasAttribute === 'function' && target.hasAttribute('data-alumna-ssg'));
+}
+
+async function boot_app (target) {
+	if (ssg_target(target)) {
+		const url = new URL(location.href);
+		const hit = match_path(app_pathname(url.pathname), config.routes);
+		if (hit && !hit.route.redirect) {
+			await load_all(config.deps[hit.pattern]);
+			return hydrate(App, {
+				target,
+				props: {
+					layout: layout_ctor(hit.route),
+					areas: area_map(hit.route)
+				}
+			});
+		}
+		return hydrate(App, { target });
+	}
+	return mount(App, { target });
+}
+
 export async function start ({ target } = {}) {
 	if (!started) {
-		app = mount(App, { target: target || document.body });
+		app = await boot_app(target || document.body);
 		bind_clicks();
 		bind_router();
 		if (config.dev)

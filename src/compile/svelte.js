@@ -1,12 +1,18 @@
 import { compile as svelte_compile } from 'svelte/compiler';
+import { createRequire } from 'node:module';
+import { join, posix } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { rewrite_imports, is_svelte_specifier, is_bare_library } from './rewrite.js';
 import { resolve_component_import } from './graph.js';
+import { alumna_root } from '../utils/paths.js';
 import { with_base } from '../utils/base.js';
 
-function compile_options (filename, dev, css) {
+const alumna_require = createRequire(join(alumna_root, 'package.json'));
+
+function compile_options (filename, dev, css, generate) {
 	return {
 		filename,
-		generate: 'client',
+		generate: generate || 'client',
 		css: css || (dev ? 'injected' : 'external'),
 		dev: !!dev,
 		discloseVersion: false
@@ -22,9 +28,10 @@ function with_map (code, map, map_name, sourcemap) {
 	};
 }
 
-export function compile_component (source, { filename, id, dev, css, sourcemap, base }) {
-	const result = svelte_compile(source, compile_options(filename, dev, css));
-	const js = rewrite_imports(result.js.code, spec => resolve_browser_specifier(spec, id, base));
+export function compile_component (source, { filename, id, dev, css, sourcemap, base, generate, resolve }) {
+	const result = svelte_compile(source, compile_options(filename, dev, css, generate));
+	const resolver = resolve || (spec => resolve_browser_specifier(spec, id, base));
+	const js = rewrite_imports(result.js.code, resolver);
 	const mapped = with_map(js, result.js.map, id.split('/').pop() + '.js.map', sourcemap);
 
 	return {
@@ -36,9 +43,10 @@ export function compile_component (source, { filename, id, dev, css, sourcemap, 
 	};
 }
 
-export function compile_shell (source, { filename, dev, css, sourcemap }) {
-	const result = svelte_compile(source, compile_options(filename, dev, css));
-	const mapped = with_map(result.js.code, result.js.map, 'app.js.map', sourcemap);
+export function compile_shell (source, { filename, dev, css, sourcemap, generate, resolve }) {
+	const result = svelte_compile(source, compile_options(filename, dev, css, generate));
+	const code = resolve ? rewrite_imports(result.js.code, resolve) : result.js.code;
+	const mapped = with_map(code, result.js.map, 'app.js.map', sourcemap);
 	return {
 		js: mapped.js,
 		map: mapped.map,
@@ -69,4 +77,59 @@ export function resolve_browser_specifier (spec, id, base) {
 		return spec;
 
 	throw new Error('Cannot import "' + spec + '" from ' + id + '.svelte');
+}
+
+export function file_url_from (root, spec) {
+	try {
+		return pathToFileURL(createRequire(join(root, 'package.json')).resolve(spec)).href;
+	}
+	catch {
+		throw new Error('Cannot import "' + spec + '" during SSG');
+	}
+}
+
+export function file_url_from_alumna (spec) {
+	try {
+		return pathToFileURL(alumna_require.resolve(spec)).href;
+	}
+	catch {
+		throw new Error('Cannot resolve "' + spec + '" for SSG');
+	}
+}
+
+function server_from_file (id) {
+	return id ? 'components/' + id + '.js' : 'App.js';
+}
+
+export function server_relative_import (from_id, to_file) {
+	let rel = posix.relative(posix.dirname(server_from_file(from_id)), to_file);
+	if (!rel || rel.charCodeAt(0) !== 46)
+		rel = './' + rel;
+	return rel;
+}
+
+export function resolve_server_specifier (spec, id, { project_root } = {}) {
+	if (is_svelte_specifier(spec))
+		return file_url_from_alumna(spec);
+
+	if (spec === 'alumna')
+		return server_relative_import(id, 'alumna.js');
+
+	const svelte_child = resolve_component_import(id, spec);
+	if (svelte_child) {
+		if (svelte_child.error)
+			return spec;
+		return server_relative_import(id, 'components/' + svelte_child.id + '.js');
+	}
+
+	if (is_bare_library(spec)) {
+		if (!project_root)
+			throw new Error('Cannot import "' + spec + '" during SSG');
+		return file_url_from(project_root, spec);
+	}
+
+	if (spec.startsWith('.') || spec.startsWith('/'))
+		return spec;
+
+	throw new Error('Cannot import "' + spec + '" from ' + (id || 'App') + '.svelte');
 }

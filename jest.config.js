@@ -17,7 +17,12 @@ export default {
 		'^/_alumna/app\\.js$': '<rootDir>/test/runtime/mocks/app.js',
 		'^/_alumna/config\\.js$': '<rootDir>/test/runtime/mocks/config.js',
 		'^/_alumna/match\\.js$': '<rootDir>/src/compile/match.js',
-	'/components/.+\\.js$': '<rootDir>/test/runtime/mocks/component.js',
-	'/middlewares/.+\\.js$': '<rootDir>/test/runtime/mocks/middleware.js'
+		// Runtime tests load /components and /<base>/components. SSG loads
+		// /tmp/.../components (more than one folder before components) and
+		// must use the real compiled files, not these mocks.
+		'^/components/.+\\.js$': '<rootDir>/test/runtime/mocks/component.js',
+		'^/[^/]+/components/.+\\.js$': '<rootDir>/test/runtime/mocks/component.js',
+		'^/middlewares/.+\\.js$': '<rootDir>/test/runtime/mocks/middleware.js',
+		'^/[^/]+/middlewares/.+\\.js$': '<rootDir>/test/runtime/mocks/middleware.js'
 	}
 };

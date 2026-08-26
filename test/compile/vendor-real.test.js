@@ -22,6 +22,7 @@ test('real rolldown bundles a tiny library', async () => {
 	const files = Object.keys(out.files);
 	expect(files.some(name => name.startsWith('_alumna/vendor/'))).toBe(true);
 	expect(out.import_map.imports['tiny-lib']).toMatch(/\/_alumna\/vendor\//);
+	expect(out.import_map.imports.svelte).toMatch(/\/_alumna\/vendor\//);
 	expect(Object.keys(out.files).some(name => name.endsWith('.map'))).toBe(true);
 }, 30000);
 

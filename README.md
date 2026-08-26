@@ -2,7 +2,7 @@
 
 Opinionated meta-framework for [Svelte](https://svelte.dev) 5. You write routes and components. Alumna handles routing, on-demand loading, and the bundler.
 
-**4.0.0-alpha.2**
+**4.0.0-alpha.3**
 
 ## Index
 
@@ -23,6 +23,7 @@ Opinionated meta-framework for [Svelte](https://svelte.dev) 5. You write routes 
 - [Config](#config)
 - [Base path](#base-path)
 - [Build and preview](#build-and-preview)
+- [Static HTML (SSG)](#static-html-ssg)
 - [Optional store](#optional-store)
 - [Embed](#embed)
 - [Not in this alpha](#not-in-this-alpha)
@@ -57,12 +58,11 @@ alumna new .            Create a project in the current empty directory
 alumna dev [--port n]   Compile in memory, live reload (default port 3030)
 alumna add <package>    Add a library for use in components
 alumna build            Production SPA into build/
+alumna build --ssg      Production SSG + hydration (static paths)
 alumna preview          Serve build/ (default port 4040)
 alumna --help
 alumna --version
 ```
-
-`--ssg` prints a warning in this alpha and still does a SPA build.
 
 `--port` is required: if that port is busy, Alumna stops. Without `--port`, Alumna uses `alumna.hjson` `port` if set, then picks the next free port if that one is busy.
 
@@ -268,7 +268,7 @@ sourcemap: false
 ssg: false
 ```
 
-`--port` overrides `port`. `out`, `build`, and `build_dir` all mean the output directory (`build` by default). `ssg` is reserved; this alpha still builds a SPA.
+`--port` overrides `port`. `out`, `build`, and `build_dir` all mean the output directory (`build` by default). `ssg: true` is the same as `alumna build --ssg`. See [Static HTML (SSG)](#static-html-ssg).
 
 ## Base path
 
@@ -284,6 +284,7 @@ App paths stay `/about`. Browser URLs are `/app/about`. Root-absolute HTML links
 
 ```
 alumna build
+alumna build --ssg
 alumna preview
 ```
 
@@ -292,14 +293,23 @@ Output:
 ```
 build/
   index.html
+  about/index.html          # only with --ssg
   alumna-manifest.json
   components/
-  _alumna/
+  _alumna/                  # runtime, vendor; spa.html when SSG
 ```
 
-`alumna-manifest.json` lists areas, routes, deps, and `base`.
+`alumna-manifest.json` lists areas, routes, deps, `base`, and (with SSG) `ssg` and `prerender`.
 
 Production JS for the runtime and shared vendor chunks is minified. Vendor files are content-hashed. Source maps are on in `alumna dev`. In `alumna build` they are off unless `sourcemap: true` in `alumna.hjson`.
+
+## Static HTML (SSG)
+
+`alumna build --ssg` (or `ssg: true` in `alumna.hjson`) writes HTML for every **static** route: `/` → `build/index.html`, `/about` → `build/about/index.html`. Routes with `:param`, `*`, or `redirect` stay SPA-only.
+
+The first paint is the prerendered HTML. The client then hydrates and the app is a SPA. Unknown paths use `build/_alumna/spa.html`. `alumna preview` serves the directory index (`/about` → `about/index.html`).
+
+There is no `data()` hook in this alpha. Parametric prerender is not in this alpha.
 
 ## Optional store
 
@@ -322,7 +332,7 @@ await start({ target: document.querySelector('#app') });
 
 ## Not in this alpha
 
-SSG (`--ssg` / `ssg: true`), HMR that keeps component state, and a public binary download. Those come later. Nested layouts are not supported and are not planned.
+HMR that keeps component state, and a public binary download. Those come later. Nested layouts are not supported and are not planned. SSG does not prerender param routes or run `data()` yet.
 
 ## Developers
 
