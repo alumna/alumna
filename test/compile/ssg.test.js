@@ -3,8 +3,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { compile_project } from '../../src/compile/project.js';
 import {
-	is_static_route_path,
-	static_route_paths,
 	html_file_for,
 	preload_hrefs_for,
 	render_ssg
@@ -25,20 +23,7 @@ async function compile (src_dir, extra = {}) {
 	});
 }
 
-test('static path helpers', () => {
-	expect(is_static_route_path('/')).toBe(true);
-	expect(is_static_route_path('/about')).toBe(true);
-	expect(is_static_route_path('/users/:id')).toBe(false);
-	expect(is_static_route_path('/*')).toBe(false);
-	expect(is_static_route_path('about')).toBe(false);
-	expect(is_static_route_path(1)).toBe(false);
-	expect(static_route_paths({
-		'/': { redirect: null },
-		'/about': {},
-		'/old': { redirect: '/about' },
-		'/users/:id': {},
-		'/*': {}
-	})).toEqual([ '/', '/about' ]);
+test('html and preload helpers', () => {
 	expect(html_file_for('/')).toBe('index.html');
 	expect(html_file_for('/about')).toBe('about/index.html');
 	expect(html_file_for('/about/')).toBe('about/index.html');
@@ -217,4 +202,108 @@ test('render_ssg outer catch when graph is missing', async () => {
 	});
 	expect(ssg.ok).toBe(false);
 	expect(ssg.errors.ssg).toBeTruthy();
+});
+
+test('render_ssg skips route middleware and expands prerender', async () => {
+	const src_dir = make_dir({
+		'index.html': INDEX_HTML,
+		'app.js': `
+			app.areas = [ 'content' ];
+			app.middleware = [ 'log' ];
+			app.route['/'] = { content: 'Home' };
+			app.route['/dash'] = { content: 'Dash', middleware: [ 'auth' ] };
+			app.route['/about'] = { content: 'About', middleware: [ 'log' ], ssg: true };
+			app.route['/hidden'] = { content: 'Home', ssg: false };
+			app.route['/blog/:slug'] = {
+				content: 'Post',
+				prerender: [ { slug: 'hello' }, { slug: 'hello' }, { slug: 'world' } ]
+			};
+			app.route['/empty/:slug'] = { content: 'Post', prerender: [] };
+			app.route['/users/:id'] = { content: 'Post' };
+			app.route['/old'] = { redirect: '/about' };
+			app.route['/*'] = { content: 'Home' };
+		`,
+		'middlewares/log.js': 'export default function log (c, n) { return n(); }',
+		'middlewares/auth.js': 'export default function auth (c, n) { return n(); }',
+		'components/Home.svelte': `<p>Welcome home</p>`,
+		'components/Dash.svelte': `<p>dash</p>`,
+		'components/About.svelte': `<p>About page</p>`,
+		'components/Post.svelte': `<script>import { route } from 'alumna';</script><p>post {route.params.slug}</p>`
+	});
+	const compiled = await compile(src_dir);
+	expect(compiled.ok).toBe(true);
+	const ssg = await render_ssg({
+		compiled,
+		src_html: INDEX_HTML,
+		project_root: alumna_root
+	});
+	expect(ssg.ok).toBe(true);
+	expect(ssg.prerender).toEqual([ '/', '/about', '/blog/hello', '/blog/world' ]);
+	expect(ssg.pages['index.html']).toMatch(/Welcome home/);
+	expect(ssg.pages['about/index.html']).toMatch(/About page/);
+	expect(ssg.pages['blog/hello/index.html']).toMatch(/post hello/);
+	expect(ssg.pages['blog/world/index.html']).toMatch(/post world/);
+	expect(ssg.pages['dash/index.html']).toBeUndefined();
+	expect(ssg.pages['hidden/index.html']).toBeUndefined();
+	expect(ssg.lookup['/blog/:slug']).toEqual([ '/blog/hello', '/blog/world' ]);
+	expect(ssg.lookup['/blog/hello']).toEqual([ '/blog/hello' ]);
+});
+
+test('render_ssg paths rebuilds one concrete URL', async () => {
+	const src_dir = make_dir({
+		'index.html': INDEX_HTML,
+		'app.js': `
+			app.areas = [ 'content' ];
+			app.route['/'] = { content: 'Home' };
+			app.route['/blog/:slug'] = { content: 'Post', prerender: [ { slug: 'hello' } ] };
+		`,
+		'components/Home.svelte': `<p>home</p>`,
+		'components/Post.svelte': `<script>import { route } from 'alumna';</script><p>{route.params.slug}</p>`
+	});
+	const compiled = await compile(src_dir);
+	const ssg = await render_ssg({
+		compiled,
+		src_html: INDEX_HTML,
+		project_root: alumna_root,
+		paths: [ '/blog/world' ]
+	});
+	expect(ssg.ok).toBe(true);
+	expect(ssg.prerender).toEqual([ '/blog/world' ]);
+	expect(ssg.pages['blog/world/index.html']).toMatch(/world/);
+	expect(ssg.pages['index.html']).toBeUndefined();
+});
+
+test('render_ssg paths empty list writes no pages', async () => {
+	const src_dir = make_dir({
+		'index.html': INDEX_HTML,
+		'app.js': `app.areas = [ 'content' ]; app.route['/'] = { content: 'Home' };`,
+		'components/Home.svelte': `<p>home</p>`
+	});
+	const compiled = await compile(src_dir);
+	const ssg = await render_ssg({
+		compiled,
+		src_html: INDEX_HTML,
+		project_root: alumna_root,
+		paths: []
+	});
+	expect(ssg.ok).toBe(true);
+	expect(ssg.prerender).toEqual([]);
+	expect(ssg.pages).toEqual({});
+});
+
+test('render_ssg paths rejects a bad path', async () => {
+	const src_dir = make_dir({
+		'index.html': INDEX_HTML,
+		'app.js': `app.areas = [ 'content' ]; app.route['/'] = { content: 'Home' };`,
+		'components/Home.svelte': `<p>home</p>`
+	});
+	const compiled = await compile(src_dir);
+	const ssg = await render_ssg({
+		compiled,
+		src_html: INDEX_HTML,
+		project_root: alumna_root,
+		paths: [ '/missing' ]
+	});
+	expect(ssg.ok).toBe(false);
+	expect(ssg.errors['ssg /missing']).toMatch(/No route matches/);
 });

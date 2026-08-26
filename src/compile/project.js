@@ -31,12 +31,17 @@ function serialize_routes (routes) {
 	const out = {};
 	for (const path of Object.keys(routes)) {
 		const route = routes[path];
-		out[path] = {
+		const rec = {
 			areas: route.areas,
 			redirect: route.redirect,
 			layout: route.layout,
 			middleware: route.middleware
 		};
+		if (route.ssg === true || route.ssg === false)
+			rec.ssg = route.ssg;
+		if (route.prerender)
+			rec.prerender = route.prerender;
+		out[path] = rec;
 	}
 	return out;
 }

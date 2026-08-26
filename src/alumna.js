@@ -14,6 +14,9 @@ import { add_packages } from './add/install.js';
 import { minify_module } from './compile/vendor.js';
 import { write_build } from './build/write.js';
 import { render_ssg } from './compile/ssg.js';
+import { run_rebuild } from './build/rebuild.js';
+import { create_notify_server } from './build/notify.js';
+import { build_manifest, stringify_manifest, alumna_version } from './build/manifest.js';
 
 const RUNTIME_JS = readFileSync(join(alumna_root, 'src/runtime/browser.js'), 'utf8');
 const MATCH_JS = readFileSync(join(alumna_root, 'src/compile/match.js'), 'utf8');
@@ -230,6 +233,7 @@ export class Alumna {
 		let html = spa_html;
 		let pages;
 		let prerender = [];
+		let lookup = {};
 
 		if (want_ssg) {
 			const ssg = await render_ssg({
@@ -250,6 +254,7 @@ export class Alumna {
 				delete pages['index.html'];
 			}
 			prerender = ssg.prerender;
+			lookup = ssg.lookup;
 		}
 
 		write_build({
@@ -259,15 +264,16 @@ export class Alumna {
 			files: compiled.files,
 			runtime,
 			match,
-			manifest: JSON.stringify({
-				version: '4.0.0-alpha.3',
+			manifest: stringify_manifest(build_manifest({
+				version: alumna_version(),
 				base: this.config.base,
 				ssg: !!want_ssg,
 				prerender,
+				lookup,
 				areas: compiled.config.areas,
 				routes: compiled.config.routes,
 				deps: compiled.config.deps
-			}, null, '\t') + '\n',
+			})),
 			static_dir: join(this.src_dir(), 'static')
 		});
 
@@ -296,6 +302,49 @@ export class Alumna {
 
 		await this.httpd.listen();
 		console.log('Preview on http://localhost:' + port + (this.config.base || ''));
+		return true;
+	}
+
+	rebuild_ctx () {
+		this.merge_config();
+		const html_file = join(this.src_dir(), 'index.html');
+		return {
+			out: join(this.config.cwd, this.config.build_dir),
+			compile: () => this.compile({ dev: false, ssg: true }),
+			src_html: existsSync(html_file) ? readFileSync(html_file, 'utf8') : '',
+			title: this.config.title,
+			base: this.config.base,
+			project_root: this.config.cwd
+		};
+	}
+
+	async rebuild (opts = {}) {
+		const result = await run_rebuild(this.rebuild_ctx(), opts);
+		this.print_warnings(result.warnings);
+		if (!result.ok) {
+			this.print_errors(result.errors);
+			return false;
+		}
+		console.log('Rebuilt ' + result.paths.length + ' page(s).');
+		return true;
+	}
+
+	async listen_rebuild () {
+		this.merge_config();
+		const out = join(this.config.cwd, this.config.build_dir);
+		if (!existsSync(join(out, 'alumna-manifest.json'))) {
+			console.error('Missing build/. Run alumna build --ssg first.');
+			return false;
+		}
+
+		const port = await pick_port(this.config.port || 4050, { required: this.port_required() });
+		this.httpd = create_notify_server({
+			port,
+			on_notify: payload => run_rebuild(this.rebuild_ctx(), payload)
+		});
+		await this.httpd.listen();
+		const bound = this.httpd.server.address().port;
+		console.log('Rebuild listener on http://127.0.0.1:' + bound + '/notify');
 		return true;
 	}
 }

@@ -8,6 +8,7 @@ import { generate_shell_source } from './shell.js';
 import { css_hrefs_for } from './project.js';
 import { with_base } from '../utils/base.js';
 import { inject_html } from '../dev/html.js';
+import { ssg_targets, resolve_rebuild_path } from './ssg-targets.js';
 
 // Node stub so prerendered components can import { goto, route } from 'alumna'.
 const ALUMNA_STUB = `export const route = { path: '', pattern: '', params: {}, query: {}, layout: null };
@@ -18,25 +19,6 @@ export function start () { return Promise.resolve(); }
 export function should_auto_start () { return false; }
 export function boot_runtime () {}
 `;
-
-export function is_static_route_path (path) {
-	return typeof path === 'string'
-		&& path.charCodeAt(0) === 47
-		&& !path.includes(':')
-		&& !path.includes('*');
-}
-
-export function static_route_paths (routes) {
-	const paths = [];
-	for (const path of Object.keys(routes)) {
-		if (!is_static_route_path(path))
-			continue;
-		if (routes[path].redirect)
-			continue;
-		paths.push(path);
-	}
-	return paths;
-}
 
 export function html_file_for (path) {
 	if (path === '/')
@@ -54,7 +36,7 @@ export function preload_hrefs_for (deps, path, base) {
 }
 
 function fail (errors, warnings) {
-	return { ok: false, errors, warnings: warnings || [], pages: {}, prerender: [] };
+	return { ok: false, errors, warnings: warnings || [], pages: {}, prerender: [], lookup: {} };
 }
 
 function write_js (file, code) {
@@ -147,38 +129,72 @@ function read_render (result) {
 	return { body: result.body, head: result.head };
 }
 
-async function pages_for_routes (dir, compiled, src_html, title, base, warnings) {
+function set_ssg_route (ssg_route, path, pattern, params, layout) {
+	ssg_route.path = path;
+	ssg_route.pattern = pattern;
+	ssg_route.params = params;
+	ssg_route.query = {};
+	ssg_route.layout = layout;
+}
+
+function jobs_for (compiled, only_paths) {
+	if (!only_paths)
+		return { ok: true, jobs: ssg_targets(compiled.routes).pages };
+
+	const jobs = [];
+	for (let i = 0; i < only_paths.length; i++) {
+		const path = only_paths[i];
+		const resolved = resolve_rebuild_path(path, compiled.routes);
+		if (resolved.error)
+			return { ok: false, error_key: 'ssg ' + path, message: resolved.error };
+		jobs.push(resolved);
+	}
+	return { ok: true, jobs };
+}
+
+async function pages_for_routes (dir, compiled, src_html, title, base, warnings, only_paths) {
 	const App = (await import(pathToFileURL(join(dir, 'App.js')).href)).default;
+	const { route: ssg_route } = await import(pathToFileURL(join(dir, 'alumna.js')).href);
 	const cache = new Map();
 	const pages = {};
-	const prerender = static_route_paths(compiled.routes);
+	const selected = jobs_for(compiled, only_paths);
+	if (!selected.ok)
+		return fail({ [selected.error_key]: selected.message }, warnings);
+
+	const jobs = selected.jobs;
+	const prerender = [];
 	const areas = compiled.config.areas;
 	const layouts = compiled.config.layouts;
 	const deps = compiled.config.deps;
 	const files = compiled.files;
 
-	for (let i = 0; i < prerender.length; i++) {
-		const path = prerender[i];
+	for (let i = 0; i < jobs.length; i++) {
+		const job = jobs[i];
+		const path = job.path;
+		const pattern = job.pattern;
 		try {
-			const props = await props_for_route(dir, cache, compiled.routes[path], areas, layouts);
+			const route = compiled.routes[pattern];
+			set_ssg_route(ssg_route, path, pattern, job.params, route.layout);
+			const props = await props_for_route(dir, cache, route, areas, layouts);
 			const html = read_render(render(App, { props }));
 			pages[html_file_for(path)] = inject_html(src_html, {
 				import_map: compiled.import_map,
 				base,
-				css_hrefs: css_hrefs_for(files, deps, path, base),
-				preload_hrefs: preload_hrefs_for(deps, path, base),
+				css_hrefs: css_hrefs_for(files, deps, pattern, base),
+				preload_hrefs: preload_hrefs_for(deps, pattern, base),
 				title,
 				body: html.body,
 				head: html.head,
 				ssg: true
 			});
+			prerender.push(path);
 		}
 		catch (error) {
 			return fail({ ['ssg ' + path]: error.message }, warnings);
 		}
 	}
 
-	return { ok: true, errors: {}, warnings, pages, prerender };
+	return { ok: true, errors: {}, warnings, pages, prerender, lookup: ssg_targets(compiled.routes).lookup };
 }
 
 export async function render_ssg ({
@@ -187,7 +203,8 @@ export async function render_ssg ({
 	title = '',
 	base = '',
 	project_root,
-	tmp_dir
+	tmp_dir,
+	paths
 } = {}) {
 	if (!compiled || !compiled.ok)
 		return fail({ ssg: 'Compile failed before SSG' });
@@ -200,7 +217,7 @@ export async function render_ssg ({
 		const compile_fail = compile_server_graph(dir, compiled, project_root, warnings);
 		if (compile_fail)
 			return compile_fail;
-		return await pages_for_routes(dir, compiled, src_html, title, base, warnings);
+		return await pages_for_routes(dir, compiled, src_html, title, base, warnings, paths);
 	}
 	catch (error) {
 		return fail({ ssg: error.message }, warnings);

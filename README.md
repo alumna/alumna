@@ -2,7 +2,7 @@
 
 Opinionated meta-framework for [Svelte](https://svelte.dev) 5. You write routes and components. Alumna handles routing, on-demand loading, and the bundler.
 
-**4.0.0-alpha.3**
+**4.0.0-alpha.4**
 
 ## Index
 
@@ -24,6 +24,7 @@ Opinionated meta-framework for [Svelte](https://svelte.dev) 5. You write routes 
 - [Base path](#base-path)
 - [Build and preview](#build-and-preview)
 - [Static HTML (SSG)](#static-html-ssg)
+- [Rebuild](#rebuild)
 - [Optional store](#optional-store)
 - [Embed](#embed)
 - [Not in this alpha](#not-in-this-alpha)
@@ -58,7 +59,8 @@ alumna new .            Create a project in the current empty directory
 alumna dev [--port n]   Compile in memory, live reload (default port 3030)
 alumna add <package>    Add a library for use in components
 alumna build            Production SPA into build/
-alumna build --ssg      Production SSG + hydration (static paths)
+alumna build --ssg      Production SSG + hydration
+alumna rebuild          Rebuild SSG pages (needs a prior build)
 alumna preview          Serve build/ (default port 4040)
 alumna --help
 alumna --version
@@ -102,6 +104,8 @@ app.route[ '/dash' ] = {
 
 Omit an area on a route to leave that area empty.
 
+Reserved route keys (not area names): `layout`, `middleware`, `redirect`, `data`, `ssg`, `prerender`.
+
 `app.route['/*']` is the catch-all. Without it, an unknown path does not change the current view.
 
 ## Areas
@@ -132,7 +136,7 @@ Set `layout: 'dash'` on a route. Routes with no `layout` use the sequential defa
 
 Layouts are one level. Nested layouts are not supported.
 
-`layout` is a reserved route key.
+`layout` is a reserved route key. So are `middleware`, `redirect`, `data`, `ssg`, and `prerender`.
 
 ## Groups, aliases, params, redirects
 
@@ -285,6 +289,7 @@ App paths stay `/about`. Browser URLs are `/app/about`. Root-absolute HTML links
 ```
 alumna build
 alumna build --ssg
+alumna rebuild --route /about
 alumna preview
 ```
 
@@ -299,17 +304,68 @@ build/
   _alumna/                  # runtime, vendor; spa.html when SSG
 ```
 
-`alumna-manifest.json` lists areas, routes, deps, `base`, and (with SSG) `ssg` and `prerender`.
+`alumna-manifest.json` lists areas, routes, deps, `base`, `ssg`, `prerender`, and `lookup`.
 
 Production JS for the runtime and shared vendor chunks is minified. Vendor files are content-hashed. Source maps are on in `alumna dev`. In `alumna build` they are off unless `sourcemap: true` in `alumna.hjson`.
 
 ## Static HTML (SSG)
 
-`alumna build --ssg` (or `ssg: true` in `alumna.hjson`) writes HTML for every **static** route: `/` → `build/index.html`, `/about` → `build/about/index.html`. Routes with `:param`, `*`, or `redirect` stay SPA-only.
+`alumna build --ssg` (or `ssg: true` in `alumna.hjson`) writes HTML for the routes in the table below. `/` → `build/index.html`, `/about` → `build/about/index.html`, `/blog/hello` → `build/blog/hello/index.html`. Unknown paths use `build/_alumna/spa.html`. `alumna preview` serves the directory index.
 
-The first paint is the prerendered HTML. The client then hydrates and the app is a SPA. Unknown paths use `build/_alumna/spa.html`. `alumna preview` serves the directory index (`/about` → `about/index.html`).
+When `--ssg` is on:
 
-There is no `data()` hook in this alpha. Parametric prerender is not in this alpha.
+| Route | Result |
+| --- | --- |
+| Static, no route `middleware`, not a redirect | HTML |
+| Static, has route `middleware: [...]` | SPA only |
+| `ssg: false` | SPA only |
+| `ssg: true` | HTML even with route middleware |
+| Param / `*` | SPA only |
+| Param + `prerender: [...]` | those concrete pages |
+| Redirect and `/*` | never HTML |
+
+`ssg: false` wins over `prerender`. `ssg: true` on a param route without `prerender` is an error. Global `app.middleware` does not skip SSG. `prerender` is an array of param objects; keys must match that route’s `:params`. Empty `prerender: []` writes no pages for that pattern in this build.
+
+```js
+app.route['/dash'] = {
+	layout: 'dashboard',
+	content: 'Overview',
+	middleware: [ 'auth' ]
+	// SPA only: route middleware, no ssg: true
+};
+
+app.route['/about'] = {
+	content: 'About',
+	middleware: [ 'announce' ],
+	ssg: true
+};
+
+app.route['/blog/:slug'] = {
+	content: 'Post',
+	prerender: [
+		{ slug: 'hello' },
+		{ slug: 'world' }
+	]
+};
+```
+
+`ssg` and `prerender` are reserved route keys. They apply only when the SSG switch is on. A SPA `alumna build` ignores them.
+
+The first paint is the prerendered HTML. The client then hydrates and the app is a SPA. There is no `data()` hook in this alpha.
+
+## Rebuild
+
+After `alumna build --ssg`:
+
+```
+alumna rebuild --route /blog/hello
+alumna rebuild --id /blog/hello
+alumna rebuild --listen [--port 4050]
+```
+
+`--route` is a concrete URL (for example `/blog/hello`). `--id` looks up that key in `alumna-manifest.json` `lookup` (keys are route paths in this alpha). `--listen` starts a localhost endpoint at `/notify`. POST JSON `{ "contentId": "..." }` or `{ "route": "/blog/hello" }`. GET query `?route=` or `?contentId=` / `?id=` also works.
+
+Rebuild writes only those HTML files. It does not rewrite JS unless the compiled files changed. HTML writes are atomic (temp file, then rename).
 
 ## Optional store
 
@@ -332,7 +388,7 @@ await start({ target: document.querySelector('#app') });
 
 ## Not in this alpha
 
-HMR that keeps component state, and a public binary download. Those come later. Nested layouts are not supported and are not planned. SSG does not prerender param routes or run `data()` yet.
+HMR that keeps component state, and a public binary download. Those come later. Nested layouts are not supported and are not planned. There is no `data()` hook yet.
 
 ## Developers
 

@@ -1,5 +1,13 @@
 # Alumna changelog
 
+## 4.0.0-alpha.4 — 2026-08-26
+
+- SSG follows the Q44 table. Static routes with no route middleware get HTML. Route `middleware` skips SSG unless `ssg: true`. Global `app.middleware` does not skip. `ssg: false` is always SPA. Param routes need `prerender: [{ param: value }, ...]`. Redirects and `/*` never get HTML. Empty `prerender: []` writes no pages for that pattern.
+- `alumna rebuild --route <path>` and `--id <contentId>` rebuild one or more SSG pages from an existing `build/`. `--listen` starts a localhost `/notify` endpoint. Manifest `lookup` maps content keys (route paths in this alpha) to URLs. HTML writes are atomic. JS is rewritten only when compiled files changed.
+- Hydrate sets `route` (including params) before the first client paint so param pages match the SSG HTML.
+- Chromium e2e covers Hello, SSG click-through, param prerender, middleware skip, and rebuild of an extra path.
+- Jest 100% four-metric (353 tests).
+
 ## 4.0.0-alpha.3 — 2026-08-26
 
 - `alumna build --ssg` and `alumna.hjson` `ssg: true` prerender static routes (no `:param`, no `*`, no redirects). Output is `build/index.html` for `/` and `build/about/index.html` for `/about`, plus `build/_alumna/spa.html` for unknown paths. The first paint hydrates, then the app is a SPA.

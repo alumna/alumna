@@ -93,6 +93,23 @@ test('named layout is compiled and middleware files are copied', async () => {
 	expect(compiled.files['components/Home.css']).toBeUndefined();
 });
 
+test('serialize ssg and prerender on routes', async () => {
+	const src_dir = make_dir({
+		'app.js': `
+			app.areas = [ 'content' ];
+			app.route['/'] = { content: 'Home', ssg: false };
+			app.route['/blog/:slug'] = { content: 'Post', prerender: [ { slug: 'hello' } ] };
+		`,
+		'components/Home.svelte': `<p>home</p>`,
+		'components/Post.svelte': `<p>post</p>`
+	});
+	const compiled = await compile({ src_dir, dev: true });
+	expect(compiled.ok).toBe(true);
+	expect(compiled.config.routes['/'].ssg).toBe(false);
+	expect(compiled.config.routes['/blog/:slug'].prerender).toEqual([ { slug: 'hello' } ]);
+	expect(compiled.config.routes['/blog/:slug'].ssg).toBeUndefined();
+});
+
 test('global middleware file is copied', async () => {
 	const src_dir = make_dir({
 		'app.js': `

@@ -92,3 +92,47 @@ test('SSG hydrate then SPA click in Chromium', async () => {
 		await a.close();
 	}
 }, 60000);
+
+test('SSG Q44 prerender, middleware skip, and rebuild in Chromium', async () => {
+	const cwd = project({
+		'src/app.js': `
+			app.areas = [ 'content' ];
+			app.route['/'] = { content: 'Home' };
+			app.route['/dash'] = { content: 'Dash', middleware: [ 'auth' ] };
+			app.route['/blog/:slug'] = {
+				content: 'Post',
+				prerender: [ { slug: 'hello' } ]
+			};
+		`,
+		'src/index.html': INDEX_HTML,
+		'src/middlewares/auth.js': 'export default function auth (c, n) { return n(); }',
+		'src/components/Home.svelte': `<p>Welcome home</p><a href="/blog/hello">Post</a>`,
+		'src/components/Dash.svelte': `<p>secret dash</p>`,
+		'src/components/Post.svelte': `<script>import { route } from 'alumna';</script><p>post {route.params.slug}</p>`
+	});
+	const a = new Alumna({ cwd, ssg: true });
+	expect(await a.build()).toBe(true);
+	expect(await a.rebuild({ route: '/blog/world' })).toBe(true);
+	expect(await a.preview()).toBe(true);
+	const port = a.httpd.server.address().port;
+	try {
+		await with_browser(async browser => {
+			const page = await browser.newPage();
+			await page.goto('http://127.0.0.1:' + port + '/', { waitUntil: 'load' });
+			expect(await page.getAttribute('body', 'data-alumna-ssg')).not.toBeNull();
+			await page.click('a[href="/blog/hello"]');
+			await page.waitForFunction(() => document.body.textContent.includes('post hello'));
+			await page.goto('http://127.0.0.1:' + port + '/blog/hello', { waitUntil: 'load' });
+			expect(await page.getAttribute('body', 'data-alumna-ssg')).not.toBeNull();
+			expect(await page.textContent('body')).toMatch(/post hello/);
+			await page.goto('http://127.0.0.1:' + port + '/blog/world', { waitUntil: 'load' });
+			expect(await page.getAttribute('body', 'data-alumna-ssg')).not.toBeNull();
+			expect(await page.textContent('body')).toMatch(/post world/);
+			await page.goto('http://127.0.0.1:' + port + '/dash', { waitUntil: 'load' });
+			expect(await page.getAttribute('body', 'data-alumna-ssg')).toBeNull();
+		});
+	}
+	finally {
+		await a.close();
+	}
+}, 60000);

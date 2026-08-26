@@ -360,6 +360,15 @@ test('ssg hydrates when the target has data-alumna-ssg', async () => {
 	document.body.removeAttribute('data-alumna-ssg');
 });
 
+test('ssg hydrate applies route params before hydrate', async () => {
+	const runtime = await load_runtime();
+	document.body.setAttribute('data-alumna-ssg', '');
+	window.history.replaceState(null, '', '/users/9');
+	await runtime.start();
+	expect(runtime.route.params.id).toBe('9');
+	document.body.removeAttribute('data-alumna-ssg');
+});
+
 test('ssg hydrates without props on a redirect url', async () => {
 	const runtime = await load_runtime();
 	document.body.setAttribute('data-alumna-ssg', '');

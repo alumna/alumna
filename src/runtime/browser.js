@@ -208,11 +208,7 @@ async function show_url (url) {
 
 	await load_all(config.deps[hit.pattern]);
 
-	current.path = path;
-	current.pattern = hit.pattern;
-	current.params = hit.params;
-	current.query = parse_query(url.search);
-	current.layout = hit.route.layout;
+	apply_route(path, hit, url);
 
 	app.show({
 		layout: layout_ctor(hit.route),
@@ -293,14 +289,28 @@ function live_reload () {
 	}
 }
 
+function apply_route (path, hit, url) {
+	current.path = path;
+	current.pattern = hit.pattern;
+	current.params = hit.params;
+	current.query = parse_query(url.search);
+	current.layout = hit.route.layout;
+}
+
 function ssg_target (target) {
 	return !!(target && typeof target.hasAttribute === 'function' && target.hasAttribute('data-alumna-ssg'));
 }
 
 async function boot_app (target) {
+	const url = new URL(location.href);
+	const path = app_pathname(url.pathname);
+	const hit = match_path(path, config.routes);
+	// Hydrate reads `route` during the first paint. Set it before hydrate so
+	// param pages match the SSG HTML.
+	if (hit && !hit.route.redirect)
+		apply_route(path, hit, url);
+
 	if (ssg_target(target)) {
-		const url = new URL(location.href);
-		const hit = match_path(app_pathname(url.pathname), config.routes);
 		if (hit && !hit.route.redirect) {
 			await load_all(config.deps[hit.pattern]);
 			return hydrate(App, {

@@ -333,3 +333,83 @@ test('build ssg fails when render throws', async () => {
 	err.mockRestore();
 	warn.mockRestore();
 });
+
+test('build ssg skips middleware routes and writes prerender pages', async () => {
+	const cwd = project({
+		'src/app.js': `
+			app.areas = [ 'content' ];
+			app.route['/'] = { content: 'Home' };
+			app.route['/dash'] = { content: 'Dash', middleware: [ 'auth' ] };
+			app.route['/blog/:slug'] = { content: 'Post', prerender: [ { slug: 'hello' } ] };
+		`,
+		'src/index.html': INDEX_HTML,
+		'src/middlewares/auth.js': 'export default function auth (c, n) { return n(); }',
+		'src/components/Home.svelte': `<p>Welcome home</p>`,
+		'src/components/Dash.svelte': `<p>dash</p>`,
+		'src/components/Post.svelte': `<p>hello post</p>`
+	});
+	const a = new Alumna({ cwd, ssg: true });
+	const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+	const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+	expect(await a.build()).toBe(true);
+	expect(readFileSync(join(cwd, 'build/index.html'), 'utf8')).toMatch(/Welcome home/);
+	expect(existsSync(join(cwd, 'build/dash'))).toBe(false);
+	expect(readFileSync(join(cwd, 'build/blog/hello/index.html'), 'utf8')).toMatch(/hello post/);
+	const manifest = JSON.parse(readFileSync(join(cwd, 'build/alumna-manifest.json'), 'utf8'));
+	expect(manifest.lookup['/blog/hello']).toEqual([ '/blog/hello' ]);
+	expect(manifest.lookup['/blog/:slug']).toEqual([ '/blog/hello' ]);
+	log.mockRestore();
+	warn.mockRestore();
+});
+
+test('rebuild writes one page and listen_rebuild accepts notify', async () => {
+	const cwd = project({
+		'src/app.js': `
+			app.areas = [ 'content' ];
+			app.route['/'] = { content: 'Home' };
+			app.route['/blog/:slug'] = { content: 'Post', prerender: [ { slug: 'hello' } ] };
+		`,
+		'src/index.html': INDEX_HTML,
+		'src/components/Home.svelte': `<p>Welcome home</p>`,
+		'src/components/Post.svelte': `<script>import { route } from 'alumna';</script><p>post {route.params.slug}</p>`
+	});
+	const a = new Alumna({ cwd, ssg: true });
+	const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+	const err = jest.spyOn(console, 'error').mockImplementation(() => {});
+	const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+	expect(await a.build()).toBe(true);
+	expect(await a.rebuild({ route: '/blog/world' })).toBe(true);
+	expect(readFileSync(join(cwd, 'build/blog/world/index.html'), 'utf8')).toMatch(/post world/);
+	const manifest = JSON.parse(readFileSync(join(cwd, 'build/alumna-manifest.json'), 'utf8'));
+	expect(manifest.prerender).toContain('/blog/world');
+	expect(manifest.lookup['/blog/world']).toEqual([ '/blog/world' ]);
+	expect(await a.rebuild({ id: '/blog/hello' })).toBe(true);
+	expect(await a.rebuild({ routes: [ '/blog/hello', '/blog/hello' ] })).toBe(true);
+	expect(await a.rebuild({ routes: [ '' ] })).toBe(false);
+	expect(await a.rebuild({ contentId: 'missing' })).toBe(false);
+	expect(await a.rebuild({})).toBe(false);
+	expect(await a.rebuild({ ids: [ '/no-such' ] })).toBe(false);
+	expect(await a.listen_rebuild()).toBe(true);
+	const port = a.httpd.server.address().port;
+	const res = await fetch('http://127.0.0.1:' + port + '/notify', {
+		method: 'POST',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify({ route: '/blog/hello' })
+	});
+	expect(res.status).toBe(200);
+	await a.close();
+	writeFileSync(join(cwd, 'src/app.js'), 'app.areas = [');
+	expect(await a.rebuild({ route: '/' })).toBe(false);
+	const junk = project(hello);
+	mkdirSync(join(junk, 'build'));
+	writeFileSync(join(junk, 'build/alumna-manifest.json'), '{bad');
+	const broken = new Alumna({ cwd: junk });
+	expect(await broken.rebuild({ route: '/' })).toBe(false);
+	const missing = new Alumna({ cwd: mkdtempSync(join(tmpdir(), 'alumna-noreb-')) });
+	expect(await missing.rebuild({ route: '/' })).toBe(false);
+	expect(await missing.rebuild()).toBe(false);
+	expect(await missing.listen_rebuild()).toBe(false);
+	log.mockRestore();
+	err.mockRestore();
+	warn.mockRestore();
+});

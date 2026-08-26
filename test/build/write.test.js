@@ -1,7 +1,7 @@
 import { mkdtempSync, writeFileSync, readFileSync, mkdirSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { write_build } from '../../src/build/write.js';
+import { write_build, atomic_write, write_if_changed } from '../../src/build/write.js';
 
 test('write_build copies static files and writes the tree', () => {
 	const cwd = mkdtempSync(join(tmpdir(), 'alumna-write-'));
@@ -25,6 +25,16 @@ test('write_build copies static files and writes the tree', () => {
 	expect(readFileSync(join(out, '_alumna/match.js'), 'utf8')).toBe('match');
 	expect(readFileSync(join(out, 'alumna-manifest.json'), 'utf8')).toBe('{}\n');
 	expect(readFileSync(join(out, 'a.txt'), 'utf8')).toBe('A');
+});
+
+test('atomic_write and write_if_changed', () => {
+	const dir = mkdtempSync(join(tmpdir(), 'alumna-atomic-'));
+	const file = join(dir, 'nested', 'x.html');
+	atomic_write(file, 'one');
+	expect(readFileSync(file, 'utf8')).toBe('one');
+	expect(write_if_changed(file, 'one')).toBe(false);
+	expect(write_if_changed(file, 'two')).toBe(true);
+	expect(readFileSync(file, 'utf8')).toBe('two');
 });
 
 test('write_build without static_dir', () => {

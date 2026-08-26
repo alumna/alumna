@@ -357,3 +357,80 @@ test('empty layout name on a route is an error', () => {
 	`);
 	expect(errors.some(message => /layout must be a layout name/.test(message))).toBe(true);
 });
+
+test('ssg and prerender are kept on the route', () => {
+	const { errors, routes } = run(`
+		app.areas = [ 'content' ];
+		app.route['/'] = { content: 'Home' };
+		app.route['/dash'] = { content: 'Dash', middleware: [ 'auth' ] };
+		app.route['/about'] = { content: 'About', ssg: true, middleware: [ 'log' ] };
+		app.route['/off'] = { content: 'Home', ssg: false };
+		app.route['/blog/:slug'] = {
+			content: 'Post',
+			prerender: [ { slug: 'hello' }, { slug: 'world' } ]
+		};
+		app.route['/none/:slug'] = { content: 'Post', prerender: [] };
+	`);
+	expect(errors).toEqual([]);
+	expect(routes['/'].ssg).toBeNull();
+	expect(routes['/about'].ssg).toBe(true);
+	expect(routes['/off'].ssg).toBe(false);
+	expect(routes['/blog/:slug'].prerender).toEqual([ { slug: 'hello' }, { slug: 'world' } ]);
+	expect(routes['/none/:slug'].prerender).toEqual([]);
+});
+
+test('ssg must be a boolean', () => {
+	const { errors } = run(`
+		app.areas = [ 'content' ];
+		app.route['/'] = { content: 'Home', ssg: 1 };
+	`);
+	expect(errors.some(message => /ssg must be a boolean/.test(message))).toBe(true);
+});
+
+test('ssg true on a param route needs prerender', () => {
+	const { errors } = run(`
+		app.areas = [ 'content' ];
+		app.route['/blog/:slug'] = { content: 'Post', ssg: true };
+		app.route['/'] = { content: 'Home' };
+	`);
+	expect(errors.some(message => /needs prerender/.test(message))).toBe(true);
+});
+
+test('prerender type and key errors', () => {
+	const { errors } = run(`
+		app.areas = [ 'content' ];
+		app.route['/'] = { content: 'Home', prerender: [ { slug: 'x' } ] };
+		app.route['/a/:slug'] = { content: 'Post', prerender: 'hello' };
+		app.route['/b/:slug'] = { content: 'Post', prerender: [ 'hello' ] };
+		app.route['/c/:slug'] = { content: 'Post', prerender: [ { id: 'x' } ] };
+		app.route['/d/:slug'] = { content: 'Post', prerender: [ { slug: 'ok', extra: 'no' } ] };
+		app.route['/e/:slug'] = { content: 'Post', prerender: [ { slug: '' } ] };
+		app.route['/f/:slug'] = { content: 'Post', prerender: [ { slug: 1 } ] };
+		app.route['/shop/:cat/:id'] = { content: 'Post', prerender: [ { cat: 'a', id: '1' } ] };
+	`);
+	expect(errors.some(message => /prerender is for routes with :params/.test(message))).toBe(true);
+	expect(errors.some(message => /prerender must be an array/.test(message))).toBe(true);
+	expect(errors.some(message => /must be a param object/.test(message))).toBe(true);
+	expect(errors.some(message => /keys must match the route params/.test(message))).toBe(true);
+	expect(errors.some(message => /must be a non-empty string/.test(message))).toBe(true);
+	const ok = run(`
+		app.areas = [ 'content' ];
+		app.route['/shop/:cat/:id'] = { content: 'Post', prerender: [ { cat: 'a', id: '1' } ] };
+	`);
+	expect(ok.errors).toEqual([]);
+	expect(ok.routes['/shop/:cat/:id'].prerender[0]).toEqual({ cat: 'a', id: '1' });
+});
+
+test('catch-all and redirect never SSG', () => {
+	const { errors } = run(`
+		app.areas = [ 'content' ];
+		app.route['/'] = { content: 'Home' };
+		app.route['/*'] = { content: 'Home', ssg: true };
+		app.route['/files/*'] = { content: 'Home', prerender: [ { _: 'a' } ] };
+		app.route['/old'] = { redirect: '/new', ssg: true };
+		app.route['/gone'] = { redirect: '/new', prerender: [ { slug: 'x' } ] };
+		app.route['/new'] = { content: 'Home' };
+	`);
+	expect(errors.filter(message => /catch-all routes never SSG/.test(message)).length).toBeGreaterThan(0);
+	expect(errors.filter(message => /redirects never SSG/.test(message)).length).toBeGreaterThan(0);
+});

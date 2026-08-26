@@ -1,4 +1,6 @@
-const RESERVED = new Set([ 'layout', 'middleware', 'redirect', 'data' ]);
+import { has_star, route_param_keys } from './pattern.js';
+
+const RESERVED = new Set([ 'layout', 'middleware', 'redirect', 'data', 'ssg', 'prerender' ]);
 
 export function split_paths (value) {
 	return String(value)
@@ -83,7 +85,90 @@ function area_map_of (value) {
 			continue;
 		map[key] = value[key];
 	}
-	return { map, redirect: value.redirect, layout: value.layout, middleware: value.middleware };
+	return {
+		map,
+		redirect: value.redirect,
+		layout: value.layout,
+		middleware: value.middleware,
+		ssg: value.ssg,
+		prerender: value.prerender
+	};
+}
+
+function read_ssg_flag (value, errors, label) {
+	if (value == null)
+		return null;
+	if (typeof value !== 'boolean') {
+		add_error(errors, label + ' ssg must be a boolean');
+		return null;
+	}
+	return value;
+}
+
+function keys_match (wanted, got) {
+	if (wanted.length !== got.length)
+		return false;
+	const set = new Set(wanted);
+	for (let i = 0; i < got.length; i++) {
+		if (!set.has(got[i]))
+			return false;
+	}
+	return true;
+}
+
+function read_prerender (value, errors, label, param_keys) {
+	if (!Array.isArray(value)) {
+		add_error(errors, label + ' prerender must be an array of param objects');
+		return null;
+	}
+	const list = [];
+	for (let i = 0; i < value.length; i++) {
+		const item = value[i];
+		const here = label + ' prerender[' + i + ']';
+		if (!is_plain_object(item)) {
+			add_error(errors, here + ' must be a param object');
+			continue;
+		}
+		const got = Object.keys(item);
+		if (!keys_match(param_keys, got)) {
+			add_error(errors, here + ' keys must match the route params (' + param_keys.join(', ') + ')');
+			continue;
+		}
+		let ok = true;
+		const params = {};
+		for (let k = 0; k < param_keys.length; k++) {
+			const key = param_keys[k];
+			const raw = item[key];
+			if (typeof raw !== 'string' || !raw.length) {
+				add_error(errors, here + '.' + key + ' must be a non-empty string');
+				ok = false;
+				continue;
+			}
+			params[key] = raw;
+		}
+		if (ok)
+			list.push(params);
+	}
+	return list;
+}
+
+function check_ssg_fields (path, parsed, ssg, errors, raw_path) {
+	const label = 'In the route \'' + raw_path + '\'';
+	if (has_star(path)) {
+		if (ssg === true || parsed.prerender != null)
+			add_error(errors, label + ' catch-all routes never SSG');
+		return;
+	}
+	if (parsed.redirect) {
+		if (ssg === true || parsed.prerender != null)
+			add_error(errors, label + ' redirects never SSG');
+		return;
+	}
+	const keys = route_param_keys(path);
+	if (parsed.prerender != null && !keys.length)
+		add_error(errors, label + ' prerender is for routes with :params');
+	if (ssg === true && keys.length && parsed.prerender === undefined)
+		add_error(errors, label + ' ssg: true needs prerender so Alumna knows which URLs to write');
 }
 
 function is_ident (name) {
@@ -237,18 +322,29 @@ export function validate_app (app) {
 			'In the route \'' + raw_path + '\' middleware'
 		);
 
+		const ssg = read_ssg_flag(parsed.ssg, errors, 'In the route \'' + raw_path + '\'');
+
 		for (const path of paths) {
 			if (seen.has(path))
 				errors.push('The path "' + path + '" is defined multiple times');
 			else
 				seen.set(path, raw_path);
 
+			const keys = route_param_keys(path);
+			let prerender = null;
+			if (parsed.prerender !== undefined && keys.length && !has_star(path) && !parsed.redirect)
+				prerender = read_prerender(parsed.prerender, errors, 'In the route \'' + raw_path + '\'', keys);
+
+			check_ssg_fields(path, parsed, ssg, errors, raw_path);
+
 			routes[path] = {
 				path,
 				areas: parsed.map,
 				redirect: parsed.redirect || null,
 				layout: parsed.layout || null,
-				middleware: route_mw
+				middleware: route_mw,
+				ssg,
+				prerender
 			};
 		}
 	}

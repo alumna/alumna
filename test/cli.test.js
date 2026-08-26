@@ -28,6 +28,8 @@ function io () {
 			async dev () { return true; }
 			async build () { return true; }
 			async preview () { return true; }
+			async rebuild () { return true; }
+			async listen_rebuild () { return true; }
 		}
 	};
 }
@@ -38,6 +40,17 @@ test('parse_argv', () => {
 	expect(parse_argv([ '--version' ]).flags.version).toBe(true);
 	expect(parse_argv([ '-v' ]).flags.version).toBe(true);
 	expect(parse_argv([ '--ssg' ]).flags.ssg).toBe(true);
+	expect(parse_argv([ '--listen' ]).flags.listen).toBe(true);
+	expect(parse_argv([ '--route', '/about' ]).flags.routes).toEqual([ '/about' ]);
+	expect(parse_argv([ '--route=/blog/hello' ]).flags.routes).toEqual([ '/blog/hello' ]);
+	expect(parse_argv([ '--id', 'post:1' ]).flags.ids).toEqual([ 'post:1' ]);
+	expect(parse_argv([ '--id=/about' ]).flags.ids).toEqual([ '/about' ]);
+	expect(parse_argv([ '--route' ]).flags.bad).toMatch(/Missing value for --route/);
+	expect(parse_argv([ '--id' ]).flags.bad).toMatch(/Missing value for --id/);
+	expect(parse_argv([ '--route', '--listen' ]).flags.bad).toMatch(/Missing value for --route/);
+	expect(parse_argv([ '--route', '--listen' ]).flags.listen).toBe(true);
+	expect(parse_argv([ '--id', '--ssg' ]).flags.bad).toMatch(/Missing value for --id/);
+	expect(parse_argv([ '--id', '--ssg' ]).flags.ssg).toBe(true);
 	expect(parse_argv([ '--port', '3030' ]).flags.port).toBe(3030);
 	expect(parse_argv([ '-p', '9' ]).flags.port).toBe(9);
 	expect(parse_argv([ '--port=4040' ]).flags.port).toBe(4040);
@@ -49,6 +62,7 @@ test('help_text includes the version', () => {
 	expect(help_text('1.2.3')).toMatch(/1\.2\.3/);
 	expect(help_text('1.2.3')).toMatch(/alumna add/);
 	expect(help_text('1.2.3')).toMatch(/--ssg/);
+	expect(help_text('1.2.3')).toMatch(/alumna rebuild/);
 });
 
 test('is_cli_entry', () => {
@@ -150,6 +164,34 @@ test('preview success and failure', async () => {
 	expect(mock.out.exit).toBeNull();
 	mock.Alumna = class { constructor () {} async preview () { return false; } };
 	await run_cli([ 'preview' ], mock);
+	expect(mock.out.exit).toBe(1);
+});
+
+test('rebuild route, id, listen, and failure', async () => {
+	const mock = io();
+	let seen;
+	mock.Alumna = class {
+		constructor () {}
+		async rebuild (opts) { seen = opts; return true; }
+		async listen_rebuild () { return true; }
+	};
+	await run_cli([ 'rebuild', '--route', '/about', '--id', 'post:1' ], mock);
+	expect(seen.routes).toEqual([ '/about' ]);
+	expect(seen.ids).toEqual([ 'post:1' ]);
+	await run_cli([ 'rebuild', '--listen' ], mock);
+	expect(mock.out.exit).toBeNull();
+	mock.Alumna = class { constructor () {} async rebuild () { return false; } };
+	await run_cli([ 'rebuild', '--route', '/' ], mock);
+	expect(mock.out.exit).toBe(1);
+	mock.Alumna = class { constructor () {} async listen_rebuild () { return false; } };
+	await run_cli([ 'rebuild', '--listen' ], mock);
+	expect(mock.out.exit).toBe(1);
+});
+
+test('missing flag value is an error', async () => {
+	const mock = io();
+	await run_cli([ 'rebuild', '--route' ], mock);
+	expect(mock.out.errors.join('')).toMatch(/Missing value for --route/);
 	expect(mock.out.exit).toBe(1);
 });
 
