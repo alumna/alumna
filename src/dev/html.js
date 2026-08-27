@@ -1,5 +1,6 @@
 import { default_import_map } from './defaults.js';
-import { normalize_base } from '../utils/base.js';
+import { normalize_base, with_base } from '../utils/base.js';
+import { sri_hash, with_integrity } from '../utils/sri.js';
 
 function escape_attr (value) {
 	return String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
@@ -45,7 +46,11 @@ export function inject_html (source, opts = {}) {
 	const base = normalize_base(opts.base);
 	const runtime = (base || '') + '/_alumna/runtime.js';
 	const map_obj = opts.import_map || default_import_map(base);
-	const map = '<script type="importmap">' + JSON.stringify(map_obj) + '</script>\n';
+	const extra = {};
+	// Hash the served runtime bytes so `import from 'alumna'` matches SRI.
+	if (opts.runtime)
+		extra[with_base(base, '/_alumna/runtime.js')] = sri_hash(opts.runtime);
+	const map = '<script type="importmap">' + JSON.stringify(with_integrity(map_obj, extra)) + '</script>\n';
 	const css = (opts.css_hrefs || []).map(href => '<link rel="stylesheet" href="' + escape_attr(href) + '">\n').join('');
 	const preload = (opts.preload_hrefs || []).map(href => '<link rel="modulepreload" href="' + escape_attr(href) + '">\n').join('');
 	const extra_head = opts.head || '';

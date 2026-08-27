@@ -2,6 +2,7 @@ import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { ensure_svelte_root, runtime_source } from '../pack/assets.js';
 import { with_base } from '../utils/base.js';
+import { integrity_for, with_integrity } from '../utils/sri.js';
 import { collect_import_uses, merge_svelte_uses } from './rewrite.js';
 import { load_rolldown } from './rolldown-load.js';
 
@@ -218,7 +219,8 @@ export async function bundle_vendor ({
 		throw new Error('Failed to bundle libraries: ' + (error.message || error));
 	}
 
-	return { files, import_map: { imports } };
+	// SRI for vendor URLs in the import map. Relative chunks are not listed.
+	return { files, import_map: with_integrity({ imports }, integrity_for(imports, files, base)) };
 }
 
 export async function minify_module (code, filename, { sourcemap = false } = {}) {

@@ -102,6 +102,16 @@ test('compile success, print helpers, memory_from, close', async () => {
 	expect(memory.has('/b.js')).toBe(true);
 	expect(memory.has('/_alumna/match.js')).toBe(true);
 	expect(memory.get('/_alumna/runtime.js').body).toMatch(/mount/);
+	expect(memory.get('/index.html').body).toMatch(/"integrity"/);
+	a.last_compiled = compiled;
+	unlinkSync(join(cwd, 'src/index.html'));
+	const before = memory.get('/index.html').body;
+	a.refresh_shell(memory);
+	expect(memory.get('/index.html').body).toBe(before);
+	writeFileSync(join(cwd, 'src/index.html'), INDEX_HTML.replace('</head>', '<title>T</title></head>'));
+	memory.delete('/_alumna/runtime.js');
+	a.refresh_shell(memory);
+	expect(memory.get('/index.html').body).toMatch(/<title>T<\/title>/);
 	await a.close();
 });
 
@@ -155,6 +165,12 @@ test('dev serves, recompiles, and close', async () => {
 	const port = a.httpd.server.address().port;
 	const html = await (await fetch('http://127.0.0.1:' + port + '/')).text();
 	expect(html).toMatch(/importmap/);
+	writeFileSync(join(cwd, 'src/index.html'), '<!DOCTYPE html><html><head><title>Next</title><meta name="x" content="y"></head><body></body></html>');
+	await new Promise(resolve => setTimeout(resolve, 250));
+	const reloaded = await (await fetch('http://127.0.0.1:' + port + '/')).text();
+	expect(reloaded).toMatch(/<title>Next<\/title>/);
+	expect(reloaded).toMatch(/content="y"/);
+	expect(reloaded).toMatch(/importmap/);
 	writeFileSync(join(cwd, 'src/components/Home.svelte'), '<p>next</p>');
 	await new Promise(resolve => setTimeout(resolve, 200));
 	const home_js = await (await fetch('http://127.0.0.1:' + port + '/components/Home.js')).text();

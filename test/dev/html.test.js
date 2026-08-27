@@ -93,3 +93,15 @@ test('data script is injected and escaped', () => {
 	const no_body = inject_html('<p>x</p>', { data: { n: 2 } });
 	expect(no_body).toMatch(/alumna-data/);
 });
+
+test('runtime bytes add SRI on the import map', () => {
+	const runtime = 'export const x = 1;\n';
+	const out = inject_html('<head></head>', {
+		import_map: { imports: { alumna: '/_alumna/runtime.js' }, integrity: { '/_alumna/vendor/a.js': 'sha384-old' } },
+		runtime
+	});
+	expect(out).toMatch(/"integrity"/);
+	expect(out).toMatch(/sha384-/);
+	expect(out).toMatch(/\/_alumna\/runtime\.js/);
+	expect(inject_html('<head></head>', { runtime: '' })).toMatch(/importmap/);
+});

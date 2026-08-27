@@ -59,6 +59,8 @@ function note_warnings (warnings, prefix, list) {
 }
 
 function compile_server_graph (dir, compiled, project_root, warnings) {
+	// Temp .js files are ESM. Node 22–24 treat a folder of .js as CJS unless this is set.
+	writeFileSync(join(dir, 'package.json'), '{"type":"module"}\n');
 	const components = compiled.graph.components;
 	for (const id of Object.keys(components)) {
 		const node = components[id];
@@ -153,7 +155,7 @@ function jobs_for (compiled, only_paths) {
 	return { ok: true, jobs };
 }
 
-async function pages_for_routes (dir, compiled, src_html, title, base, warnings, only_paths) {
+async function pages_for_routes (dir, compiled, src_html, title, base, warnings, only_paths, runtime) {
 	const App = (await import(pathToFileURL(join(dir, 'App.js')).href)).default;
 	const { route: ssg_route } = await import(pathToFileURL(join(dir, 'alumna.js')).href);
 	const cache = new Map();
@@ -192,7 +194,8 @@ async function pages_for_routes (dir, compiled, src_html, title, base, warnings,
 				body: html.body,
 				head: html.head,
 				ssg: true,
-				data
+				data,
+				runtime
 			});
 			prerender.push(path);
 		}
@@ -211,7 +214,8 @@ export async function render_ssg ({
 	base = '',
 	project_root,
 	tmp_dir,
-	paths
+	paths,
+	runtime
 } = {}) {
 	if (!compiled || !compiled.ok)
 		return fail({ ssg: 'Compile failed before SSG' });
@@ -227,7 +231,7 @@ export async function render_ssg ({
 		const prerender_errors = await resolve_prerender_lists(compiled.routes);
 		if (prerender_errors.length)
 			return fail(Object.fromEntries(prerender_errors.map((message, i) => [ 'app.js#' + (i + 1), message ])), warnings);
-		return await pages_for_routes(dir, compiled, src_html, title, base, warnings, paths);
+		return await pages_for_routes(dir, compiled, src_html, title, base, warnings, paths, runtime);
 	}
 	catch (error) {
 		return fail({ ssg: error.message }, warnings);

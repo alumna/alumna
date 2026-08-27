@@ -1,5 +1,13 @@
 # Alumna changelog
 
+## 4.0.0-alpha.7 — 2026-08-27
+
+- `alumna dev`: a change to `src/index.html` (title and other shell HTML) shows in the browser without a restart.
+- Vendor import map includes SRI (`integrity`) hashes. The runtime URL is hashed too.
+- GitHub Actions CI **verified** on PRs: Node 24, Bun 1.4.0, Jest 100% four-metric (439 tests), Codecov coverage and JUnit Test Analytics.
+- SSG temp dir includes `"type":"module"` so Node 22–24 can load the server files (GitHub Actions Node 24).
+- Jest 100% four-metric (439 tests).
+
 ## 4.0.0-alpha.6 — 2026-08-27
 
 - Compiled `alumna` Rolldown cache: relative `@rolldown/pluginutils` imports; native `.node` in `rolldown/dist` and `rolldown/dist/shared`; `.ok` marker `layout-2`.

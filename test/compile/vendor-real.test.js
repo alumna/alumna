@@ -3,6 +3,7 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { bundle_vendor, minify_module } from '../../src/compile/vendor.js';
+import { sri_hash } from '../../src/utils/sri.js';
 
 test('real rolldown bundles a tiny library', async () => {
 	const dir = mkdtempSync(join(tmpdir(), 'alumna-real-vendor-'));
@@ -23,6 +24,10 @@ test('real rolldown bundles a tiny library', async () => {
 	expect(files.some(name => name.startsWith('_alumna/vendor/'))).toBe(true);
 	expect(out.import_map.imports['tiny-lib']).toMatch(/\/_alumna\/vendor\//);
 	expect(out.import_map.imports.svelte).toMatch(/\/_alumna\/vendor\//);
+	const svelte_url = out.import_map.imports.svelte;
+	const svelte_file = svelte_url.slice(1);
+	expect(out.import_map.integrity[svelte_url]).toMatch(/^sha384-/);
+	expect(out.import_map.integrity[svelte_url]).toBe(sri_hash(out.files[svelte_file]));
 	expect(Object.keys(out.files).some(name => name.endsWith('.map'))).toBe(true);
 }, 30000);
 
