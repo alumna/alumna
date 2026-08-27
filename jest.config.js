@@ -13,6 +13,10 @@ export default {
 			lines: 100
 		}
 	},
+	reporters: [
+		'default',
+		[ 'jest-junit', { outputDirectory: './junit', outputName: 'junit.xml' } ]
+	],
 	moduleNameMapper: {
 		'^/_alumna/app\\.js$': '<rootDir>/test/runtime/mocks/app.js',
 		'^/_alumna/config\\.js$': '<rootDir>/test/runtime/mocks/config.js',

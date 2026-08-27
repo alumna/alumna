@@ -3,6 +3,7 @@ node_modules/
 /dist/
 vendor/
 coverage/
+junit/
 *.log
 .alumna-cache/
 .DS_Store

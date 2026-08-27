@@ -84,6 +84,7 @@ test('bundle_vendor empty maps only alumna when svelte emit is empty', async () 
 		sourcemap: false
 	});
 	expect(out.import_map.imports.alumna).toBe('/_alumna/runtime.js');
+	expect(out.import_map.integrity).toBeUndefined();
 	expect(out.files).toEqual({});
 	const empty = await bundle_vendor({});
 	expect(empty.import_map.imports.alumna).toBe('/_alumna/runtime.js');
@@ -110,6 +111,7 @@ test('bundle_vendor always maps svelte for the runtime', async () => {
 		sourcemap: false
 	});
 	expect(out.import_map.imports.svelte).toBe('/_alumna/vendor/svelte-index-aaa.js');
+	expect(out.import_map.integrity['/_alumna/vendor/svelte-index-aaa.js']).toMatch(/^sha384-/);
 	const plugin = captured[0].plugins[0];
 	expect(plugin.load('\0alumna-esm-env:esm-env')).toMatch(/DEV = true/);
 	expect(plugin.load('\0alumna-esm-env:esm-env/development')).toMatch(/true/);
@@ -172,6 +174,8 @@ test('bundle_vendor svelte + libraries + assets + maps', async () => {
 	});
 	expect(out.import_map.imports['svelte/internal/client']).toBe('/app/_alumna/vendor/svelte-internal-client-aaa.js');
 	expect(out.import_map.imports.marked).toBe('/app/_alumna/vendor/marked-bbb.js');
+	expect(out.import_map.integrity['/app/_alumna/vendor/svelte-internal-client-aaa.js']).toMatch(/^sha384-/);
+	expect(out.import_map.integrity['/app/_alumna/vendor/marked-bbb.js']).toMatch(/^sha384-/);
 	expect(out.files['_alumna/vendor/svelte-internal-client-aaa.js']).toMatch(/sourceMappingURL/);
 	expect(out.files['_alumna/vendor/note.txt']).toBe('hi');
 	expect(Buffer.isBuffer(out.files['_alumna/vendor/bin.dat'])).toBe(true);

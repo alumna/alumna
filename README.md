@@ -2,7 +2,7 @@
 
 Opinionated meta-framework for [Svelte](https://svelte.dev) 5. You write routes and components. Alumna handles routing, on-demand loading, and the bundler.
 
-**4.0.0-alpha.6**
+**4.0.0-alpha.7**
 
 ## Index
 
@@ -50,7 +50,7 @@ cd my-app
 alumna dev
 ```
 
-Open `http://localhost:3030`. Live reload is on. A compile error shows an overlay; the last good compile stays in memory.
+Open `http://localhost:3030`. Live reload is on, including `src/index.html`. A compile error shows an overlay; the last good compile stays in memory.
 
 ## Commands
 
@@ -436,6 +436,8 @@ bun run build:binary    # writes dist/alumna
 ```
 
 Tests must stay at 100% statements, branches, functions, and lines on `src/**`. Cover both unit tests and integration / real-browser tests. `bun run build:binary` bundles Alumna with Rolldown, then `bun build --compile`. The binary does not embed Rolldown’s native binding.
+
+GitHub Actions runs `bun run test` on pull requests and uploads coverage to Codecov.
 
 ## License
 

@@ -53,6 +53,13 @@ function write_changed_files (out, files) {
 		write_if_changed(join(out, path), files[path]);
 }
 
+export function read_build_runtime (out) {
+	const file = join(out, '_alumna/runtime.js');
+	if (!existsSync(file))
+		return;
+	return readFileSync(file);
+}
+
 export async function run_rebuild (ctx, opts = {}) {
 	const out = ctx.out;
 	if (!existsSync(join(out, 'alumna-manifest.json')))
@@ -78,7 +85,8 @@ export async function run_rebuild (ctx, opts = {}) {
 		title: ctx.title,
 		base: ctx.base,
 		project_root: ctx.project_root,
-		paths: wanted.paths
+		paths: wanted.paths,
+		runtime: read_build_runtime(out)
 	});
 	if (!ssg.ok)
 		return { ok: false, errors: ssg.errors, warnings: ssg.warnings, paths: [] };

@@ -1,10 +1,10 @@
 # Alumna 4.0 — Living Plan
 
-> **Status:** draft 1.18 — 2026-08-27. Decisions locked. **4.0.0-alpha.6** is the current slice. Next conversation: `src/index.html` live reload in `alumna dev`; import-map integrity; public GitHub binary (CI + Codecov first). Jest four-metric coverage stays **100%** on `src/**`. Tests cover unit, integration, and Chromium e2e. Contributors use **Bun only**. Docs rules are in §0.5. Coding and text rules are in §0.4.
+> **Status:** draft 1.19 — 2026-08-27. Decisions locked. **4.0.0-alpha.7** is the current slice. Next conversation: public GitHub binary download URL (CI + Codecov are in). Jest four-metric coverage stays **100%** on `src/**`. Tests cover unit, integration, and Chromium e2e. Contributors use **Bun only**. Docs rules are in §0.5. Coding and text rules are in §0.4.
 >
 > **Purpose of this file:** source of truth for Alumna 4.0. Implementation follows this file, not chat history. This file also coordinates work across phases until a contributor guide exists.
 >
-> **How to continue in a new conversation:** *“Read `ALUMNA-4.0-PLAN.md` draft 1.18. Start from §0 (delivery + tests + next work). Follow §0.2 (unit + integration + Chromium e2e), §0.4 coding rules, and §0.5 docs rules. Do not re-litigate the Decision Log unless I ask.”*
+> **How to continue in a new conversation:** *“Read `ALUMNA-4.0-PLAN.md` draft 1.19. Start from §0 (delivery + tests + next work). Follow §0.2 (unit + integration + Chromium e2e), §0.4 coding rules, and §0.5 docs rules. Do not re-litigate the Decision Log unless I ask.”*
 
 Legend used throughout:
 
@@ -12,7 +12,7 @@ Legend used throughout:
 | --- | --- |
 | `[HISTORICAL]` | What previous Alumna versions actually did (verified in source) |
 | `[DECIDED]` | Locked (was `[PROPOSED]` / `[RECOMMENDED DEFAULT]` / an answered `[OPEN]`) |
-| `[SHIPPED]` | In `4.0.0-alpha.6` on disk, with the caveats listed in §0.1 |
+| `[SHIPPED]` | In `4.0.0-alpha.7` on disk, with the caveats listed in §0.1 |
 | `[ALTERNATIVE]` | A path we considered and rejected, kept so we do not re-litigate it |
 | `[DEFERRED]` | Intentionally not in the first 4.0.0 slice |
 | `[OPEN]` | None. All product questions in §12/§15 are answered. |
@@ -29,9 +29,11 @@ Alumna 4.0 is a from-scratch rebuild, **inspired by** 2.0/3.0, not a port. Every
 
 Any later change to product or process must edit this file and append the Decision Log or the revision log. At session end also follow §0.5.
 
-### 0.1 What 4.0.0-alpha.6 already delivered `[SHIPPED]`
+### 0.1 What 4.0.0-alpha.7 already delivered `[SHIPPED]`
 
-Package: `@alumna/alumna@4.0.0-alpha.6`. CLI for contributors: `bun src/cli.js` (bin `alumna`). Authors will install a **single binary**; npm is not the author install channel (README). `bun run build:binary` writes `dist/alumna`.
+Package: `@alumna/alumna@4.0.0-alpha.7`. CLI for contributors: `bun src/cli.js` (bin `alumna`). Authors will install a **single binary**; npm is not the author install channel (README). `bun run build:binary` writes `dist/alumna`.
+
+**Alpha.7:** `alumna dev` re-reads `src/index.html` on a `reload` watch (title and other shell HTML) and then SSE-reloads. Vendor import map includes SRI `integrity` (sha384) for mapped vendor URLs; the served runtime bytes are hashed too. GitHub Actions runs Jest, uploads coverage to Codecov, and uploads JUnit for Test Analytics (`CODECOV_TOKEN`). Public binary URL still waits.
 
 **Alpha.6 cache fix:** a compiled Bun binary cannot resolve npm package names (`@rolldown/pluginutils`, `@rolldown/binding-*`) from Rolldown files on disk. `ensure_rolldown` rewrites those pluginutils imports to relative paths and copies the native `.node` into `rolldown/dist` and `rolldown/dist/shared`. Cache marker `layout-2` in `.ok` so `alumna setup` rebuilds an alpha.5 cache that only had `dist/index.mjs`. The Svelte vendor pass stubs `esm-env`; `clsx` is written next to the cached Svelte files. Authors need a new `dist/alumna`; the alpha.5 binary cannot repair this.
 
@@ -48,11 +50,11 @@ src/static/
 
 **Route language that works today:** `app.areas`, `app.route`, `app.group` (prefix and `group:name`), comma aliases `'/, /home'`, params `:id`, `redirect`, **named layouts** (`app.layout.name = { component, areas }`, `layout: 'name'` on a route), **middlewares** (`export default` in `src/middlewares/*.js`, `middleware: ['auth']`, `app.middleware` global, async, before load). Array middleware form is rejected (Q30). VM sandbox + JSON clone out of the sandbox (Node 26 `deepEqual` is realm-strict).
 
-**Compiler:** route graph from `app.js` → only reachable `.svelte` files → `svelte/compiler` `generate:'client'` (and `generate:'server'` for SSG) → Acorn rewrite of import/export specifiers → per-route `deps` → generated App shell with keyed `$state` areas, PascalCase dynamic tags, snippet props for named layouts, and `$props`/`$derived` so SSG can hydrate then `show()` owns identity. `show({ layout, areas })` only writes changed constructors. Dev CSS **injected**; build CSS **external** (fetched before mount; skipped when a `<link rel="stylesheet">` is already in the page). Unused components are not compiled. Middleware files are copied as ESM to `/middlewares/*.js`. Bare npm imports require `alumna add`; Rolldown emits hashed `/_alumna/vendor/` chunks. Svelte internals are tree-shaken from used `$` / named exports. The vendor import map **always** includes `svelte` (`mount` / `hydrate`) because the runtime imports them; compiled components alone only pull `svelte/internal/client`.
+**Compiler:** route graph from `app.js` → only reachable `.svelte` files → `svelte/compiler` `generate:'client'` (and `generate:'server'` for SSG) → Acorn rewrite of import/export specifiers → per-route `deps` → generated App shell with keyed `$state` areas, PascalCase dynamic tags, snippet props for named layouts, and `$props`/`$derived` so SSG can hydrate then `show()` owns identity. `show({ layout, areas })` only writes changed constructors. Dev CSS **injected**; build CSS **external** (fetched before mount; skipped when a `<link rel="stylesheet">` is already in the page). Unused components are not compiled. Middleware files are copied as ESM to `/middlewares/*.js`. Bare npm imports require `alumna add`; Rolldown emits hashed `/_alumna/vendor/` chunks. Svelte internals are tree-shaken from used `$` / named exports. The vendor import map **always** includes `svelte` (`mount` / `hydrate`) because the runtime imports them; compiled components alone only pull `svelte/internal/client`. Import-map `integrity` is sha384 SRI for those vendor URLs and for the served runtime.
 
 **Runtime (`src/runtime/browser.js`):** `import()` + in-memory constructor cache, `Promise.all` of `deps[pattern]`, Navigation API with History fallback, `<a>` intercept, hover prefetch (`mouseover`), `goto` / `redirect` / `prefetch` / `route` object (`path`, `pattern`, `params`, `query`, `layout`). Public API vs boot: `start({ target })` and `boot_runtime(import.meta.url)` (auto-start only when the script URL is `/_alumna/runtime.js`). Middleware chain before load. SSE live reload only when `config.dev` is true. `config.base` prefixes asset URLs and is stripped for route match. If `<body>` has `data-alumna-ssg`, the boot uses `hydrate()` with the current route’s constructors after `load_all`; otherwise `mount()`. Then the existing `show_url` / SPA router.
 
-**Dev server:** in-process `node:http`, memory overlay, SPA fallback, `src/static` pass-through, `fs.watch` with the §17.3 table (`classify_watch`: ignore unused `.svelte` and new dirs; reload static/html; **update** a used `.svelte` with `update_components`; full `recompile` for `app.js` / middlewares / other files). A used `.svelte` change recompiles that module only. New children are compiled. Unreachable children are dropped. Route `deps` update when the child list changes. Vendor chunks rebuild only when library or Svelte imports change. Compile failure keeps the last good graph and serves an overlay page (`overlay_html`) plus SSE reload. Optional `base` strips the prefix before lookup. Preview of an SSG build uses directory index (`/about` → `about/index.html`) and falls back to `_alumna/spa.html` for unknown HTML paths. **Bug (alpha.6):** edits to `src/index.html` (for example `<title>`) do not show until `alumna dev` is stopped and started again. Next conversation.
+**Dev server:** in-process `node:http`, memory overlay, SPA fallback, `src/static` pass-through, `fs.watch` with the §17.3 table (`classify_watch`: ignore unused `.svelte` and new dirs; reload static/html; **update** a used `.svelte` with `update_components`; full `recompile` for `app.js` / middlewares / other files). A used `.svelte` change recompiles that module only. New children are compiled. Unreachable children are dropped. Route `deps` update when the child list changes. Vendor chunks rebuild only when library or Svelte imports change. Compile failure keeps the last good graph and serves an overlay page (`overlay_html`) plus SSE reload. Optional `base` strips the prefix before lookup. Preview of an SSG build uses directory index (`/about` → `about/index.html`) and falls back to `_alumna/spa.html` for unknown HTML paths. A change to `src/index.html` re-injects the shell and reloads.
 
 **Svelte / library vendor:** Rolldown (Alumna dependency). First-run Bun for Svelte vendor is **gone**. Production minify of runtime, `match.js`, and vendor chunks. Hashed vendor filenames. Source maps in dev; optional in build (`sourcemap` in hjson).
 
@@ -122,13 +124,16 @@ src/utils/bin.js              # find_bun for alumna add
 src/utils/cache.js            # ALUMNA_CACHE / XDG / ~/.cache/alumna
 src/utils/tgz.js              # npm tarball extract
 src/utils/platform.js         # Rolldown native package name
+src/utils/sri.js              # import-map SRI (sha384)
 src/utils/embedded.js         # bun compile / $bunfs
 scripts/build-binary.js       # Rolldown-bundle Alumna, then bun compile
+.github/workflows/ci.yml      # Jest + Codecov coverage and JUnit on PRs
+codecov.yml                   # 100% project and patch target
 scaffold/
 test/**/*.test.js             # Jest, 100% four-metric on src/**; Playwright Chromium e2e in test/e2e/
 ```
 
-**Verified in this session:** Jest **100%** statements/branches/functions/lines on `src/**` (424 tests; 2603 / 1953 / 356 / 2530). Chromium e2e: Hello via `alumna dev`; SSG hydrate then SPA click; Q44 param prerender (`/blog/hello`), middleware skip (`/dash`), rebuild of an extra path (`/blog/world`); `data()` hydrate then click. Used `.svelte` watch path recompiles that module only (`update_components`). `bun run build:binary` writes `dist/alumna`; `--help` / `--version` / `new` / `setup` smoke on that file.
+**Verified in this session:** Jest **100%** statements/branches/functions/lines on `src/**` (439 tests; 2721 / 2032 / 369 / 2644). Chromium e2e: Hello via `alumna dev` (import-map `integrity` present); `src/index.html` title live reload; SSG hydrate then SPA click; Q44 param prerender (`/blog/hello`), middleware skip (`/dash`), rebuild of an extra path (`/blog/world`); `data()` hydrate then click. Used `.svelte` watch path recompiles that module only (`update_components`). `bun run build:binary` writes `dist/alumna`; `--help` / `--version` / `new` / `setup` smoke on that file. GitHub Actions workflow is in `.github/workflows/ci.yml`.
 
 **Explicitly not in this slice:**
 
@@ -144,16 +149,16 @@ test/**/*.test.js             # Jest, 100% four-metric on src/**; Playwright Chr
 | `alumna.start({ target })` (Q40a) | **Shipped** (`start({ target })` + `boot_runtime`) |
 | Error overlay in the browser | **Shipped** (`overlay_html` on compile fail) |
 | Selective `on_event` recompile | **Shipped** (`classify_watch` + per-module `update_components`) |
-| Import-map integrity | Not started. Next conversation. |
-| Public GitHub binary download | Not started. Next conversation. Prerequisite: GitHub Actions CI + Codecov on PRs (`CODECOV_TOKEN` secret). |
-| `src/index.html` live reload in `alumna dev` | **Bug.** Shell HTML (for example `<title>`) stays stale until restart. Next conversation. |
+| Import-map integrity | **Shipped** (sha384 SRI on vendor URLs + runtime) |
+| Public GitHub binary download | CI + Codecov **shipped**. Public URL not started. Next conversation. |
+| `src/index.html` live reload in `alumna dev` | **Shipped** |
 | SSG first slice (static paths, hydrate then SPA) | **Shipped** (`4.0.0-alpha.3`) |
 | Q44 route `ssg` / `prerender` (middleware skip, param lists) | **Shipped** (`4.0.0-alpha.4`) |
 | `alumna rebuild` + manifest `lookup` + atomic HTML writes | **Shipped** (`4.0.0-alpha.4`) |
 | `data()` | **Shipped** (Q25: server `data()`, JSON props, `#alumna-data`, `/_alumna/ssg-data.js`, dev `/_alumna/data`) |
-| bun compile binary / npm publish | **Shipped** (`bun run build:binary` → `dist/alumna`). Public GitHub download: next conversation (CI + Codecov first). npm `@alumna/alumna` stays the contingency. |
+| bun compile binary / npm publish | **Shipped** (`bun run build:binary` → `dist/alumna`). Public GitHub download: next conversation (CI + Codecov are in). npm `@alumna/alumna` stays the contingency. |
 | Jest + coverage | **Shipped** (100% four-metric gate on current `src/`) |
-| Chromium e2e | **Shipped** (Hello + SSG click-through + Q44 prerender + rebuild) |
+| Chromium e2e | **Shipped** (Hello + SSG click-through + Q44 prerender + rebuild + `index.html` reload) |
 
 **Known debt to fix, not copy forward:**
 
@@ -163,7 +168,7 @@ test/**/*.test.js             # Jest, 100% four-metric on src/**; Playwright Chr
 4. ~~Import map `'alumna'` auto-start~~ **Done.** `should_auto_start` / `boot_runtime`; `start({ target })` is public.
 5. ~~Bun required for Svelte vendor~~ **Done.** Rolldown vendors Svelte. `find_bun` remains only as a helper for `alumna add` if Bun is on the machine.
 6. Sequential area tags must be PascalCase (`<Nav />`, not `<nav />`) so Svelte treats them as components. Fixed in `ident_from`.
-7. **`src/index.html` in `alumna dev`.** A change (for example `<title>`) does not update the served shell until a full restart. §17.3 already says non-component files refresh. Next conversation.
+7. ~~`src/index.html` in `alumna dev`.~~ **Done.** A change re-injects the shell and SSE-reloads.
 
 ### 0.2 Testing policy — Jest + 100% four-metric coverage `[DECIDED 2026-08-26]`
 
@@ -198,7 +203,11 @@ export default {
   coverageReporters: ['text', 'text-summary', 'lcov', 'json-summary'],
   coverageThreshold: {
     global: { statements: 100, branches: 100, functions: 100, lines: 100 }
-  }
+  },
+  reporters: [
+    'default',
+    [ 'jest-junit', { outputDirectory: './junit', outputName: 'junit.xml' } ]
+  ]
 };
 ```
 
@@ -229,19 +238,17 @@ Turn the 100% `coverageThreshold` **on once the Jest port covers the existing al
    
    100% four-metric coverage stays. Browser tests do not replace unit tests. Pure helpers need unit tests. Author-visible runtime and UI also need integration, and Chromium when a real page is involved.
    
-   **Today:** unit tests, integration tests (CLI, `alumna dev` HTTP, real Rolldown, `alumna rebuild`, `alumna setup` cache), and Chromium e2e (Hello, SSG, Q44 prerender, rebuild, `data()`) are in. Keep Chromium e2e for every later author-visible change.
+   **Today:** unit tests, integration tests (CLI, `alumna dev` HTTP, real Rolldown, `alumna rebuild`, `alumna setup` cache), and Chromium e2e (Hello, SSG, Q44 prerender, rebuild, `data()`, `index.html` reload) are in. Keep Chromium e2e for every later author-visible change.
 
 10. **Contributor machine for the full suite:** Bun (CLI and package manager), Node (Jest only), Playwright Chromium (e2e). Order: `bun install`, then `bunx playwright install --with-deps chromium` once (apt/sudo for OS libraries). `@playwright/test` is already a devDependency; `bunx` runs that local CLI. Do not use `npx`. Firefox is optional. Headless Chromium is enough (no display). See README Developers.
 
 ### 0.3 What the next conversation should do (ordered)
 
-Do **not** restart archaeology. Do **not** re-ask Q1–Q44. Do **not** re-do S0; the spike passed. Do **not** re-do Phase 3. Do **not** re-do used-`.svelte` incremental compile. Do **not** re-do SSG (first slice or Q44). Do **not** re-do Phase 5 rebuild. Do **not** re-do Phase 6 or `data()` (Q25). Do **not** start Architect or HMR unless asked.
+Do **not** restart archaeology. Do **not** re-ask Q1–Q44. Do **not** re-do S0; the spike passed. Do **not** re-do Phase 3. Do **not** re-do used-`.svelte` incremental compile. Do **not** re-do SSG (first slice or Q44). Do **not** re-do Phase 5 rebuild. Do **not** re-do Phase 6 or `data()` (Q25). Do **not** re-do `src/index.html` live reload, import-map integrity, or GitHub Actions CI + Codecov. Do **not** start Architect or HMR unless asked.
 
-1. **`src/index.html` live reload.** In `alumna dev`, a change to the project shell (for example `<title>`) must show without stopping the process. Same for other `src/index.html` content Alumna injects into. Cover with unit + Chromium e2e (§0.2).
-2. **Import-map integrity** (Phase 3 leftover). Hashes / SRI on the vendor import map.
-3. **Public GitHub binary download.** Prerequisite first: GitHub Actions CI that runs the Jest suite and sends coverage to Codecov on opened PRs, using the Actions secret `CODECOV_TOKEN`. Then publish a public download URL for `dist/alumna`. Do not ship the public binary URL before that CI + Codecov path works.
-4. Keep Chromium e2e in the suite for every author-visible change (Hello, navigation, SSG, overlay, rebuild, `data()`, `index.html` reload).
-5. At the end of the session, follow §0.5 (plan + changelog always; README when authors or contributors need a change). Keep Jest 100%. Cover both test directions (§0.2). Do not commit or push unless the author asks.
+1. **Public GitHub binary download.** CI + Codecov are in. Publish a public download URL for `dist/alumna`. Do not treat npm as the author install channel.
+2. Keep Chromium e2e in the suite for every author-visible change (Hello, navigation, SSG, overlay, rebuild, `data()`, `index.html` reload).
+3. At the end of the session, follow §0.5 (plan + changelog always; README when authors or contributors need a change). Keep Jest 100%. Cover both test directions (§0.2). Do not commit or push unless the author asks.
 
 ### 0.4 Coding and text rules `[DECIDED 2026-08-26]`
 
@@ -1646,13 +1653,13 @@ Shipped 2026-08-26 (details in §0.1):
 
 - ~~Rolldown/OXC vendor bundling for npm imports (`alumna add`)~~ **Done**
 - ~~Tree-shaken Svelte client runtime~~ **Done** (used `$` / named exports; not a full bun-split runtime)
-- ~~Minify, hashed shared chunks~~ **Done**. Import-map integrity hashes still optional / not started
+- ~~Minify, hashed shared chunks~~ **Done**. Import-map integrity **Done** (sha384 SRI on vendor URLs + runtime)
 - ~~CSS strategy (Q3): injected-dev / external-build; no FOUC~~ **Done** (fetch CSS before mount)
 - ~~Base path (`/app/` hosted) (Q35)~~ **Done**
 - ~~Source maps in dev, optional in build~~ **Done**
 - ~~Keep 100% Jest coverage as a merge gate~~ **Done**
 
-Leftover from this phase (not a blocker): import-map integrity. **Next conversation.**
+Leftover from this phase (not a blocker): none. Import-map integrity shipped in `4.0.0-alpha.7`.
 
 ### Phase 4 — SSG + hydration `[SHIPPED]` first slice as `4.0.0-alpha.3`
 
@@ -1682,7 +1689,7 @@ Shipped 2026-08-26:
 - ~~Rolldown-bundle + `minify: true` (Oxc **inside Rolldown**) Alumna itself into one JS file, then **`bun build --compile`**. Required. See §3.5.1.~~ **Done** (`bun run build:binary` → `dist/alumna`)
 - ~~First-need download of **Rolldown** into a cache dir. **Not** a separate Oxc binary. Optional `alumna setup` to prefetch Rolldown. See Q6.~~ **Done** (`4.0.0-alpha.6` also rewrites pluginutils imports and copies the `.node` so a compiled binary can load the cache)
 - ~~`alumna add` uses **Bun’s installer inside the same binary** (`BUN_BE_BUN=1`, `--ignore-scripts`). No extra installer download. No Node/Bun on `PATH`. See §3.5.2 / Q42.~~ **Done**
-- **npm `@alumna/alumna`** only if bun compile cannot ship. Compile **can** ship in this alpha; a public GitHub download URL is not out yet. **Next conversation.** Prerequisite: GitHub Actions CI + Codecov on PRs (`CODECOV_TOKEN`). Then the public binary URL.
+- **npm `@alumna/alumna`** only if bun compile cannot ship. Compile **can** ship; GitHub Actions CI + Codecov on PRs **shipped** (`CODECOV_TOKEN`). A public GitHub download URL is not out yet. **Next conversation.**
 - scriptc / AoT later as an optimization, not a gate.
 - Docs: README is the complete author documentation (index, binary install, no npm as the Alumna install channel; first-need Rolldown; `data()`).
 
@@ -1838,6 +1845,7 @@ All `[PROPOSED]` items in the body were accepted on 2026-08-26 unless listed as 
 | 2026-08-26 | — | Phase 6 + Q25 shipped as `4.0.0-alpha.5`: bun compile (`dist/alumna`), first-need Rolldown, `alumna setup`, `BUN_BE_BUN` `add`, `data()`, async `prerender`. |
 | 2026-08-27 | — | Compiled binary could not load the Rolldown cache (`Cannot find package '@rolldown/pluginutils'`). **Fixed in `4.0.0-alpha.6`:** relative imports + `.node` copy + `layout-2` ready marker. |
 | 2026-08-27 | — | Next conversation: `src/index.html` live reload in `alumna dev`; import-map integrity; public GitHub binary. Public binary requires GitHub Actions CI + Codecov on PRs (`CODECOV_TOKEN`) first. Architect and HMR still wait. |
+| 2026-08-27 | — | `4.0.0-alpha.7`: `src/index.html` live reload in `alumna dev`; import-map SRI (`integrity` sha384); GitHub Actions CI + Codecov on PRs. Public binary URL still waits. Architect and HMR still wait. |
 
 ---
 
@@ -1868,6 +1876,7 @@ All `[PROPOSED]` items in the body were accepted on 2026-08-26 unless listed as 
 | 2026-08-26 | 1.16 | Phase 6 + Q25 shipped as `4.0.0-alpha.5`: `data()`, async `prerender`, `bun run build:binary` → `dist/alumna`, first-need Rolldown, `alumna setup`, compiled `alumna add` (`BUN_BE_BUN=1`). Chromium e2e: `data()` hydrate then click. Jest 100% (424 tests). Next: leftovers only if asked (public binary URL, import-map integrity, Architect, HMR). |
 | 2026-08-27 | 1.17 | Compiled-Rolldown cache fix as `4.0.0-alpha.6`: rewrite `@rolldown/pluginutils` to relative paths, copy the `.node` next to the loader, `layout-2` ready marker so `alumna setup` rebuilds a broken alpha.5 cache. Jest 100% (432 tests). Next: leftovers only if asked. |
 | 2026-08-27 | 1.18 | Next conversation ordered: (1) `src/index.html` live reload in `alumna dev`; (2) import-map integrity; (3) public GitHub binary, after GitHub Actions CI + Codecov on PRs (`CODECOV_TOKEN`). Architect and HMR still wait unless asked. |
+| 2026-08-27 | 1.19 | `4.0.0-alpha.7`: `src/index.html` live reload; import-map SRI; GitHub Actions CI + Codecov (`CODECOV_TOKEN`). Jest 100% (439 tests). Next: public GitHub binary URL. Architect and HMR still wait unless asked. |
 
 ---
 
@@ -1927,4 +1936,4 @@ In 4.0 English: validate map → compile graph → rewrite + bundle vendor → e
 
 ---
 
-*End of draft 1.18. Decisions locked. Phase 3–5, Phase 6 distribution, `data()` (Q25), and the compiled-Rolldown cache fix are on disk (`4.0.0-alpha.6`). Contributors use Bun only, Node (Jest), and Playwright Chromium (`bunx`). Next conversation (§0.3): `src/index.html` live reload; import-map integrity; public GitHub binary after CI + Codecov. Follow §0.2 both test directions and §0.5 at session end. Keep Jest 100%. Do not re-read archaeology. Do not re-do S0, Phase 3, SSG, Phase 5, Phase 6, or `data()`.*
+*End of draft 1.19. Decisions locked. Phase 3–5, Phase 6 distribution, `data()` (Q25), the compiled-Rolldown cache fix, `src/index.html` live reload, import-map SRI, and GitHub Actions CI + Codecov are on disk (`4.0.0-alpha.7`). Contributors use Bun only, Node (Jest), and Playwright Chromium (`bunx`). Next conversation (§0.3): public GitHub binary download URL. Follow §0.2 both test directions and §0.5 at session end. Keep Jest 100%. Do not re-read archaeology. Do not re-do S0, Phase 3, SSG, Phase 5, Phase 6, `data()`, `index.html` reload, import-map integrity, or CI.*

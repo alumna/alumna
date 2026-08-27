@@ -139,7 +139,8 @@ export class Alumna {
 			preload_hrefs: extra.preload_hrefs,
 			body: extra.body,
 			head: extra.head,
-			ssg: extra.ssg
+			ssg: extra.ssg,
+			runtime: extra.runtime
 		});
 	}
 
@@ -164,12 +165,25 @@ export class Alumna {
 			memory.set(url, { body, type: mime(path) });
 		}
 		memory.set('/_alumna/match.js', { body: match_js(), type: mime('.js') });
+		const runtime = apply_base_to_runtime(runtime_js(), this.config.base);
 		memory.set('/_alumna/runtime.js', {
-			body: apply_base_to_runtime(runtime_js(), this.config.base),
+			body: runtime,
 			type: mime('.js')
 		});
-		memory.set('/index.html', { body: this.html(compiled), type: mime('.html') });
+		memory.set('/index.html', { body: this.html(compiled, { runtime }), type: mime('.html') });
 		return memory;
+	}
+
+	// Re-read src/index.html into the memory shell, then the browser can reload.
+	refresh_shell (memory) {
+		const html_file = join(this.src_dir(), 'index.html');
+		if (!existsSync(html_file))
+			return;
+		const runtime = memory.get('/_alumna/runtime.js');
+		memory.set('/index.html', {
+			body: this.html(this.last_compiled, { runtime: runtime && runtime.body }),
+			type: mime('.html')
+		});
 	}
 
 	async close () {
@@ -207,6 +221,7 @@ export class Alumna {
 			if (action === 'ignore')
 				return;
 			if (action === 'reload') {
+				this.refresh_shell(memory);
 				this.httpd.reload();
 				return;
 			}
@@ -258,7 +273,7 @@ export class Alumna {
 			this.config.base
 		);
 		const match = (await minify_module(match_js(), 'match.js')).code;
-		const spa_html = this.html(compiled);
+		const spa_html = this.html(compiled, { runtime });
 		let html = spa_html;
 		let pages;
 		let prerender = [];
@@ -270,7 +285,8 @@ export class Alumna {
 				src_html: readFileSync(join(this.src_dir(), 'index.html'), 'utf8'),
 				title: this.config.title,
 				base: this.config.base,
-				project_root: this.config.cwd
+				project_root: this.config.cwd,
+				runtime
 			});
 			if (!ssg.ok) {
 				this.print_errors(ssg.errors);

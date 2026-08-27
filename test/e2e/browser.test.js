@@ -52,6 +52,41 @@ test('Hello in Chromium via alumna dev', async () => {
 				);
 			}
 			expect(await page.textContent('.hello')).toMatch(/Welcome to Alumna/);
+			const map = JSON.parse(await page.locator('script[type="importmap"]').textContent());
+			expect(map.integrity).toBeTruthy();
+			expect(Object.keys(map.integrity).length).toBeGreaterThan(0);
+		});
+	}
+	finally {
+		await a.close();
+	}
+}, 60000);
+
+test('src/index.html live reload in Chromium', async () => {
+	const cwd = mkdtempSync(join(tmpdir(), 'alumna-html-reload-'));
+	cpSync(join(alumna_root, 'scaffold'), cwd, { recursive: true });
+	const a = new Alumna({ cwd });
+	expect(await a.dev()).toBe(true);
+	const port = a.httpd.server.address().port;
+	try {
+		await with_browser(async browser => {
+			const page = await browser.newPage();
+			await page.goto('http://127.0.0.1:' + port + '/', { waitUntil: 'load' });
+			await page.waitForSelector('.hello', { timeout: 15000 });
+			expect(await page.title()).toBe('Alumna');
+			writeFileSync(join(cwd, 'src/index.html'), `<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Reloaded title</title>
+</head>
+<body>
+</body>
+</html>
+`);
+			await page.waitForFunction(() => document.title === 'Reloaded title', { timeout: 15000 });
+			expect(await page.title()).toBe('Reloaded title');
+			expect(await page.textContent('.hello')).toMatch(/Welcome to Alumna/);
 		});
 	}
 	finally {
