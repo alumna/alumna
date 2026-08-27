@@ -155,6 +155,7 @@ test('render_ssg keeps tmp_dir and records warnings', async () => {
 		});
 		expect(ssg.ok).toBe(true);
 		expect(existsSync(join(tmp_dir, 'App.js'))).toBe(true);
+		expect(readFileSync(join(tmp_dir, 'package.json'), 'utf8')).toMatch(/"type":"module"/);
 		expect(ssg.warnings.some(message => /alt/.test(message))).toBe(true);
 	}
 	finally {

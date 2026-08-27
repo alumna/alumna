@@ -59,6 +59,8 @@ function note_warnings (warnings, prefix, list) {
 }
 
 function compile_server_graph (dir, compiled, project_root, warnings) {
+	// Temp .js files are ESM. Node 22–24 treat a folder of .js as CJS unless this is set.
+	writeFileSync(join(dir, 'package.json'), '{"type":"module"}\n');
 	const components = compiled.graph.components;
 	for (const id of Object.keys(components)) {
 		const node = components[id];
