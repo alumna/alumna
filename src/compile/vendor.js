@@ -139,10 +139,21 @@ async function bundle_svelte ({ svelte_uses, base, minify, sourcemap }) {
 			resolveId (id) {
 				if (id.startsWith(SVELTE_VIRTUAL))
 					return id;
+				// Compiled binary svelte-root has no node_modules/esm-env.
+				if (id === 'esm-env' || id.startsWith('esm-env/'))
+					return '\0alumna-esm-env:' + id;
 			},
 			load (id) {
 				if (id.startsWith(SVELTE_VIRTUAL))
 					return sources[id.slice(SVELTE_VIRTUAL.length)];
+				if (id === '\0alumna-esm-env:esm-env')
+					return 'export const BROWSER = true;\nexport const DEV = ' + String(!minify) + ';\nexport const NODE = false;\n';
+				if (id === '\0alumna-esm-env:esm-env/browser')
+					return 'export default true;\n';
+				if (id === '\0alumna-esm-env:esm-env/development')
+					return 'export default ' + String(!minify) + ';\n';
+				if (id === '\0alumna-esm-env:esm-env/node')
+					return 'export default false;\n';
 			}
 		} ]
 	});

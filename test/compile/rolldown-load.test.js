@@ -1,5 +1,5 @@
 import { gzipSync } from 'node:zlib';
-import { mkdtempSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { reset_rolldown, load_rolldown, ensure_rolldown } from '../../src/compile/rolldown-load.js';
@@ -71,10 +71,31 @@ test('load_rolldown downloads when import fails', async () => {
 				version: '1.2.6',
 				dependencies: { '@rolldown/pluginutils': '^1.0.1' }
 			}),
-			'dist/index.mjs': 'export const rolldown = 1;\n'
+			'dist/index.mjs': 'export const rolldown = 1;\n',
+			'dist/note.txt': 'skip',
+			'dist/nested/x.mjs': 'import * as filter from "@rolldown/pluginutils";\n',
+			'dist/shared/open.mjs': 'const m = import("@rolldown/pluginutils/filter");\n',
+			'dist/shared/keep.mjs': 'export const n = 1;\n',
+			'dist/shared/missing.mjs': 'import x from "@rolldown/pluginutils/missing";\n'
 		}),
-		binding: tgz_pkg({ 'package.json': '{"name":"b"}' }),
-		pluginutils: tgz_pkg({ 'package.json': '{"name":"p"}' })
+		binding: tgz_pkg({
+			'package.json': JSON.stringify({
+				name: 'b',
+				main: 'rolldown-binding.linux-x64-gnu.node'
+			}),
+			'rolldown-binding.linux-x64-gnu.node': 'fake-node'
+		}),
+		pluginutils: tgz_pkg({
+			'package.json': JSON.stringify({
+				name: '@rolldown/pluginutils',
+				exports: {
+					'.': './dist/index.mjs',
+					'./filter': './dist/filter/index.mjs'
+				}
+			}),
+			'dist/index.mjs': 'export const n = 1;\n',
+			'dist/filter/index.mjs': 'export const f = 1;\n'
+		})
 	};
 	const out = await load_rolldown({
 		dir,
@@ -89,6 +110,17 @@ test('load_rolldown downloads when import fails', async () => {
 	});
 	expect(out.rolldown).toBe(1);
 	expect(readFileSync(join(dir, 'node_modules/rolldown/dist/index.mjs'), 'utf8')).toMatch(/rolldown/);
+	expect(readFileSync(join(dir, 'node_modules/rolldown/dist/nested/x.mjs'), 'utf8'))
+		.toMatch(/@rolldown\/pluginutils\/dist\/index\.mjs/);
+	expect(readFileSync(join(dir, 'node_modules/rolldown/dist/shared/open.mjs'), 'utf8'))
+		.toMatch(/@rolldown\/pluginutils\/dist\/filter\/index\.mjs/);
+	expect(readFileSync(join(dir, 'node_modules/rolldown/dist/shared/missing.mjs'), 'utf8'))
+		.toMatch(/@rolldown\/pluginutils\/missing/);
+	expect(readFileSync(join(dir, 'node_modules/rolldown/dist/rolldown-binding.linux-x64-gnu.node'), 'utf8'))
+		.toBe('fake-node');
+	expect(readFileSync(join(dir, 'node_modules/rolldown/dist/shared/rolldown-binding.linux-x64-gnu.node'), 'utf8'))
+		.toBe('fake-node');
+	expect(readFileSync(join(dir, '.ok'), 'utf8')).toMatch(/layout-2/);
 	expect(await ensure_rolldown({ dir, version: '1.2.6' })).toBe(dir);
 });
 
@@ -195,4 +227,183 @@ test('load_rolldown force reloads', async () => {
 	await load_rolldown({ import_mod: async () => ({ n: ++n }) });
 	const again = await load_rolldown({ import_mod: async () => ({ n: ++n }), force: true });
 	expect(again.n).toBe(2);
+});
+
+function stub_packs (extra = {}) {
+	return {
+		rolldown: tgz_pkg({
+			'package.json': JSON.stringify({
+				name: 'rolldown',
+				dependencies: { '@rolldown/pluginutils': '1.0.1' }
+			}),
+			'dist/index.mjs': extra.rolldown_index || 'export const rolldown = 1;\n',
+			'dist/use.mjs': extra.use || 'import x from "@rolldown/pluginutils";\n'
+		}),
+		binding: extra.binding || tgz_pkg({ 'package.json': '{}' }),
+		pluginutils: extra.pluginutils || tgz_pkg({
+			'package.json': '{"name":"p","main":"lib.mjs"}',
+			'lib.mjs': 'export const n = 1;\n'
+		})
+	};
+}
+
+test('ensure_rolldown rebuilds a cache without layout-2', async () => {
+	const dir = mkdtempSync(join(tmpdir(), 'alumna-rd-old-'));
+	mkdirSync(join(dir, 'node_modules/rolldown/dist'), { recursive: true });
+	writeFileSync(join(dir, 'node_modules/rolldown/dist/index.mjs'), 'old');
+	writeFileSync(join(dir, '.ok'), '1.2.6\n');
+	await ensure_rolldown({
+		dir,
+		version: '1.2.6',
+		binding: '@rolldown/binding-linux-x64-gnu',
+		fetch: fetch_packs(stub_packs({ rolldown_index: 'export const rolldown = "new";\n' }))
+	});
+	expect(readFileSync(join(dir, 'node_modules/rolldown/dist/index.mjs'), 'utf8')).toMatch(/new/);
+	expect(readFileSync(join(dir, '.ok'), 'utf8')).toMatch(/layout-2/);
+});
+
+test('ensure_rolldown rebuilds a cache without .ok', async () => {
+	const dir = mkdtempSync(join(tmpdir(), 'alumna-rd-nook-'));
+	mkdirSync(join(dir, 'node_modules/rolldown/dist'), { recursive: true });
+	writeFileSync(join(dir, 'node_modules/rolldown/dist/index.mjs'), 'old');
+	await ensure_rolldown({
+		dir,
+		version: '1.2.6',
+		binding: '@rolldown/binding-linux-x64-gnu',
+		fetch: fetch_packs(stub_packs({ rolldown_index: 'export const rolldown = "fresh";\n' }))
+	});
+	expect(readFileSync(join(dir, 'node_modules/rolldown/dist/index.mjs'), 'utf8')).toMatch(/fresh/);
+});
+
+test('ensure_rolldown skips rewrite without pluginutils package.json', async () => {
+	const dir = mkdtempSync(join(tmpdir(), 'alumna-rd-nopkg-'));
+	await ensure_rolldown({
+		dir,
+		version: '1.2.6',
+		binding: '@rolldown/binding-linux-x64-gnu',
+		fetch: fetch_packs(stub_packs({
+			pluginutils: tgz_pkg({ 'dist/index.mjs': 'export const n = 1;\n' })
+		}))
+	});
+	expect(readFileSync(join(dir, 'node_modules/rolldown/dist/use.mjs'), 'utf8'))
+		.toMatch(/@rolldown\/pluginutils"/);
+});
+
+test('ensure_rolldown uses pluginutils main and dist fallback', async () => {
+	const dir = mkdtempSync(join(tmpdir(), 'alumna-rd-main-'));
+	await ensure_rolldown({
+		dir,
+		version: '1.2.6',
+		binding: '@rolldown/binding-linux-x64-gnu',
+		fetch: fetch_packs(stub_packs())
+	});
+	expect(readFileSync(join(dir, 'node_modules/rolldown/dist/use.mjs'), 'utf8'))
+		.toMatch(/from "\.\.\/\.\.\/@rolldown\/pluginutils\/lib\.mjs"/);
+
+	const dir2 = mkdtempSync(join(tmpdir(), 'alumna-rd-fb-'));
+	await ensure_rolldown({
+		dir: dir2,
+		version: '1.2.6',
+		binding: '@rolldown/binding-linux-x64-gnu',
+		fetch: fetch_packs(stub_packs({
+			pluginutils: tgz_pkg({
+				'package.json': '{"name":"p"}',
+				'dist/index.mjs': 'export const n = 1;\n'
+			})
+		}))
+	});
+	expect(readFileSync(join(dir2, 'node_modules/rolldown/dist/use.mjs'), 'utf8'))
+		.toMatch(/from "\.\.\/\.\.\/@rolldown\/pluginutils\/dist\/index\.mjs"/);
+});
+
+test('ensure_rolldown keeps imports when the export file is missing', async () => {
+	const dir = mkdtempSync(join(tmpdir(), 'alumna-rd-miss-'));
+	await ensure_rolldown({
+		dir,
+		version: '1.2.6',
+		binding: '@rolldown/binding-linux-x64-gnu',
+		fetch: fetch_packs(stub_packs({
+			pluginutils: tgz_pkg({
+				'package.json': JSON.stringify({ exports: { '.': './nope.mjs' } })
+			})
+		}))
+	});
+	expect(readFileSync(join(dir, 'node_modules/rolldown/dist/use.mjs'), 'utf8'))
+		.toMatch(/from "@rolldown\/pluginutils"/);
+});
+
+test('ensure_rolldown uses main when exports is not a string', async () => {
+	const dir = mkdtempSync(join(tmpdir(), 'alumna-rd-obj-'));
+	await ensure_rolldown({
+		dir,
+		version: '1.2.6',
+		binding: '@rolldown/binding-linux-x64-gnu',
+		fetch: fetch_packs(stub_packs({
+			pluginutils: tgz_pkg({
+				'package.json': JSON.stringify({
+					exports: { '.': { default: './dist/index.mjs' } },
+					main: 'lib.mjs'
+				}),
+				'lib.mjs': 'export const n = 1;\n'
+			})
+		}))
+	});
+	expect(readFileSync(join(dir, 'node_modules/rolldown/dist/use.mjs'), 'utf8'))
+		.toMatch(/from "\.\.\/\.\.\/@rolldown\/pluginutils\/lib\.mjs"/);
+});
+
+test('ensure_rolldown skips rewrite without rolldown dist', async () => {
+	const dir = mkdtempSync(join(tmpdir(), 'alumna-rd-nodist-'));
+	await ensure_rolldown({
+		dir,
+		version: '1.2.6',
+		binding: '@rolldown/binding-linux-x64-gnu',
+		fetch: fetch_packs({
+			rolldown: tgz_pkg({
+				'package.json': JSON.stringify({
+					name: 'rolldown',
+					dependencies: { '@rolldown/pluginutils': '1.0.1' }
+				})
+			}),
+			binding: tgz_pkg({ 'package.json': '{}' }),
+			pluginutils: tgz_pkg({
+				'package.json': '{"name":"p","main":"lib.mjs"}',
+				'lib.mjs': 'export const n = 1;\n'
+			})
+		})
+	});
+	expect(existsSync(join(dir, 'node_modules/@rolldown/pluginutils/lib.mjs'))).toBe(true);
+	expect(existsSync(join(dir, 'node_modules/rolldown/dist/index.mjs'))).toBe(false);
+});
+
+test('ensure_rolldown skips a binding with no package.json or missing main file', async () => {
+	const dir = mkdtempSync(join(tmpdir(), 'alumna-rd-bind-'));
+	await ensure_rolldown({
+		dir,
+		version: '1.2.6',
+		binding: '@rolldown/binding-linux-x64-gnu',
+		fetch: fetch_packs({
+			rolldown: tgz_pkg({
+				'package.json': '{"name":"rolldown"}',
+				'dist/index.mjs': 'export const rolldown = 1;\n'
+			}),
+			binding: tgz_pkg({ 'README.md': 'x' })
+		})
+	});
+	expect(existsSync(join(dir, 'node_modules/rolldown/dist/index.mjs'))).toBe(true);
+
+	const dir2 = mkdtempSync(join(tmpdir(), 'alumna-rd-bind2-'));
+	await ensure_rolldown({
+		dir: dir2,
+		version: '1.2.6',
+		binding: '@rolldown/binding-linux-x64-gnu',
+		fetch: fetch_packs({
+			rolldown: tgz_pkg({
+				'package.json': '{"name":"rolldown"}',
+				'dist/index.mjs': 'export const rolldown = 1;\n'
+			}),
+			binding: tgz_pkg({ 'package.json': '{"main":"missing.node"}' })
+		})
+	});
+	expect(existsSync(join(dir2, 'node_modules/rolldown/dist/missing.node'))).toBe(false);
 });

@@ -2,7 +2,7 @@
 
 Opinionated meta-framework for [Svelte](https://svelte.dev) 5. You write routes and components. Alumna handles routing, on-demand loading, and the bundler.
 
-**4.0.0-alpha.5**
+**4.0.0-alpha.6**
 
 ## Index
 
@@ -38,7 +38,7 @@ Alumna is **one executable**. Put it on your `PATH`. Do not install Alumna with 
 
 You do not need Node, Bun, or npm on your machine.
 
-The first `alumna dev` or `alumna build` may download Rolldown once (cached). You can run `alumna setup` first if you want that download before you go offline. `alumna add` uses the installer already inside the Alumna binary.
+The first `alumna dev` or `alumna build` download Rolldown once (cached). You can run `alumna setup` first if you want that download before you go offline. A newer Alumna binary uses a new cache folder, so the first run after an upgrade may download again. `alumna add` uses the installer already inside the Alumna binary.
 
 Public binaries for this alpha are not out yet. Until they are, run Alumna from this repository. See [Developers](#developers).
 
@@ -397,13 +397,11 @@ Rebuild writes only those HTML files. It does not rewrite JS unless the compiled
 
 ## Optional store
 
-There is no built-in store. If you want shared state, add `src/store.svelte.js` yourself:
+If you want shared state, import in your components `src/store.svelte.js` and then:
 
 ```js
 export const state = $state({ count: 0 });
 ```
-
-Import it from components. Alumna does not generate this file.
 
 ## Embed
 

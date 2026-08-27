@@ -110,6 +110,9 @@ test('bundle_vendor always maps svelte for the runtime', async () => {
 		sourcemap: false
 	});
 	expect(out.import_map.imports.svelte).toBe('/_alumna/vendor/svelte-index-aaa.js');
+	const plugin = captured[0].plugins[0];
+	expect(plugin.load('\0alumna-esm-env:esm-env')).toMatch(/DEV = true/);
+	expect(plugin.load('\0alumna-esm-env:esm-env/development')).toMatch(/true/);
 });
 
 test('bundle_vendor svelte + libraries + assets + maps', async () => {
@@ -179,9 +182,16 @@ test('bundle_vendor svelte + libraries + assets + maps', async () => {
 	const spec = '\0alumna-svelte:svelte/internal/client';
 	expect(svelte_opts.plugins[0].resolveId(spec)).toBe(spec);
 	expect(svelte_opts.plugins[0].resolveId('other')).toBeUndefined();
+	expect(svelte_opts.plugins[0].resolveId('esm-env')).toBe('\0alumna-esm-env:esm-env');
+	expect(svelte_opts.plugins[0].resolveId('esm-env/browser')).toBe('\0alumna-esm-env:esm-env/browser');
 	expect(svelte_opts.plugins[0].load(spec)).toMatch(/from_html/);
 	expect(svelte_opts.plugins[0].load('\0alumna-svelte:svelte')).toMatch(/mount/);
 	expect(svelte_opts.plugins[0].load('other')).toBeUndefined();
+	expect(svelte_opts.plugins[0].load('\0alumna-esm-env:esm-env')).toMatch(/DEV = false/);
+	expect(svelte_opts.plugins[0].load('\0alumna-esm-env:esm-env/browser')).toMatch(/true/);
+	expect(svelte_opts.plugins[0].load('\0alumna-esm-env:esm-env/development')).toMatch(/false/);
+	expect(svelte_opts.plugins[0].load('\0alumna-esm-env:esm-env/node')).toMatch(/false/);
+	expect(svelte_opts.plugins[0].load('\0alumna-esm-env:esm-env/other')).toBeUndefined();
 	const lib_opts = captured.find(opts => typeof opts.external === 'function');
 	expect(lib_opts.external('svelte')).toBe(true);
 	expect(lib_opts.external('svelte/x')).toBe(true);

@@ -1,45 +1,49 @@
 # Alumna changelog
 
+## 4.0.0-alpha.6 — 2026-08-27
+
+- Compiled `alumna` Rolldown cache: relative `@rolldown/pluginutils` imports; native `.node` in `rolldown/dist` and `rolldown/dist/shared`; `.ok` marker `layout-2`.
+- Svelte vendor stubs `esm-env`. Svelte-root includes `clsx`.
+- Jest 100% four-metric (432 tests).
+
 ## 4.0.0-alpha.5 — 2026-08-26
 
-- `data()` on a route runs on the server at build time (and in `alumna dev`). The result is JSON, passed as the `data` prop, and written into HTML as `#alumna-data`. After the first SSG page, the client loads `/_alumna/ssg-data.js`.
+- Route `data()` on the server at build time and in `alumna dev`. JSON result: `data` prop and `#alumna-data`. After the first SSG page, `/_alumna/ssg-data.js`.
 - `prerender` may be an async function that returns the param list.
-- Author binary: Rolldown-bundle Alumna, then `bun build --compile` (`bun run build:binary` → `dist/alumna`). Scaffold and `svelte/compiler` are in the binary. Rolldown downloads on first `dev` / `build`, or with `alumna setup`.
-- Compiled `alumna add` uses `BUN_BE_BUN=1` and `--ignore-scripts`. Authors still need no Node/Bun/npm on `PATH`.
-- Chromium e2e covers `data()` hydrate then a click. Jest 100% four-metric (424 tests).
+- Author binary: Rolldown-bundle Alumna, then `bun build --compile` (`bun run build:binary` → `dist/alumna`). Scaffold and `svelte/compiler` in the binary. Rolldown on first `dev` / `build`, or `alumna setup`.
+- Compiled `alumna add`: `BUN_BE_BUN=1`, `--ignore-scripts`.
+- Chromium e2e: `data()` hydrate then a click. Jest 100% four-metric (424 tests).
 
 ## 4.0.0-alpha.4 — 2026-08-26
 
-- SSG follows the Q44 table. Static routes with no route middleware get HTML. Route `middleware` skips SSG unless `ssg: true`. Global `app.middleware` does not skip. `ssg: false` is always SPA. Param routes need `prerender: [{ param: value }, ...]`. Redirects and `/*` never get HTML. Empty `prerender: []` writes no pages for that pattern.
-- `alumna rebuild --route <path>` and `--id <contentId>` rebuild one or more SSG pages from an existing `build/`. `--listen` starts a localhost `/notify` endpoint. Manifest `lookup` maps content keys (route paths in this alpha) to URLs. HTML writes are atomic. JS is rewritten only when compiled files changed.
-- Hydrate sets `route` (including params) before the first client paint so param pages match the SSG HTML.
-- Chromium e2e covers Hello, SSG click-through, param prerender, middleware skip, and rebuild of an extra path.
+- SSG (Q44): static route, no route middleware → HTML. Route `middleware` → SPA unless `ssg: true`. Global `app.middleware` does not skip. `ssg: false` → SPA. Param routes: `prerender: [{ param: value }, ...]`. Redirects and `/*`: no HTML. `prerender: []`: no pages for that pattern.
+- `alumna rebuild --route <path>` / `--id <contentId>` from an existing `build/`. `--listen`: localhost `/notify`. Manifest `lookup` (route paths → URLs). Atomic HTML writes. JS rewrite only when compiled files changed.
+- Hydrate sets `route` (including params) before first client paint.
+- Chromium e2e: Hello, SSG click-through, param prerender, middleware skip, rebuild extra path.
 - Jest 100% four-metric (353 tests).
 
 ## 4.0.0-alpha.3 — 2026-08-26
 
-- `alumna build --ssg` and `alumna.hjson` `ssg: true` prerender static routes (no `:param`, no `*`, no redirects). Output is `build/index.html` for `/` and `build/about/index.html` for `/about`, plus `build/_alumna/spa.html` for unknown paths. The first paint hydrates, then the app is a SPA.
-- The vendor import map always includes `svelte` (`mount` and `hydrate`) so the browser can boot the runtime.
-- Chromium e2e covers Hello (`alumna dev`) and SSG hydrate then a click to `/about`.
-- `alumna dev` recompiles only the changed used `.svelte` file. It also compiles new child components and removes unused ones. Route deps update when the child list changes. Vendor chunks rebuild only when library or Svelte imports change.
-- Tests must cover unit tests and integration / real-browser tests. Contributors need Playwright Chromium for the full suite: `bun install`, then `bunx playwright install --with-deps chromium`.
-- Alumna development uses Bun only. Commit `bun.lock`. Rolldown is a contributor devDependency (authors get it on first run later).
-- Plan (not in this alpha yet): which routes SSG. Route middleware skips SSG unless `ssg: true`. Param routes need `prerender: [{ param: value }, ...]`. Optional `ssg: false` / `ssg: true`.
+- `alumna build --ssg` and `alumna.hjson` `ssg: true`: prerender static routes (no `:param`, no `*`, no redirects). `build/index.html` (`/`), `build/about/index.html` (`/about`), `build/_alumna/spa.html` (unknown paths). First paint hydrates, then SPA.
+- Vendor import map always includes `svelte` (`mount`, `hydrate`).
+- `alumna dev`: recompile only the changed used `.svelte` file; compile new children; drop unused; update route `deps` when the child list changes; rebuild vendor only when library or Svelte imports change.
+- Chromium e2e: Hello (`alumna dev`); SSG hydrate then click `/about`.
+- Tests: unit + integration + Chromium e2e. Contributors: Bun only (`bun.lock`); Playwright Chromium; Rolldown is a contributor `devDependency`.
 
 ## 4.0.0-alpha.2 — 2026-08-26
 
 Production-quality SPA slice (Phase 3).
 
-- `alumna add` installs app libraries. Alumna owns `package.json` and bundles used packages into hashed `/_alumna/vendor/` chunks (Rolldown).
-- Tree-shaken Svelte client runtime via used exports. Bun is no longer required to vendor Svelte.
-- Production minify of runtime, match helper, and vendor chunks.
+- `alumna add` installs app libraries. Alumna owns `package.json`. Used packages → hashed `/_alumna/vendor/` chunks (Rolldown).
+- Tree-shaken Svelte client runtime from used exports.
+- Production minify: runtime, match helper, vendor chunks.
 - Optional `alumna.hjson`: `port`, `base`, `out`, `title`, `sourcemap`, `ssg`.
-- Configurable `base` for subfolder / Capacitor hosts.
+- Configurable `base` (subfolder / Capacitor).
 - Source maps in `alumna dev`; optional in `alumna build` (`sourcemap: true`).
-- Build CSS is fetched before mount so routes do not flash unstyled.
-- README is the full author documentation (index, binary install, no npm as the Alumna install channel). Catch-all `/*`, live-reload overlay, hjson output aliases, and the manifest are documented there.
-- Distribution plan: authors need no Node/Bun/npm on `PATH`, including for `alumna add`. Alumna itself is Rolldown-bundled and minified (Oxc inside Rolldown), then bun-compiled. `alumna add` uses Bun’s installer in that same binary (`BUN_BE_BUN=1`). Rolldown downloads on first `dev`/`build`. No separate Oxc CLI.
-- Contributors use Bun (`bun install`, `bun src/cli.js`). Node remains for the Jest suite only.
+- Build CSS fetched before mount.
+- README: index; binary install; no npm as the Alumna install channel; `/*`; live-reload overlay; hjson output aliases; manifest.
+- Distribution (plan): no Node/Bun/npm on `PATH` for authors; Rolldown-bundle + Oxc minify, then bun-compile; `alumna add` via `BUN_BE_BUN=1`; Rolldown on first `dev`/`build`; no separate Oxc CLI.
+- Contributors: Bun (`bun install`, `bun src/cli.js`). Node: Jest only.
 
 ## 4.0.0-alpha.1 — 2026-08-26
 
@@ -54,4 +58,4 @@ First 4.0 slice, rebuilt from scratch on Svelte 5.
 - In-memory dev server, selective watch, compile error overlay
 - Production SPA emit plus `alumna-manifest.json`
 - `.svelte` components, runes-first
-- README is the author documentation (short). Install for authors first; a Developers section for clone and tests.
+- README: author docs (install first); Developers: clone and tests.

@@ -10,6 +10,7 @@ import {
 	write_file_map,
 	scaffold_files,
 	svelte_file_map,
+	svelte_dep_maps,
 	ensure_svelte_root
 } from '../src/pack/assets.js';
 import { alumna_root } from '../src/utils/paths.js';
@@ -34,6 +35,8 @@ test('disk sources', () => {
 	expect(skipped['index.d.ts']).toBeUndefined();
 	expect(skipped['README.md']).toBeUndefined();
 	expect(skipped['types/extra.js']).toBeUndefined();
+	expect(Object.keys(svelte_dep_maps()).sort()).toEqual([ 'clsx', 'esm-env' ]);
+	expect(svelte_dep_maps()['clsx']['package.json']).toMatch(/clsx/);
 	expect(ensure_svelte_root()).toBe(alumna_root);
 });
 
@@ -68,6 +71,8 @@ test('ensure_svelte_root extracts when svelte is not installed', () => {
 	try {
 		const root = ensure_svelte_root(dir);
 		expect(existsSync(join(root, 'node_modules/svelte/package.json'))).toBe(true);
+		expect(existsSync(join(root, 'node_modules/clsx/package.json'))).toBe(true);
+		expect(existsSync(join(root, 'node_modules/esm-env/package.json'))).toBe(true);
 		expect(ensure_svelte_root(dir)).toBe(root);
 	}
 	finally {

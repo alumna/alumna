@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { read_file_map, svelte_file_map, package_version, rolldown_version } from '../pack/assets.js';
+import { read_file_map, svelte_file_map, svelte_dep_maps, package_version, rolldown_version } from '../pack/assets.js';
 import { alumna_root } from '../utils/paths.js';
 
 export function alumna_externals (id) {
@@ -36,6 +36,7 @@ export function collect_release_assets ({
 		runtime: readFileSync(join(root, 'src/runtime/browser.js'), 'utf8'),
 		match: readFileSync(join(root, 'src/compile/match.js'), 'utf8'),
 		scaffold: read_file_map(join(root, 'scaffold')),
-		svelte_files: svelte_file_map()
+		svelte_files: svelte_file_map(),
+		svelte_deps: svelte_dep_maps()
 	};
 }

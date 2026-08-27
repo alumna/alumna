@@ -102,6 +102,31 @@ export function svelte_file_map (dir) {
 	return out;
 }
 
+const SVELTE_VENDOR_DEPS = [ 'esm-env', 'clsx' ];
+
+export function svelte_dep_maps (root = alumna_root) {
+	const live = live_data();
+	if (live && live.svelte_deps)
+		return live.svelte_deps;
+	const out = {};
+	for (let i = 0; i < SVELTE_VENDOR_DEPS.length; i++) {
+		const name = SVELTE_VENDOR_DEPS[i];
+		out[name] = read_file_map(join(root, 'node_modules', name));
+	}
+	return out;
+}
+
+function write_svelte_deps (dest) {
+	const deps = svelte_dep_maps();
+	const names = Object.keys(deps);
+	for (let i = 0; i < names.length; i++) {
+		const name = names[i];
+		const dir = join(dest, 'node_modules', name);
+		if (!existsSync(join(dir, 'package.json')))
+			write_file_map(dir, deps[name]);
+	}
+}
+
 // Contributor: Alumna's own node_modules. Author binary: files from the bundle, written once.
 export function ensure_svelte_root (root = alumna_root) {
 	if (existsSync(join(root, 'node_modules/svelte/package.json')))
@@ -117,5 +142,6 @@ export function ensure_svelte_root (root = alumna_root) {
 		write_file_map(join(dest, 'node_modules/svelte'), files);
 		writeFileSync(join(dest, 'package.json'), '{"type":"module"}\n');
 	}
+	write_svelte_deps(dest);
 	return dest;
 }
