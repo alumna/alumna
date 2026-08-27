@@ -355,3 +355,38 @@ test('spa_file falls back to index.html', () => {
 	writeFileSync(join(disk, 'index.html'), 'home');
 	expect(spa_file(disk).endsWith('index.html')).toBe(true);
 });
+
+test('data endpoint', async () => {
+	const { httpd, url } = await listen({ memory: new Map() });
+	try {
+		expect((await request(url + '/_alumna/data')).status).toBe(404);
+	}
+	finally {
+		await httpd.close();
+	}
+
+	const { httpd: h2, url: u2 } = await listen({
+		memory: new Map(),
+		on_data: async path => {
+			if (path === '/boom')
+				throw new Error('bad data');
+			if (path === '/raw')
+				throw 'raw-fail';
+			if (path === '/none')
+				return undefined;
+			return { path };
+		}
+	});
+	try {
+		const ok = await request(u2 + '/_alumna/data?path=/about');
+		expect(ok.status).toBe(200);
+		expect(JSON.parse(ok.body).path).toBe('/about');
+		expect((await request(u2 + '/_alumna/data?path=/none')).status).toBe(404);
+		expect((await request(u2 + '/_alumna/data?path=/boom')).status).toBe(500);
+		expect((await request(u2 + '/_alumna/data?path=/raw')).status).toBe(500);
+		expect((await request(u2 + '/_alumna/data')).body).toMatch(/"path":"\/"/);
+	}
+	finally {
+		await h2.close();
+	}
+});

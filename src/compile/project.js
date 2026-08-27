@@ -39,8 +39,10 @@ function serialize_routes (routes) {
 		};
 		if (route.ssg === true || route.ssg === false)
 			rec.ssg = route.ssg;
-		if (route.prerender)
+		if (Array.isArray(route.prerender))
 			rec.prerender = route.prerender;
+		if (route.data)
+			rec.has_data = true;
 		out[path] = rec;
 	}
 	return out;

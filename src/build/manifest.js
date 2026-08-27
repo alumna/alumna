@@ -1,7 +1,8 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { package_version } from '../pack/assets.js';
 
-const pkg_version = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version;
+const pkg_version = package_version();
 
 export function alumna_version () {
 	return pkg_version;

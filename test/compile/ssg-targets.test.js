@@ -1,4 +1,4 @@
-import { resolve_rebuild_path, ssg_targets, urls_for_route } from '../../src/compile/ssg-targets.js';
+import { resolve_rebuild_path, ssg_targets, urls_for_route, resolve_prerender_lists } from '../../src/compile/ssg-targets.js';
 
 const home = { redirect: null, middleware: [], ssg: null, prerender: null };
 const auth = { redirect: null, middleware: [ 'auth' ], ssg: null, prerender: null };
@@ -36,6 +36,12 @@ test('urls_for_route follows the Q44 table', () => {
 	expect(urls_for_route('/blog/:slug', { ...post, prerender: null })).toEqual([]);
 	expect(urls_for_route('/blog/:slug', post).map(item => item.path)).toEqual([ '/blog/hello', '/blog/world' ]);
 	expect(urls_for_route('/blog/:slug', guarded_post)).toEqual([]);
+	expect(urls_for_route('/blog/:slug', {
+		redirect: null,
+		middleware: [],
+		ssg: null,
+		prerender: async () => [ { slug: 'x' } ]
+	})).toEqual([]);
 	expect(urls_for_route('/blog/:slug', forced_post).map(item => item.path)).toEqual([ '/blog/hello' ]);
 });
 
@@ -70,4 +76,28 @@ test('resolve_rebuild_path errors', () => {
 	expect(ok.path).toBe('/blog/extra');
 	expect(ok.pattern).toBe('/blog/:slug');
 	expect(ok.params.slug).toBe('extra');
+});
+
+test('resolve_prerender_lists', async () => {
+	expect(await resolve_prerender_lists(null)).toEqual([]);
+	const routes = {
+		'/blog/:slug': {
+			prerender_fn: async () => [ { slug: 'hello' } ],
+			prerender: null
+		},
+		'/ok': { prerender: [ { slug: 'x' } ] },
+		'/bad/:slug': {
+			prerender_fn: async () => { throw new Error('nope'); }
+		},
+		'/wrong/:slug': {
+			prerender_fn: async () => 'nope'
+		},
+		'/str/:slug': {
+			prerender_fn: async () => { throw 'raw'; }
+		}
+	};
+	const errors = await resolve_prerender_lists(routes);
+	expect(routes['/blog/:slug'].prerender).toEqual([ { slug: 'hello' } ]);
+	expect(errors.some(message => /prerender failed/.test(message))).toBe(true);
+	expect(errors.some(message => /prerender must be an array/.test(message))).toBe(true);
 });

@@ -91,3 +91,16 @@ test('creates a missing named directory', () => {
 		process.chdir(prev);
 	}
 });
+
+test('create_project can write an explicit file map', () => {
+	const cwd = mkdtempSync(join(tmpdir(), 'alumna-files-'));
+	const prev = process.cwd();
+	process.chdir(cwd);
+	try {
+		create_project('from-map', { files: { 'src/app.js': 'app' } });
+		expect(readFileSync(join(cwd, 'from-map/src/app.js'), 'utf8')).toBe('app');
+	}
+	finally {
+		process.chdir(prev);
+	}
+});

@@ -1,10 +1,10 @@
 # Alumna 4.0 — Living Plan
 
-> **Status:** draft 1.15 — 2026-08-26. Decisions locked. **4.0.0-alpha.4** is the current slice (Phase 3 + used-`.svelte` incremental compile + Phase 4 SSG including Q44 + Phase 5 selective rebuild). `data()` (Q25) waits. Jest four-metric coverage stays **100%** on `src/**`. Tests cover unit, integration, and Chromium e2e. Contributors use **Bun only**. Docs rules are in §0.5. Coding and text rules are in §0.4.
+> **Status:** draft 1.16 — 2026-08-26. Decisions locked. **4.0.0-alpha.5** is the current slice (Phase 3–5 plus Phase 6 distribution and `data()` / Q25). Jest four-metric coverage stays **100%** on `src/**`. Tests cover unit, integration, and Chromium e2e. Contributors use **Bun only**. Docs rules are in §0.5. Coding and text rules are in §0.4.
 >
 > **Purpose of this file:** source of truth for Alumna 4.0. Implementation follows this file, not chat history. This file also coordinates work across phases until a contributor guide exists.
 >
-> **How to continue in a new conversation:** *“Read `ALUMNA-4.0-PLAN.md` draft 1.15. Start from §0 (delivery + tests + next work). Follow §0.2 (unit + integration + Chromium e2e), §0.4 coding rules, and §0.5 docs rules. Do not re-litigate the Decision Log unless I ask.”*
+> **How to continue in a new conversation:** *“Read `ALUMNA-4.0-PLAN.md` draft 1.16. Start from §0 (delivery + tests + next work). Follow §0.2 (unit + integration + Chromium e2e), §0.4 coding rules, and §0.5 docs rules. Do not re-litigate the Decision Log unless I ask.”*
 
 Legend used throughout:
 
@@ -12,7 +12,7 @@ Legend used throughout:
 | --- | --- |
 | `[HISTORICAL]` | What previous Alumna versions actually did (verified in source) |
 | `[DECIDED]` | Locked (was `[PROPOSED]` / `[RECOMMENDED DEFAULT]` / an answered `[OPEN]`) |
-| `[SHIPPED]` | In `4.0.0-alpha.4` on disk, with the caveats listed in §0.1 |
+| `[SHIPPED]` | In `4.0.0-alpha.5` on disk, with the caveats listed in §0.1 |
 | `[ALTERNATIVE]` | A path we considered and rejected, kept so we do not re-litigate it |
 | `[DEFERRED]` | Intentionally not in the first 4.0.0 slice |
 | `[OPEN]` | None. All product questions in §12/§15 are answered. |
@@ -25,15 +25,15 @@ Alumna 4.0 is a from-scratch rebuild, **inspired by** 2.0/3.0, not a port. Every
 
 **Repo layout `[SHIPPED Q39]`:** this directory **is** Alumna 4.0.0. There is no `alumna-4.0/` subfolder. The archaeology trees (`alumna-2.0/`, `alumna-3.0/`, `alumna-3.0-feature-build/`) were deleted on 2026-08-26. Historical detail lives in §2 of this file and on GitHub.
 
-**Environment this alpha was built on:** Ubuntu 26.04 LXC, Bun **1.4.0**, Node.js **26.7.0** (Jest). Alumna source is JS. `svelte@5.56.10`. Rolldown **1.2.5** vendors Svelte and app libraries (contributor **devDependency**; authors get a first-need download in Phase 6). Contributors use **Bun only** (`bun install`, `bunx`, `bun src/cli.js`). Commit `bun.lock`. Node is still required to run Jest. **The full suite also needs Playwright Chromium** (`bunx playwright install --with-deps chromium` after `bun install`). See §0.2.
+**Environment this alpha was built on:** Ubuntu 26.04 LXC, Bun **1.4.0**, Node.js **26.7.0** (Jest). Alumna source is JS. `svelte@5.56.10`. Rolldown **1.2.5** vendors Svelte and app libraries (contributor **devDependency**; authors get a first-need download). Contributors use **Bun only** (`bun install`, `bunx`, `bun src/cli.js`). Commit `bun.lock`. Node is still required to run Jest. **The full suite also needs Playwright Chromium** (`bunx playwright install --with-deps chromium` after `bun install`). See §0.2.
 
 Any later change to product or process must edit this file and append the Decision Log or the revision log. At session end also follow §0.5.
 
-### 0.1 What 4.0.0-alpha.4 already delivered `[SHIPPED]`
+### 0.1 What 4.0.0-alpha.5 already delivered `[SHIPPED]`
 
-Package: `@alumna/alumna@4.0.0-alpha.4`. CLI for contributors: `bun src/cli.js` (bin `alumna`). Authors will install a **single binary**; npm is not the author install channel (README).
+Package: `@alumna/alumna@4.0.0-alpha.5`. CLI for contributors: `bun src/cli.js` (bin `alumna`). Authors will install a **single binary**; npm is not the author install channel (README). `bun run build:binary` writes `dist/alumna`.
 
-**Commands that run:** `new`, `add`, `dev [--port]`, `build`, `build --ssg`, `rebuild --route` / `--id` / `--listen`, `preview`, `--help`, `--version`. `alumna.hjson` `ssg: true` is the same as `--ssg`.
+**Commands that run:** `new`, `add`, `setup`, `dev [--port]`, `build`, `build --ssg`, `rebuild --route` / `--id` / `--listen`, `preview`, `--help`, `--version`. `alumna.hjson` `ssg: true` is the same as `--ssg`.
 
 **Author project (scaffold in `scaffold/`):**
 
@@ -69,18 +69,19 @@ build/
   _alumna/runtime.js
   _alumna/match.js
   _alumna/spa.html           # SSG only: empty SPA shell for unknown paths
+  _alumna/ssg-data.js        # SSG only: JSON map of path → data()
   _alumna/vendor/            # hashed Svelte (including svelte + internals) + app libraries
   <src/static copied first, generated files overwrite>
 ```
 
-SSG (`alumna build --ssg` or `ssg: true`): Q44 table. Static path with no route middleware → HTML. Route `middleware` skips unless `ssg: true`. Global `app.middleware` does not skip. `ssg: false` always SPA. Param + `prerender: [{ param: value }, ...]` → those URLs. Redirects and `/*` never. Empty `prerender: []` writes no pages for that pattern. Server compile to a temp dir (`generate:'server'`), `svelte/server` `render()`, then delete the temp dir. HTML has CSS links, modulepreload, import map, runtime boot, `data-alumna-ssg` on `<body>`, and SSR body. Hydrate sets `route` (including params) before the first client paint. No `data()` (Q25). `alumna rebuild --route` / `--id` / `--listen` is the Phase 5 primitive (`alumna build --route` is not a separate command).
+SSG (`alumna build --ssg` or `ssg: true`): Q44 table. Static path with no route middleware → HTML. Route `middleware` skips unless `ssg: true`. Global `app.middleware` does not skip. `ssg: false` always SPA. Param + `prerender` (array or async function that returns that array) → those URLs. Redirects and `/*` never. Empty `prerender: []` writes no pages for that pattern. Server compile to a temp dir (`generate:'server'`), `svelte/server` `render()`, then delete the temp dir. HTML has CSS links, modulepreload, import map, runtime boot, `data-alumna-ssg` on `<body>`, SSR body, and optional `#alumna-data`. Hydrate sets `route` (including params) before the first client paint. Route `data()` (Q25) runs on the server at build time; JSON is passed as the `data` prop. `alumna rebuild --route` / `--id` / `--listen` is the Phase 5 primitive (`alumna build --route` is not a separate command).
 
 **Source tree (actual):**
 
 ```
 src/cli.js
 src/cli/run.js                # parse argv, help, boot
-src/alumna.js                 # Alumna class: new/add/dev/build/rebuild/preview
+src/alumna.js                 # Alumna class: new/add/setup/dev/build/rebuild/preview
 src/add/install.js            # alumna add
 src/build/write.js            # SPA emit + atomic_write
 src/build/manifest.js         # alumna-manifest.json + lookup
@@ -88,19 +89,24 @@ src/build/rebuild.js          # alumna rebuild
 src/build/notify.js           # localhost /notify
 src/config/hjson.js           # alumna.hjson reader
 src/config/load.js
-src/compile/read-app.js       # vm.runInNewContext + JSON clone
-src/compile/validate.js       # routes, layouts, middleware names, ssg, prerender
+src/compile/read-app.js       # vm.runInNewContext + clone (keeps data/prerender functions)
+src/compile/validate.js       # routes, layouts, middleware names, ssg, prerender, data
+src/compile/data.js           # data() call, timeout, ssg-data.js helpers
 src/compile/match.js          # shared with the browser via /_alumna/match.js
 src/compile/pattern.js        # :params, fill pattern, concrete paths
 src/compile/graph.js
 src/compile/svelte.js
-src/compile/ssg.js            # server compile, per-route HTML
-src/compile/ssg-targets.js    # Q44 eligibility + prerender expansion
+src/compile/ssg.js            # server compile, per-route HTML, data()
+src/compile/ssg-targets.js    # Q44 eligibility + prerender expansion (array or function)
 src/compile/rewrite.js        # Acorn walk of import/export specifiers + used exports
-src/compile/shell.js          # sequential + snippet layouts
+src/compile/shell.js          # sequential + snippet layouts; data prop
 src/compile/project.js        # compile_project + update_components (used .svelte only)
 src/compile/vendor.js         # Rolldown: svelte tree-shake + app libraries + minify
-src/runtime/browser.js        # loader, router, middleware, start(), hydrate
+src/compile/rolldown-load.js  # first-need Rolldown cache (dynamic import)
+src/pack/assets.js            # disk vs inlined scaffold, runtime, Svelte files
+src/pack/data.js              # live_data stub; release inlines strings here
+src/release/collect.js        # binary asset collect + Rolldown externals
+src/runtime/browser.js        # loader, router, middleware, start(), hydrate, data()
 src/dev/server.js
 src/dev/watch.js              # watch + classify_watch (§17.3) + changed_used_ids
 src/dev/overlay.js            # compile error page
@@ -111,11 +117,16 @@ src/new/copy.js
 src/utils/paths.js
 src/utils/base.js             # Q35 base path
 src/utils/bin.js              # find_bun for alumna add
+src/utils/cache.js            # ALUMNA_CACHE / XDG / ~/.cache/alumna
+src/utils/tgz.js              # npm tarball extract
+src/utils/platform.js         # Rolldown native package name
+src/utils/embedded.js         # bun compile / $bunfs
+scripts/build-binary.js       # Rolldown-bundle Alumna, then bun compile
 scaffold/
 test/**/*.test.js             # Jest, 100% four-metric on src/**; Playwright Chromium e2e in test/e2e/
 ```
 
-**Verified in this session:** Jest **100%** statements/branches/functions/lines on `src/**` (353 tests; 2169 / 1589 / 295 / 2106). Chromium e2e: Hello via `alumna dev`; SSG hydrate then SPA click; Q44 param prerender (`/blog/hello`), middleware skip (`/dash`), rebuild of an extra path (`/blog/world`). Used `.svelte` watch path recompiles that module only (`update_components`).
+**Verified in this session:** Jest **100%** statements/branches/functions/lines on `src/**` (424 tests; 2603 / 1953 / 356 / 2530). Chromium e2e: Hello via `alumna dev`; SSG hydrate then SPA click; Q44 param prerender (`/blog/hello`), middleware skip (`/dash`), rebuild of an extra path (`/blog/world`); `data()` hydrate then click. Used `.svelte` watch path recompiles that module only (`update_components`). `bun run build:binary` writes `dist/alumna`; `--help` / `--version` / `new` / `setup` smoke on that file.
 
 **Explicitly not in this slice:**
 
@@ -125,7 +136,7 @@ test/**/*.test.js             # Jest, 100% four-metric on src/**; Playwright Chr
 | Middleware execution (Q23, Q30) | **Shipped** (before load, async, `export default`) |
 | `alumna.hjson` (Q22) | **Shipped** (`port`, `base`, `out`, `title`, `sourcemap`, `ssg`) |
 | `alumna add` + app `package.json` (Q21) | **Shipped** |
-| Rolldown/OXC, minify, hashed vendor chunks | **Shipped** (Rolldown minify = Oxc; first-need Rolldown download is Phase 6) |
+| Rolldown/OXC, minify, hashed vendor chunks | **Shipped** (Rolldown minify = Oxc; first-need Rolldown download **shipped** in alpha.5) |
 | Configurable `base` (Q35) | **Shipped** |
 | Source maps | **Shipped** (dev on; build via hjson) |
 | `alumna.start({ target })` (Q40a) | **Shipped** (`start({ target })` + `boot_runtime`) |
@@ -135,8 +146,8 @@ test/**/*.test.js             # Jest, 100% four-metric on src/**; Playwright Chr
 | SSG first slice (static paths, hydrate then SPA) | **Shipped** (`4.0.0-alpha.3`) |
 | Q44 route `ssg` / `prerender` (middleware skip, param lists) | **Shipped** (`4.0.0-alpha.4`) |
 | `alumna rebuild` + manifest `lookup` + atomic HTML writes | **Shipped** (`4.0.0-alpha.4`) |
-| `data()` | Not started (Q25) |
-| bun compile binary / npm publish | Not started (Phase 6). README already describes the binary. |
+| `data()` | **Shipped** (Q25: server `data()`, JSON props, `#alumna-data`, `/_alumna/ssg-data.js`, dev `/_alumna/data`) |
+| bun compile binary / npm publish | **Shipped** (`bun run build:binary` → `dist/alumna`). Public GitHub download of that file is not out yet. npm `@alumna/alumna` stays the contingency. |
 | Jest + coverage | **Shipped** (100% four-metric gate on current `src/`) |
 | Chromium e2e | **Shipped** (Hello + SSG click-through + Q44 prerender + rebuild) |
 
@@ -213,16 +224,16 @@ Turn the 100% `coverageThreshold` **on once the Jest port covers the existing al
    
    100% four-metric coverage stays. Browser tests do not replace unit tests. Pure helpers need unit tests. Author-visible runtime and UI also need integration, and Chromium when a real page is involved.
    
-   **Today:** unit tests, integration tests (CLI, `alumna dev` HTTP, real Rolldown, `alumna rebuild`), and Chromium e2e (Hello, SSG, Q44 prerender, rebuild) are in. Keep Chromium e2e for every later author-visible change.
+   **Today:** unit tests, integration tests (CLI, `alumna dev` HTTP, real Rolldown, `alumna rebuild`, `alumna setup` cache), and Chromium e2e (Hello, SSG, Q44 prerender, rebuild, `data()`) are in. Keep Chromium e2e for every later author-visible change.
 
 10. **Contributor machine for the full suite:** Bun (CLI and package manager), Node (Jest only), Playwright Chromium (e2e). Order: `bun install`, then `bunx playwright install --with-deps chromium` once (apt/sudo for OS libraries). `@playwright/test` is already a devDependency; `bunx` runs that local CLI. Do not use `npx`. Firefox is optional. Headless Chromium is enough (no display). See README Developers.
 
 ### 0.3 What the next conversation should do (ordered)
 
-Do **not** restart archaeology. Do **not** re-ask Q1–Q44. Do **not** re-do S0; the spike passed. Do **not** re-do Phase 3. Do **not** re-do used-`.svelte` incremental compile. Do **not** re-do SSG (first slice or Q44). Do **not** re-do Phase 5 rebuild.
+Do **not** restart archaeology. Do **not** re-ask Q1–Q44. Do **not** re-do S0; the spike passed. Do **not** re-do Phase 3. Do **not** re-do used-`.svelte` incremental compile. Do **not** re-do SSG (first slice or Q44). Do **not** re-do Phase 5 rebuild. Do **not** re-do Phase 6 or `data()` (Q25).
 
-1. **Phase 6 / `data()` only if asked.** Distribution (bun compile, first-need Rolldown) and `data()` (Q25) wait. Do not start them on your own.
-2. Keep Chromium e2e in the suite for every author-visible change (Hello, navigation, SSG, overlay, rebuild).
+1. **Leftovers only if asked.** Public GitHub binary download, import-map integrity, Architect, and HMR wait. Do not start them on your own.
+2. Keep Chromium e2e in the suite for every author-visible change (Hello, navigation, SSG, overlay, rebuild, `data()`).
 3. At the end of the session, follow §0.5 (plan + changelog always; README when authors or contributors need a change). Keep Jest 100%. Cover both test directions (§0.2). Do not commit or push unless the author asks.
 
 ### 0.4 Coding and text rules `[DECIDED 2026-08-26]`
@@ -274,7 +285,7 @@ Follow these in every session. Alumna 4.0 is a new project. There is no retro-co
 - Commit `bun.lock`. Ignore npm / yarn / pnpm lockfiles.
 - Use `bunx`, not `npx`.
 - Node is only for Jest (`bun run test` starts Node).
-- Rolldown is a **devDependency**. Contributors get it from `bun install`. The author binary must **not** embed Rolldown’s native binding (dynamic import from a first-need cache, Phase 6). Moving it to `devDependencies` does not by itself stop `bun build --compile` from bundling a static `import 'rolldown'`.
+- Rolldown is a **devDependency**. Contributors get it from `bun install`. The author binary must **not** embed Rolldown’s native binding (dynamic import from a first-need cache). Moving it to `devDependencies` does not by itself stop `bun build --compile` from bundling a static `import 'rolldown'`. `src/compile/vendor.js` uses `load_rolldown()`.
 
 **Git**
 
@@ -813,7 +824,7 @@ Per-component files stay separate. That is the on-demand model. We bundle **depe
 | **OXC as its own CLI** | No | **No.** Oxc minify/transform arrives *inside* Rolldown (`minify: true`). Do not ship a second Oxc binary in 4.0. |
 | Package installer for `alumna add` | **Yes.** Bun’s installer is already inside the bun-compiled Alumna file (`BUN_BE_BUN=1`). | **No** extra download. |
 
-`alumna setup` (Phase 6) prefetches the cache so a machine can go offline after that.
+`alumna setup` prefetches the cache so a machine can go offline after that.
 
 **Ship-all-in-one vs download:** first-need cache is for **Rolldown only**. The Alumna download stays one file. Bun (runtime + package manager) is already inside that file because of `bun compile`. Rolldown is large, native, and NAPI — packing it into every Alumna update is the wrong default. A later GitHub “full” archive (Alumna + Rolldown for that OS) is allowed if offline-first install becomes a real request. It is not the 4.0.0 default.
 
@@ -839,7 +850,7 @@ Q37 clarified: **authors are not required to have Bun or Node on `PATH`** if the
 
 #### 3.5.1 Bundle Alumna itself before `bun compile` `[DECIDED 2026-08-26]`
 
-The author binary is not a zip of the git tree. **This step is required**, not optional polish. Release pipeline (Phase 6):
+The author binary is not a zip of the git tree. **This step is required**, not optional polish. Release pipeline (`4.0.0-alpha.5`):
 
 1. **Rolldown** bundles Alumna’s ESM (CLI, compiler, `svelte/compiler`, Acorn, scaffold as embedded assets). Tree-shake. One JS file.
 2. **`minify: true`** on that file. Rolldown uses the **Oxc minifier** built into Rolldown. Same knob Alumna already uses on app vendor chunks. **No separate Oxc CLI.**
@@ -847,7 +858,7 @@ The author binary is not a zip of the git tree. **This step is required**, not o
 
 Do not minify Alumna during development of Alumna. Minify is for the release artifact.
 
-**What cannot go into that JS file:** Rolldown’s native binding. Keep it as a first-need cache download. Dynamic `import('rolldown')` / NAPI load from the cache dir. In this repo Rolldown is a **devDependency** (contributors still get it from `bun install`). `dependencies` vs `devDependencies` does **not** control `bun build --compile`: a static `import { rolldown } from 'rolldown'` still pulls it in. Phase 6 must externalize that import.
+**What cannot go into that JS file:** Rolldown’s native binding. Keep it as a first-need cache download. Dynamic `import('rolldown')` / NAPI load from the cache dir. In this repo Rolldown is a **devDependency** (contributors still get it from `bun install`). `dependencies` vs `devDependencies` does **not** control `bun build --compile`: a static `import { rolldown } from 'rolldown'` still pulls it in. `load_rolldown()` externalizes that import.
 
 #### 3.5.2 `alumna add` uses Bun’s installer inside the Alumna binary `[DECIDED Q42]`
 
@@ -868,7 +879,7 @@ If Bun later ships `Bun.install()` / `Bun.add()`, switch to the in-process call.
 
 **`[DECIDED]` `alumna add` ignores lifecycle scripts** (`--ignore-scripts`). The tree is for the **browser** bundle.
 
-**Alpha (this repo, `bun src/cli.js`):** still spawn `bun add` or `npm install` if they exist on `PATH` when the process is not a compiled Alumna binary. The `BUN_BE_BUN` path is for the **compiled Alumna binary** (Phase 6). The npm `@alumna/alumna` contingency (if bun compile cannot ship) may keep using Node’s npm.
+**Alpha (this repo, `bun src/cli.js`):** still spawn `bun add` or `npm install` if they exist on `PATH` when the process is not a compiled Alumna binary. The `BUN_BE_BUN` path is for the **compiled Alumna binary**. The npm `@alumna/alumna` contingency (if bun compile cannot ship) may keep using Node’s npm.
 
 #### 3.5.3 Contributor runtime is Bun `[DECIDED Q43]`
 
@@ -1447,7 +1458,7 @@ Exception: a middleware that must inspect a component — not a v1 need.
 
 ## 9. SSG + hydration (v1.x, designed now)
 
-First slice **shipped** in `4.0.0-alpha.3`. Q44 (which routes, including param lists) and Phase 5 rebuild **shipped** in `4.0.0-alpha.4`. `data()` waits.
+First slice **shipped** in `4.0.0-alpha.3`. Q44 (which routes, including param lists) and Phase 5 rebuild **shipped** in `4.0.0-alpha.4`. `data()` and async `prerender` **shipped** in `4.0.0-alpha.5`.
 
 ### 9.0 Which routes get HTML `[DECIDED Q44]`
 
@@ -1510,9 +1521,9 @@ app.route['/blog/:slug'] = {
 
 `[ALTERNATIVE]` rejected: a second map (`app.ssg.include` / `exclude`); infer from JWT or a backend; infer from layout name; `ssg` as both boolean and array; opt-in `ssg: true` on every public page; skip SSG because of global `app.middleware`.
 
-`[DEFERRED]` `prerender` / `data` as async functions. `app.js` still has no `fetch` / `fs` in the VM, then JSON clone drops functions. Keep the declarative list until that reader changes. Architect can also skip the list and rebuild a concrete path it already knows (`/blog/hello`). Content-id lookup for Phase 5 lives on the **manifest**, not as `app.prerender`.
+`[SHIPPED]` `prerender` / `data` as async functions (`4.0.0-alpha.5`). The `app.js` VM has `fetch` (not `fs`). `clone_out` keeps functions. Architect can also skip the list and rebuild a concrete path it already knows (`/blog/hello`). Content-id lookup for Phase 5 lives on the **manifest**, not as `app.prerender`.
 
-**On disk in alpha.4:** Q44 table. Route `ssg` / `prerender` are read. Middleware skip. Param expansion. Manifest `lookup`. `alumna rebuild`.
+**On disk in alpha.5:** Q44 table plus `data()` and async `prerender`. Route `ssg` / `prerender` / `data` are read. Middleware skip. Param expansion. Manifest `lookup`. `alumna rebuild`. `#alumna-data` and `/_alumna/ssg-data.js`.
 
 ### 9.1 Algorithm
 
@@ -1527,7 +1538,7 @@ For each concrete route that SSG can know (alpha.3 = static paths only; later = 
 
 ### 9.2 Data at SSG time
 
-`[DEFERRED Q25]` optional per-route `data` in `app.js` (not in the first SSG slice; add when Architect needs it):
+`[SHIPPED Q25]` optional per-route `data` in `app.js`:
 
 ```js
 app.route[ '/about' ] = {
@@ -1544,7 +1555,7 @@ Passed as props into the content component. Serialized into the HTML for hydrati
 
 This is the hook Architect will later call with CMS content instead of `fetch`.
 
-First SSG slice is **pure** components (no `data()`). The hook’s shape is recorded here so Architect does not invent a second one.
+This is the hook Architect will later call with CMS content instead of `fetch`. **Shipped in `4.0.0-alpha.5`.** Async `prerender` functions use the same server-side timeout helper.
 
 ### 9.3 Hybrid rebuild (Architect era)
 
@@ -1594,8 +1605,8 @@ Each phase produces something you can run. We do not start phase N+1 with phase 
 | **S1. Native ESM component load** | **Done.** Compile → import map → `import()` + `deps` `Promise.all`. Chromium Hello e2e in `test/e2e/browser.test.js`. |
 | **S2. Navigation API + History fallback** | **Done** in `runtime/browser.js`. Chromium e2e clicks `/about` after SSG hydrate. |
 | **S3. svelte/compiler generate client+server** | **Done** (SSG first slice). Client + server compile. Server JS stays in a temp dir; not written to `build/`. |
-| **S4. Rolldown as a library** | **Shipped 2026-08-26.** Rolldown API vendors Svelte (used exports) and app libraries into hashed ESM chunks. Production minify (`minify: true` = Oxc). First-need native Rolldown download is Phase 6. |
-| **S5. scriptc hello** | **Not started** (Phase 6). bun compile is the first binary attempt. |
+| **S4. Rolldown as a library** | **Shipped 2026-08-26.** Rolldown API vendors Svelte (used exports) and app libraries into hashed ESM chunks. Production minify (`minify: true` = Oxc). First-need native Rolldown download **shipped** in alpha.5. |
+| **S5. scriptc hello** | **Not started.** bun compile is the author binary (`4.0.0-alpha.5`). scriptc AoT stays later. |
 
 ### Phase 1 — SPA vertical slice (“Hello Alumna 4”) `[SHIPPED]` as `4.0.0-alpha.1`
 
@@ -1634,7 +1645,7 @@ Shipped 2026-08-26 (details in §0.1):
 - ~~Source maps in dev, optional in build~~ **Done**
 - ~~Keep 100% Jest coverage as a merge gate~~ **Done**
 
-Leftover from this phase (not a blocker): import-map integrity; first-need Rolldown download (Phase 6).
+Leftover from this phase (not a blocker): import-map integrity.
 
 ### Phase 4 — SSG + hydration `[SHIPPED]` first slice as `4.0.0-alpha.3`
 
@@ -1646,7 +1657,7 @@ Shipped 2026-08-26 (details in §0.1):
 - ~~Hydration that then continues as SPA~~ **Done**
 - ~~`alumna build --route` for one-route rebuild can wait~~ **Done as `alumna rebuild --route` / `--id` / `--listen` (Phase 5)**
 - ~~Q44 (`ssg` / `prerender` / middleware skip) **decided**; not in alpha.3~~ **Done** (`4.0.0-alpha.4`)
-- `data()` waits (Q25)
+- ~~`data()` waits (Q25)~~ **Done** (`4.0.0-alpha.5`; async `prerender` too)
 
 ### Phase 5 — Selective rebuild (Architect-facing) `[SHIPPED]` as `4.0.0-alpha.4`
 
@@ -1657,14 +1668,16 @@ Shipped 2026-08-26:
 - ~~Tiny notify HTTP listener (local)~~ **Done** (`alumna rebuild --listen`, `127.0.0.1`, `/notify`)
 - ~~Atomic writes~~ **Done** (`atomic_write`: temp file, then rename)
 
-### Phase 6 — Distribution
+### Phase 6 — Distribution `[SHIPPED]` as `4.0.0-alpha.5`
 
-- Rolldown-bundle + `minify: true` (Oxc **inside Rolldown**) Alumna itself into one JS file, then **`bun build --compile`**. Required. See §3.5.1.
-- First-need download of **Rolldown** into a cache dir. **Not** a separate Oxc binary. Optional `alumna setup` to prefetch Rolldown. See Q6.
-- `alumna add` uses **Bun’s installer inside the same binary** (`BUN_BE_BUN=1`, `--ignore-scripts`). No extra installer download. No Node/Bun on `PATH`. See §3.5.2 / Q42.
-- **npm `@alumna/alumna`** only if bun compile cannot ship.
+Shipped 2026-08-26:
+
+- ~~Rolldown-bundle + `minify: true` (Oxc **inside Rolldown**) Alumna itself into one JS file, then **`bun build --compile`**. Required. See §3.5.1.~~ **Done** (`bun run build:binary` → `dist/alumna`)
+- ~~First-need download of **Rolldown** into a cache dir. **Not** a separate Oxc binary. Optional `alumna setup` to prefetch Rolldown. See Q6.~~ **Done**
+- ~~`alumna add` uses **Bun’s installer inside the same binary** (`BUN_BE_BUN=1`, `--ignore-scripts`). No extra installer download. No Node/Bun on `PATH`. See §3.5.2 / Q42.~~ **Done**
+- **npm `@alumna/alumna`** only if bun compile cannot ship. Compile **can** ship in this alpha; a public download URL is not out yet.
 - scriptc / AoT later as an optimization, not a gate.
-- Docs: README is the complete author documentation (index, binary install, no npm as the Alumna install channel; first-need Rolldown).
+- Docs: README is the complete author documentation (index, binary install, no npm as the Alumna install channel; first-need Rolldown; `data()`).
 
 ### Explicitly not scheduled until you ask
 
@@ -1698,7 +1711,7 @@ Full table is in §15. Narrative answers that needed more than a yes/no:
 
 **Q40.** 4.0 is a new project with a similar language. No extra 2.0 features. No automated migrator, ever (Q28). Q40a: hidden `alumna.start({ target })` for tests/embed, auto-start default. Q40b: no `globalVar`. Q40c: no `alumna install user/repo`.
 
-**Q44 / which routes SSG.** Eligibility and expansion are separate. Master switch remains `--ssg` / hjson. On a route: optional `ssg` (boolean) and `prerender` (array of param objects). Defaults: static path with no route middleware → SSG; route middleware → SPA unless `ssg: true`; param / `*` → SPA unless `prerender`; `ssg: false` always SPA; redirects never. Global `app.middleware` does not skip. No second include/exclude map. Async lists wait with Q25. **Shipped in alpha.4.** Full table in §9.0.
+**Q44 / which routes SSG.** Eligibility and expansion are separate. Master switch remains `--ssg` / hjson. On a route: optional `ssg` (boolean) and `prerender` (array of param objects, or an async function that returns that array). Defaults: static path with no route middleware → SSG; route middleware → SPA unless `ssg: true`; param / `*` → SPA unless `prerender`; `ssg: false` always SPA; redirects never. Global `app.middleware` does not skip. No second include/exclude map. **Shipped in alpha.4**; async lists **shipped in alpha.5** with Q25. Full table in §9.0.
 
 ---
 
@@ -1709,7 +1722,7 @@ Full table is in §15. Narrative answers that needed more than a yes/no:
 - Native ESM `import()`, import maps, parallel `deps` load. No eval, no IIFE, no `Al.lib`.
 - Navigation API + History fallback. HTTPS origins. Capacitor-friendly, not Cordova-special.
 - Hidden Rolldown (first-need download). Oxc minify via Rolldown, not a second binary. Dev server rewritten inside Alumna (Pulsa/Liven ideas, not those packages).
-- CLI: `new`, `dev`, `build`, `rebuild`, `preview`, `add`. Zero config; optional `alumna.hjson`.
+- CLI: `new`, `dev`, `build`, `rebuild`, `preview`, `add`, `setup`. Zero config; optional `alumna.hjson`.
 - Distribution: Rolldown-bundle + Oxc-minify Alumna → **bun compile**. `alumna add` = `BUN_BE_BUN=1` on that same file. npm fallback. scriptc later. Authors need no JS runtime on `PATH`, including for `add` (Q42). Contributors use Bun (Q43); Node remains for Jest only.
 - SPA first. SSG next (`--ssg` / hjson). Manifest from day one. Architect deferred.
 - Middlewares: `export default`, async, `middleware: ['auth']` only, run before load.
@@ -1751,7 +1764,7 @@ Full table is in §15. Narrative answers that needed more than a yes/no:
 
 ## 15. Decision log
 
-All `[PROPOSED]` items in the body were accepted on 2026-08-26 unless listed as rejected below. All `[DEFERRED]` items stay deferred (Architect CMS, HMR, nested layouts, View Transitions, `data()`, protected-route sugar, i18n, SW, JWT helpers, modules marketplace).
+All `[PROPOSED]` items in the body were accepted on 2026-08-26 unless listed as rejected below. All `[DEFERRED]` items stay deferred (Architect CMS, HMR, nested layouts, View Transitions, protected-route sugar, i18n, SW, JWT helpers, modules marketplace).
 
 | Date | ID | Decision |
 | --- | --- | --- |
@@ -1779,7 +1792,7 @@ All `[PROPOSED]` items in the body were accepted on 2026-08-26 unless listed as 
 | 2026-08-26 | Q22 | Zero config. Optional `alumna.hjson` only (not a `.ts` config). |
 | 2026-08-26 | Q23 | Async middleware: yes. |
 | 2026-08-26 | Q24 | First SSG slice on disk: static paths only. |
-| 2026-08-26 | Q25 | No `data()` in the first SSG slice. Shape reserved. |
+| 2026-08-26 | Q25 | No `data()` in the first SSG slice. Shape reserved. **Shipped in `4.0.0-alpha.5`:** per-route `data: async () => {}`, Node-side, JSON props, `#alumna-data`, async `prerender`. |
 | 2026-08-26 | Q44 | SSG eligibility vs expansion. Route `ssg` (boolean) and `prerender` (param objects). Route middleware skips SSG unless `ssg: true`. Global `app.middleware` does not skip. `ssg: false` wins. Param routes need `prerender`. **Shipped in alpha.4.** See §9.0. |
 | 2026-08-26 | Q26 | Package name `@alumna/alumna`, CLI `alumna`. |
 | 2026-08-26 | Q27 | MIT. |
@@ -1813,8 +1826,9 @@ All `[PROPOSED]` items in the body were accepted on 2026-08-26 unless listed as 
 | 2026-08-26 | — | Phase 4 SSG first slice shipped as `4.0.0-alpha.3`. Parametric prerender, `data()`, and `alumna build --route` wait. |
 | 2026-08-26 | Q44 | Which routes SSG: defaults + optional `ssg` / `prerender`. **Shipped in `4.0.0-alpha.4`.** |
 | 2026-08-26 | — | Contributor package manager is **Bun only**. Commit `bun.lock`. Ignore npm / yarn / pnpm lockfiles. Use `bunx`, not `npx`. |
-| 2026-08-26 | — | Rolldown is a **devDependency** in this repo. Authors get a first-need download (Phase 6). `devDependencies` does not stop bun-compile from bundling a static `import 'rolldown'`; that import must be externalized. |
+| 2026-08-26 | — | Rolldown is a **devDependency** in this repo. Authors get a first-need download. `devDependencies` does not stop bun-compile from bundling a static `import 'rolldown'`; that import must be externalized. **Done in alpha.5** (`load_rolldown()`). |
 | 2026-08-26 | — | Q44 and Phase 5 shipped as `4.0.0-alpha.4`: route `ssg` / `prerender`, middleware skip, param lists, manifest `lookup`, `alumna rebuild`, localhost `/notify`, atomic HTML writes. `data()` still waits. |
+| 2026-08-26 | — | Phase 6 + Q25 shipped as `4.0.0-alpha.5`: bun compile (`dist/alumna`), first-need Rolldown, `alumna setup`, `BUN_BE_BUN` `add`, `data()`, async `prerender`. |
 
 ---
 
@@ -1842,6 +1856,7 @@ All `[PROPOSED]` items in the body were accepted on 2026-08-26 unless listed as 
 | 2026-08-26 | 1.13 | Phase 4 SSG first slice shipped as `4.0.0-alpha.3`: static paths, `generate:'server'`, per-route HTML, hydrate then SPA. Vendor import map always includes `svelte` (`mount`/`hydrate`). Chromium e2e: Hello + SSG click-through. Jest 100% (324 tests). Next: leftover SSG / Phase 5 only if asked. |
 | 2026-08-26 | 1.14 | Q44: which routes get SSG. Defaults table in §9.0. Optional route keys `ssg` and `prerender`. Route middleware skips unless `ssg: true`. Not in alpha.3. |
 | 2026-08-26 | 1.15 | Q44 + Phase 5 shipped as `4.0.0-alpha.4`: route `ssg` / `prerender`, middleware skip, param lists, manifest `lookup`, `alumna rebuild --route` / `--id` / `--listen`, atomic HTML writes. Hydrate sets `route` before first paint. Chromium e2e: param prerender, skip `/dash`, rebuild extra path. Jest 100% (353 tests). Next: Phase 6 / `data()` only if asked. |
+| 2026-08-26 | 1.16 | Phase 6 + Q25 shipped as `4.0.0-alpha.5`: `data()`, async `prerender`, `bun run build:binary` → `dist/alumna`, first-need Rolldown, `alumna setup`, compiled `alumna add` (`BUN_BE_BUN=1`). Chromium e2e: `data()` hydrate then click. Jest 100% (424 tests). Next: leftovers only if asked (public binary URL, import-map integrity, Architect, HMR). |
 
 ---
 
@@ -1901,4 +1916,4 @@ In 4.0 English: validate map → compile graph → rewrite + bundle vendor → e
 
 ---
 
-*End of draft 1.15. Decisions locked. Phase 3, used-`.svelte` incremental compile, Phase 4 SSG (including Q44), and Phase 5 selective rebuild are on disk (`4.0.0-alpha.4`). `data()` waits. Contributors use Bun only, Node (Jest), and Playwright Chromium (`bunx`). Next conversation: Phase 6 / `data()` only if asked. Follow §0.2 both test directions and §0.5 at session end. Keep Jest 100%. Do not re-read archaeology. Do not re-do S0, Phase 3, SSG, or Phase 5.*
+*End of draft 1.16. Decisions locked. Phase 3–5, Phase 6 distribution, and `data()` (Q25) are on disk (`4.0.0-alpha.5`). Contributors use Bun only, Node (Jest), and Playwright Chromium (`bunx`). Next conversation: leftovers only if asked. Follow §0.2 both test directions and §0.5 at session end. Keep Jest 100%. Do not re-read archaeology. Do not re-do S0, Phase 3, SSG, Phase 5, Phase 6, or `data()`.*

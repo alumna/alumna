@@ -1,9 +1,10 @@
-import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Alumna as DefaultAlumna } from '../alumna.js';
+import { package_version } from '../pack/assets.js';
+import { is_compiled_url } from '../utils/embedded.js';
 
-const pkg_version = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version;
+const pkg_version = package_version();
 
 export function is_cli_entry (meta_url, argv1) {
 	if (!meta_url || !argv1)
@@ -97,6 +98,9 @@ alumna rebuild --listen [--port 4050]
 
 # serve the build directory
 alumna preview [--port 4040]
+
+# download Rolldown into the cache (optional; also happens on first dev/build)
+alumna setup
 `.trim();
 }
 
@@ -192,6 +196,11 @@ export async function run_cli (argv, io = {}) {
 			return;
 		}
 
+		if (command === 'setup') {
+			await alumna.setup();
+			return;
+		}
+
 		error('Unrecognised command' + (command ? ' ' + command : '') + '. Type alumna --help to see instructions');
 		exit(1);
 	}
@@ -202,8 +211,19 @@ export async function run_cli (argv, io = {}) {
 }
 
 export async function boot_cli (meta_url, argv, io = {}) {
-	if (!is_cli_entry(meta_url, argv[1]))
+	const compiled = io.compiled ?? is_compiled_url(meta_url);
+	if (!compiled && !is_cli_entry(meta_url, argv[1]))
 		return false;
-	await run_cli(argv.slice(2), io);
+	await run_cli(user_argv(argv, compiled), io);
 	return true;
+}
+
+// bun compile: argv[0] is the binary; argv[1] is often /$bunfs/root/alumna.
+export function user_argv (argv, compiled) {
+	if (!compiled)
+		return argv.slice(2);
+	const rest = argv.slice(1);
+	if (rest[0] && rest[0].includes('$bunfs'))
+		return rest.slice(1);
+	return rest;
 }

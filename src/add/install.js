@@ -2,6 +2,7 @@ import { writeFileSync, existsSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { find_bun } from '../utils/bin.js';
+import { is_compiled } from '../utils/embedded.js';
 
 function ensure_package_json (cwd) {
 	const file = join(cwd, 'package.json');
@@ -33,6 +34,18 @@ export function add_packages (cwd, names, deps = {}) {
 
 	const spawn = deps.spawn || spawnSync;
 	ensure_package_json(cwd);
+
+	if (deps.compiled ?? is_compiled()) {
+		const env = Object.assign({}, process.env, { BUN_BE_BUN: '1' });
+		const result = spawn(deps.execPath || process.execPath, [ 'add', '--ignore-scripts', ...list ], {
+			cwd,
+			encoding: 'utf8',
+			env
+		});
+		if (result.status !== 0)
+			fail_spawn(result, 'bun add');
+		return { installer: 'bun', names: list };
+	}
 
 	const bun = (deps.find_bun || find_bun)(spawn);
 	if (bun) {

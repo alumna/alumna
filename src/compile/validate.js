@@ -91,7 +91,8 @@ function area_map_of (value) {
 		layout: value.layout,
 		middleware: value.middleware,
 		ssg: value.ssg,
-		prerender: value.prerender
+		prerender: value.prerender,
+		data: value.data
 	};
 }
 
@@ -116,7 +117,7 @@ function keys_match (wanted, got) {
 	return true;
 }
 
-function read_prerender (value, errors, label, param_keys) {
+export function read_prerender (value, errors, label, param_keys) {
 	if (!Array.isArray(value)) {
 		add_error(errors, label + ' prerender must be an array of param objects');
 		return null;
@@ -322,6 +323,9 @@ export function validate_app (app) {
 			'In the route \'' + raw_path + '\' middleware'
 		);
 
+		if (parsed.data != null && typeof parsed.data !== 'function')
+			errors.push('In the route \'' + raw_path + '\' data must be a function');
+
 		const ssg = read_ssg_flag(parsed.ssg, errors, 'In the route \'' + raw_path + '\'');
 
 		for (const path of paths) {
@@ -332,7 +336,12 @@ export function validate_app (app) {
 
 			const keys = route_param_keys(path);
 			let prerender = null;
-			if (parsed.prerender !== undefined && keys.length && !has_star(path) && !parsed.redirect)
+			let prerender_fn = null;
+			if (typeof parsed.prerender === 'function') {
+				if (keys.length && !has_star(path) && !parsed.redirect)
+					prerender_fn = parsed.prerender;
+			}
+			else if (parsed.prerender !== undefined && keys.length && !has_star(path) && !parsed.redirect)
 				prerender = read_prerender(parsed.prerender, errors, 'In the route \'' + raw_path + '\'', keys);
 
 			check_ssg_fields(path, parsed, ssg, errors, raw_path);
@@ -344,7 +353,9 @@ export function validate_app (app) {
 				layout: parsed.layout || null,
 				middleware: route_mw,
 				ssg,
-				prerender
+				prerender,
+				prerender_fn,
+				data: typeof parsed.data === 'function' ? parsed.data : null
 			};
 		}
 	}

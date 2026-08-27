@@ -1,6 +1,6 @@
 {
 	"name": "@alumna/alumna",
-	"version": "4.0.0-alpha.4",
+	"version": "4.0.0-alpha.5",
 	"description": "Alumna: an opinionated meta-framework for Svelte 5 apps",
 	"type": "module",
 	"license": "MIT",
@@ -27,7 +27,8 @@
 	"scripts": {
 		"test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
 		"test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
-		"cli": "bun src/cli.js"
+		"cli": "bun src/cli.js",
+		"build:binary": "bun scripts/build-binary.js"
 	},
 	"engines": {
 		"bun": ">=1.4.0",

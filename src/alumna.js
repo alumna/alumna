@@ -7,7 +7,6 @@ import { create_server, pick_port } from './dev/server.js';
 import { watch_src, classify_watch, changed_used_ids } from './dev/watch.js';
 import { overlay_html } from './dev/overlay.js';
 import { mime } from './dev/mime.js';
-import { alumna_root } from './utils/paths.js';
 import { load_project_config } from './config/load.js';
 import { normalize_base } from './utils/base.js';
 import { add_packages } from './add/install.js';
@@ -17,9 +16,18 @@ import { render_ssg } from './compile/ssg.js';
 import { run_rebuild } from './build/rebuild.js';
 import { create_notify_server } from './build/notify.js';
 import { build_manifest, stringify_manifest, alumna_version } from './build/manifest.js';
+import { match_source, runtime_source } from './pack/assets.js';
+import { ensure_rolldown } from './compile/rolldown-load.js';
+import { call_route_data, ssg_data_module } from './compile/data.js';
+import { match_path } from './compile/match.js';
 
-const RUNTIME_JS = readFileSync(join(alumna_root, 'src/runtime/browser.js'), 'utf8');
-const MATCH_JS = readFileSync(join(alumna_root, 'src/compile/match.js'), 'utf8');
+function runtime_js () {
+	return runtime_source();
+}
+
+function match_js () {
+	return match_source();
+}
 
 function apply_base_to_runtime (code, base) {
 	const prefix = normalize_base(base);
@@ -84,6 +92,26 @@ export class Alumna {
 		return result;
 	}
 
+	async setup () {
+		const dir = await ensure_rolldown();
+		console.log('Rolldown is ready.');
+		return dir;
+	}
+
+	async route_data (path) {
+		const compiled = this.last_compiled;
+		if (!compiled || !compiled.routes)
+			return undefined;
+		const hit = match_path(path, compiled.routes);
+		if (!hit)
+			return undefined;
+		return call_route_data(hit.route, {
+			path,
+			pattern: hit.pattern,
+			params: hit.params
+		});
+	}
+
 	async compile ({ dev, ssg } = {}) {
 		this.merge_config();
 		const src_dir = this.src_dir();
@@ -135,9 +163,9 @@ export class Alumna {
 			const url = path.charCodeAt(0) === 47 ? path : '/' + path;
 			memory.set(url, { body, type: mime(path) });
 		}
-		memory.set('/_alumna/match.js', { body: MATCH_JS, type: mime('.js') });
+		memory.set('/_alumna/match.js', { body: match_js(), type: mime('.js') });
 		memory.set('/_alumna/runtime.js', {
-			body: apply_base_to_runtime(RUNTIME_JS, this.config.base),
+			body: apply_base_to_runtime(runtime_js(), this.config.base),
 			type: mime('.js')
 		});
 		memory.set('/index.html', { body: this.html(compiled), type: mime('.html') });
@@ -170,7 +198,8 @@ export class Alumna {
 			src_dir: this.src_dir(),
 			port,
 			memory,
-			base: this.config.base
+			base: this.config.base,
+			on_data: p => this.route_data(p)
 		});
 
 		this.stop_watch = watch_src(this.src_dir(), async files => {
@@ -225,10 +254,10 @@ export class Alumna {
 		this.print_warnings(compiled.warnings);
 
 		const runtime = apply_base_to_runtime(
-			(await minify_module(RUNTIME_JS, 'runtime.js')).code,
+			(await minify_module(runtime_js(), 'runtime.js')).code,
 			this.config.base
 		);
-		const match = (await minify_module(MATCH_JS, 'match.js')).code;
+		const match = (await minify_module(match_js(), 'match.js')).code;
 		const spa_html = this.html(compiled);
 		let html = spa_html;
 		let pages;
@@ -255,6 +284,7 @@ export class Alumna {
 			}
 			prerender = ssg.prerender;
 			lookup = ssg.lookup;
+			compiled.files['_alumna/ssg-data.js'] = ssg_data_module(ssg.data_map);
 		}
 
 		write_build({

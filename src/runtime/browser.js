@@ -5,6 +5,9 @@ import { match_path, parse_query } from '/_alumna/match.js';
 
 const loaded = new Map();
 const loaded_mw = new Map();
+const data_mem = new Map();
+let ssg_data_mod;
+let used_embedded_data = false;
 let app;
 let started = false;
 const current = { path: '', pattern: '', params: {}, query: {}, layout: null };
@@ -209,10 +212,12 @@ async function show_url (url) {
 	await load_all(config.deps[hit.pattern]);
 
 	apply_route(path, hit, url);
+	const data = await data_for(path, hit);
 
 	app.show({
 		layout: layout_ctor(hit.route),
-		areas: area_map(hit.route)
+		areas: area_map(hit.route),
+		data
 	});
 }
 
@@ -289,6 +294,78 @@ function live_reload () {
 	}
 }
 
+function read_embedded_data () {
+	const el = typeof document !== 'undefined' && document.getElementById('alumna-data');
+	if (!el)
+		return undefined;
+	try {
+		return JSON.parse(el.textContent);
+	}
+	catch {
+		return undefined;
+	}
+}
+
+async function load_ssg_data_mod () {
+	if (ssg_data_mod)
+		return ssg_data_mod;
+	try {
+		ssg_data_mod = (await import(asset('/_alumna/ssg-data.js'))).default || {};
+	}
+	catch {
+		ssg_data_mod = {};
+	}
+	return ssg_data_mod;
+}
+
+async function data_for (path, hit) {
+	if (data_mem.has(path))
+		return data_mem.get(path);
+
+	if (!used_embedded_data) {
+		used_embedded_data = true;
+		const current = app_pathname(location.pathname);
+		if (hit && hit.route && hit.route.has_data && path === current) {
+			const embedded = read_embedded_data();
+			if (embedded !== undefined) {
+				data_mem.set(path, embedded);
+				return embedded;
+			}
+		}
+	}
+
+	if (!hit || !hit.route || !hit.route.has_data) {
+		data_mem.set(path, undefined);
+		return undefined;
+	}
+
+	if (config.dev) {
+		try {
+			const res = await fetch(asset('/_alumna/data?path=' + encodeURIComponent(path)));
+			if (res.ok) {
+				const value = await res.json();
+				data_mem.set(path, value);
+				return value;
+			}
+		}
+		catch {
+			// no data endpoint
+		}
+		data_mem.set(path, undefined);
+		return undefined;
+	}
+
+	if (config.ssg) {
+		const map = await load_ssg_data_mod();
+		const value = map[path];
+		data_mem.set(path, value);
+		return value;
+	}
+
+	data_mem.set(path, undefined);
+	return undefined;
+}
+
 function apply_route (path, hit, url) {
 	current.path = path;
 	current.pattern = hit.pattern;
@@ -313,11 +390,13 @@ async function boot_app (target) {
 	if (ssg_target(target)) {
 		if (hit && !hit.route.redirect) {
 			await load_all(config.deps[hit.pattern]);
+			const data = await data_for(path, hit);
 			return hydrate(App, {
 				target,
 				props: {
 					layout: layout_ctor(hit.route),
-					areas: area_map(hit.route)
+					areas: area_map(hit.route),
+					data
 				}
 			});
 		}

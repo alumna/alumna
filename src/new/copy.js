@@ -1,10 +1,10 @@
-import { cpSync, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
+import { mkdirSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, basename } from 'node:path';
-import { alumna_root } from '../utils/paths.js';
+import { scaffold_files, write_file_map } from '../pack/assets.js';
 
 const NAME_RE = /^[a-z0-9_.-]+$/i;
 
-export function create_project (target) {
+export function create_project (target, opts = {}) {
 	if (!target)
 		throw new Error('Use: alumna new <project_name>');
 
@@ -24,8 +24,6 @@ export function create_project (target) {
 		mkdirSync(dest, { recursive: true });
 	}
 
-	const scaffold = join(alumna_root, 'scaffold');
-	cpSync(scaffold, dest, { recursive: true });
-
+	write_file_map(dest, opts.files || scaffold_files());
 	return dest;
 }

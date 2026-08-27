@@ -2,7 +2,7 @@
 
 Opinionated meta-framework for [Svelte](https://svelte.dev) 5. You write routes and components. Alumna handles routing, on-demand loading, and the bundler.
 
-**4.0.0-alpha.4**
+**4.0.0-alpha.5**
 
 ## Index
 
@@ -24,6 +24,7 @@ Opinionated meta-framework for [Svelte](https://svelte.dev) 5. You write routes 
 - [Base path](#base-path)
 - [Build and preview](#build-and-preview)
 - [Static HTML (SSG)](#static-html-ssg)
+- [Data](#data)
 - [Rebuild](#rebuild)
 - [Optional store](#optional-store)
 - [Embed](#embed)
@@ -37,7 +38,7 @@ Alumna is **one executable**. Put it on your `PATH`. Do not install Alumna with 
 
 You do not need Node, Bun, or npm on your machine.
 
-The first `alumna dev` or `alumna build` may download Rolldown once (cached). `alumna add` uses the installer already inside the Alumna binary.
+The first `alumna dev` or `alumna build` may download Rolldown once (cached). You can run `alumna setup` first if you want that download before you go offline. `alumna add` uses the installer already inside the Alumna binary.
 
 Public binaries for this alpha are not out yet. Until they are, run Alumna from this repository. See [Developers](#developers).
 
@@ -58,6 +59,7 @@ alumna new <name>       Create a project
 alumna new .            Create a project in the current empty directory
 alumna dev [--port n]   Compile in memory, live reload (default port 3030)
 alumna add <package>    Add a library for use in components
+alumna setup            Download Rolldown into the cache (optional)
 alumna build            Production SPA into build/
 alumna build --ssg      Production SSG + hydration
 alumna rebuild          Rebuild SSG pages (needs a prior build)
@@ -301,7 +303,7 @@ build/
   about/index.html          # only with --ssg
   alumna-manifest.json
   components/
-  _alumna/                  # runtime, vendor; spa.html when SSG
+  _alumna/                  # runtime, vendor, ssg-data.js; spa.html when SSG
 ```
 
 `alumna-manifest.json` lists areas, routes, deps, `base`, `ssg`, `prerender`, and `lookup`.
@@ -324,7 +326,7 @@ When `--ssg` is on:
 | Param + `prerender: [...]` | those concrete pages |
 | Redirect and `/*` | never HTML |
 
-`ssg: false` wins over `prerender`. `ssg: true` on a param route without `prerender` is an error. Global `app.middleware` does not skip SSG. `prerender` is an array of param objects; keys must match that route’s `:params`. Empty `prerender: []` writes no pages for that pattern in this build.
+`ssg: false` wins over `prerender`. `ssg: true` on a param route without `prerender` is an error. Global `app.middleware` does not skip SSG. `prerender` is an array of param objects, or a function that returns that array. Keys must match that route’s `:params`. Empty `prerender: []` writes no pages for that pattern in this build.
 
 ```js
 app.route['/dash'] = {
@@ -342,7 +344,7 @@ app.route['/about'] = {
 
 app.route['/blog/:slug'] = {
 	content: 'Post',
-	prerender: [
+	prerender: async () => [
 		{ slug: 'hello' },
 		{ slug: 'world' }
 	]
@@ -351,7 +353,33 @@ app.route['/blog/:slug'] = {
 
 `ssg` and `prerender` are reserved route keys. They apply only when the SSG switch is on. A SPA `alumna build` ignores them.
 
-The first paint is the prerendered HTML. The client then hydrates and the app is a SPA. There is no `data()` hook in this alpha.
+The first paint is the prerendered HTML. The client then hydrates and the app is a SPA.
+
+## Data
+
+Optional `data` on a route is a function. Alumna runs it on the **server** (Node-side) at build time, and in `alumna dev` when the page asks. The result must be JSON. Components receive it as the `data` prop.
+
+```js
+app.route['/about'] = {
+	content: 'About',
+	data: async () => {
+		const res = await fetch('https://cms.example/about');
+		return res.json();
+	}
+};
+```
+
+```svelte
+<script>
+	let { data } = $props();
+</script>
+
+<h1>{data.title}</h1>
+```
+
+SSG writes the JSON into the HTML (`<script type="application/json" id="alumna-data">`). After the first page, the client loads `/_alumna/ssg-data.js`. In `alumna dev`, the client calls `/_alumna/data?path=`.
+
+`data` is a reserved route key.
 
 ## Rebuild
 
@@ -388,7 +416,7 @@ await start({ target: document.querySelector('#app') });
 
 ## Not in this alpha
 
-HMR that keeps component state, and a public binary download. Those come later. Nested layouts are not supported and are not planned. There is no `data()` hook yet.
+HMR that keeps component state, and a public binary download. Those come later. Nested layouts are not supported and are not planned.
 
 ## Developers
 
@@ -406,9 +434,10 @@ bun install
 bunx playwright install --with-deps chromium
 bun run test
 bun src/cli.js new my-app
+bun run build:binary    # writes dist/alumna
 ```
 
-Tests must stay at 100% statements, branches, functions, and lines on `src/**`. Cover both unit tests and integration / real-browser tests.
+Tests must stay at 100% statements, branches, functions, and lines on `src/**`. Cover both unit tests and integration / real-browser tests. `bun run build:binary` bundles Alumna with Rolldown, then `bun build --compile`. The binary does not embed Rolldown’s native binding.
 
 ## License
 

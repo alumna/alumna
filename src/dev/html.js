@@ -21,12 +21,26 @@ export function insert_body (source, body) {
 	return source + '<body data-alumna-ssg>' + body + '</body>';
 }
 
+export function data_script_tag (data) {
+	if (data === undefined)
+		return '';
+	const json = JSON.stringify(data).replace(/</g, '\\u003c');
+	return '<script type="application/json" id="alumna-data">' + json + '</script>';
+}
+
 export function inject_html (source, opts = {}) {
 	let html = source;
 	if (opts.ssg)
 		html = with_ssg_marker(html);
 	if (opts.body)
 		html = insert_body(html, opts.body);
+	const data_tag = data_script_tag(opts.data);
+	if (data_tag) {
+		if (html.includes('</body>'))
+			html = html.replace('</body>', data_tag + '</body>');
+		else
+			html += data_tag;
+	}
 
 	const base = normalize_base(opts.base);
 	const runtime = (base || '') + '/_alumna/runtime.js';

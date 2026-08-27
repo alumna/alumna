@@ -1,4 +1,4 @@
-import { inject_html, with_ssg_marker, insert_body } from '../../src/dev/html.js';
+import { inject_html, with_ssg_marker, insert_body, data_script_tag } from '../../src/dev/html.js';
 
 test('injects import map and boot before </head>', () => {
 	const out = inject_html('<html><head></head><body></body></html>');
@@ -82,4 +82,14 @@ test('ssg with an existing boot script still inserts body', () => {
 	const out = inject_html(src, { ssg: true, body: '<p>x</p>' });
 	expect(out).toMatch(/data-alumna-ssg/);
 	expect(out).toMatch(/<p>x<\/p>/);
+});
+
+test('data script is injected and escaped', () => {
+	expect(data_script_tag(undefined)).toBe('');
+	expect(data_script_tag({ t: '<x>' })).toMatch(/\\u003c/);
+	const out = inject_html('<html><head></head><body></body></html>', { data: { n: 1 } });
+	expect(out).toMatch(/id="alumna-data"/);
+	expect(out).toMatch(/{"n":1}/);
+	const no_body = inject_html('<p>x</p>', { data: { n: 2 } });
+	expect(no_body).toMatch(/alumna-data/);
 });

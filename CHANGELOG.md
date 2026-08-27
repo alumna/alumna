@@ -1,5 +1,13 @@
 # Alumna changelog
 
+## 4.0.0-alpha.5 — 2026-08-26
+
+- `data()` on a route runs on the server at build time (and in `alumna dev`). The result is JSON, passed as the `data` prop, and written into HTML as `#alumna-data`. After the first SSG page, the client loads `/_alumna/ssg-data.js`.
+- `prerender` may be an async function that returns the param list.
+- Author binary: Rolldown-bundle Alumna, then `bun build --compile` (`bun run build:binary` → `dist/alumna`). Scaffold and `svelte/compiler` are in the binary. Rolldown downloads on first `dev` / `build`, or with `alumna setup`.
+- Compiled `alumna add` uses `BUN_BE_BUN=1` and `--ignore-scripts`. Authors still need no Node/Bun/npm on `PATH`.
+- Chromium e2e covers `data()` hydrate then a click. Jest 100% four-metric (424 tests).
+
 ## 4.0.0-alpha.4 — 2026-08-26
 
 - SSG follows the Q44 table. Static routes with no route middleware get HTML. Route `middleware` skips SSG unless `ssg: true`. Global `app.middleware` does not skip. `ssg: false` is always SPA. Param routes need `prerender: [{ param: value }, ...]`. Redirects and `/*` never get HTML. Empty `prerender: []` writes no pages for that pattern.

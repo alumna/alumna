@@ -20,7 +20,7 @@ export function is_snippet_name (name) {
 function area_mount (name) {
 	const ident = ident_from(name);
 	const key = escape(name);
-	return `{#if use_areas['${key}']}\n\t{@const ${ident} = use_areas['${key}']}\n\t<${ident} />\n{/if}`;
+	return `{#if use_areas['${key}']}\n\t{@const ${ident} = use_areas['${key}']}\n\t<${ident} data={use_data} />\n{/if}`;
 }
 
 function area_snippet (name) {
@@ -35,12 +35,14 @@ export function generate_shell_source (area_names, layouts = {}) {
 	const snippets = snippet_areas.filter(is_snippet_name).map(area_snippet).join('\n');
 
 	return `<script>
-	let { layout = null, areas: start_areas = {} } = $props();
+	let { layout = null, areas: start_areas = {}, data: start_data = undefined } = $props();
 	let Layout = $state(null);
 	let areas = $state({});
+	let page_data = $state(undefined);
 	let did_show = $state(false);
 	let use_layout = $derived(did_show ? Layout : layout);
 	let use_areas = $derived(did_show ? areas : start_areas);
+	let use_data = $derived(did_show ? page_data : start_data);
 
 	export function show(next) {
 		const next_layout = next.layout || null;
@@ -52,6 +54,7 @@ export function generate_shell_source (area_names, layouts = {}) {
 		for (const key of Object.keys(areas)) {
 			if (!(key in next_areas)) areas[key] = undefined;
 		}
+		page_data = next.data;
 		did_show = true;
 	}
 </script>

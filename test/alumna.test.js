@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { mkdtempSync, mkdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, existsSync, readFileSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { INDEX_HTML } from './helpers/fixture.js';
@@ -23,6 +23,12 @@ jest.unstable_mockModule('../src/compile/vendor.js', () => ({
 
 jest.unstable_mockModule('../src/add/install.js', () => ({
 	add_packages: (cwd, names) => ({ installer: 'test', names, cwd })
+}));
+
+jest.unstable_mockModule('../src/compile/rolldown-load.js', () => ({
+	ensure_rolldown: async () => '/tmp/alumna-rolldown-cache',
+	load_rolldown: async () => ({ rolldown: async () => ({}) }),
+	reset_rolldown: () => {}
 }));
 
 const { Alumna } = await import('../src/alumna.js');
@@ -295,6 +301,7 @@ test('build ssg writes per-route html and spa shell', async () => {
 	expect(existsSync(join(cwd, 'build/users'))).toBe(false);
 	expect(readFileSync(join(cwd, 'build/_alumna/spa.html'), 'utf8')).not.toMatch(/data-alumna-ssg/);
 	expect(readFileSync(join(cwd, 'build/alumna-manifest.json'), 'utf8')).toMatch(/"ssg": true/);
+	expect(readFileSync(join(cwd, 'build/_alumna/ssg-data.js'), 'utf8')).toMatch(/export default/);
 	expect(log.mock.calls.join(' ')).toMatch(/SSG wrote/);
 	log.mockRestore();
 	warn.mockRestore();
@@ -378,8 +385,10 @@ test('rebuild writes one page and listen_rebuild accepts notify', async () => {
 	const err = jest.spyOn(console, 'error').mockImplementation(() => {});
 	const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
 	expect(await a.build()).toBe(true);
+	unlinkSync(join(cwd, 'build/_alumna/ssg-data.js'));
 	expect(await a.rebuild({ route: '/blog/world' })).toBe(true);
 	expect(readFileSync(join(cwd, 'build/blog/world/index.html'), 'utf8')).toMatch(/post world/);
+	expect(readFileSync(join(cwd, 'build/_alumna/ssg-data.js'), 'utf8')).toMatch(/export default/);
 	const manifest = JSON.parse(readFileSync(join(cwd, 'build/alumna-manifest.json'), 'utf8'));
 	expect(manifest.prerender).toContain('/blog/world');
 	expect(manifest.lookup['/blog/world']).toEqual([ '/blog/world' ]);
@@ -411,5 +420,44 @@ test('rebuild writes one page and listen_rebuild accepts notify', async () => {
 	expect(await missing.listen_rebuild()).toBe(false);
 	log.mockRestore();
 	err.mockRestore();
+	warn.mockRestore();
+});
+
+test('setup and route_data', async () => {
+	const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+	const a = new Alumna({ cwd: mkdtempSync(join(tmpdir(), 'alumna-setup-')) });
+	expect(await a.setup()).toBe('/tmp/alumna-rolldown-cache');
+	expect(await a.route_data('/')).toBeUndefined();
+	a.last_compiled = {
+		routes: {
+			'/': { data: async () => ({ n: 1 }) },
+			'/about': { areas: {} }
+		}
+	};
+	expect(await a.route_data('/')).toEqual({ n: 1 });
+	expect(await a.route_data('/missing')).toBeUndefined();
+	expect(await a.route_data('/about')).toBeUndefined();
+	log.mockRestore();
+});
+
+test('dev data endpoint calls route_data', async () => {
+	const cwd = project({
+		'src/app.js': `
+			app.areas = [ 'content' ];
+			app.route['/'] = { content: 'Home', data: async () => ({ n: 7 }) };
+		`,
+		'src/index.html': INDEX_HTML,
+		'src/components/Home.svelte': `<script>let { data } = $props();</script><p>{data.n}</p>`
+	});
+	const a = new Alumna({ cwd });
+	const log = jest.spyOn(console, 'log').mockImplementation(() => {});
+	const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+	expect(await a.dev()).toBe(true);
+	const port = a.httpd.server.address().port;
+	const res = await fetch('http://127.0.0.1:' + port + '/_alumna/data?path=/');
+	expect(res.status).toBe(200);
+	expect(await res.json()).toEqual({ n: 7 });
+	await a.close();
+	log.mockRestore();
 	warn.mockRestore();
 });

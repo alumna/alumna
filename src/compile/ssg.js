@@ -8,7 +8,8 @@ import { generate_shell_source } from './shell.js';
 import { css_hrefs_for } from './project.js';
 import { with_base } from '../utils/base.js';
 import { inject_html } from '../dev/html.js';
-import { ssg_targets, resolve_rebuild_path } from './ssg-targets.js';
+import { ssg_targets, resolve_rebuild_path, resolve_prerender_lists } from './ssg-targets.js';
+import { call_route_data } from './data.js';
 
 // Node stub so prerendered components can import { goto, route } from 'alumna'.
 const ALUMNA_STUB = `export const route = { path: '', pattern: '', params: {}, query: {}, layout: null };
@@ -36,7 +37,7 @@ export function preload_hrefs_for (deps, path, base) {
 }
 
 function fail (errors, warnings) {
-	return { ok: false, errors, warnings: warnings || [], pages: {}, prerender: [], lookup: {} };
+	return { ok: false, errors, warnings: warnings || [], pages: {}, prerender: [], lookup: {}, data_map: {} };
 }
 
 function write_js (file, code) {
@@ -163,6 +164,7 @@ async function pages_for_routes (dir, compiled, src_html, title, base, warnings,
 
 	const jobs = selected.jobs;
 	const prerender = [];
+	const data_map = {};
 	const areas = compiled.config.areas;
 	const layouts = compiled.config.layouts;
 	const deps = compiled.config.deps;
@@ -175,7 +177,11 @@ async function pages_for_routes (dir, compiled, src_html, title, base, warnings,
 		try {
 			const route = compiled.routes[pattern];
 			set_ssg_route(ssg_route, path, pattern, job.params, route.layout);
+			const data = await call_route_data(route, job);
+			if (data !== undefined)
+				data_map[path] = data;
 			const props = await props_for_route(dir, cache, route, areas, layouts);
+			props.data = data;
 			const html = read_render(render(App, { props }));
 			pages[html_file_for(path)] = inject_html(src_html, {
 				import_map: compiled.import_map,
@@ -185,7 +191,8 @@ async function pages_for_routes (dir, compiled, src_html, title, base, warnings,
 				title,
 				body: html.body,
 				head: html.head,
-				ssg: true
+				ssg: true,
+				data
 			});
 			prerender.push(path);
 		}
@@ -194,7 +201,7 @@ async function pages_for_routes (dir, compiled, src_html, title, base, warnings,
 		}
 	}
 
-	return { ok: true, errors: {}, warnings, pages, prerender, lookup: ssg_targets(compiled.routes).lookup };
+	return { ok: true, errors: {}, warnings, pages, prerender, lookup: ssg_targets(compiled.routes).lookup, data_map };
 }
 
 export async function render_ssg ({
@@ -217,6 +224,9 @@ export async function render_ssg ({
 		const compile_fail = compile_server_graph(dir, compiled, project_root, warnings);
 		if (compile_fail)
 			return compile_fail;
+		const prerender_errors = await resolve_prerender_lists(compiled.routes);
+		if (prerender_errors.length)
+			return fail(Object.fromEntries(prerender_errors.map((message, i) => [ 'app.js#' + (i + 1), message ])), warnings);
 		return await pages_for_routes(dir, compiled, src_html, title, base, warnings, paths);
 	}
 	catch (error) {

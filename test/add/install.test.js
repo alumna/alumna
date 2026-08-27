@@ -80,6 +80,32 @@ test('default spawnSync is used when spawn is omitted', () => {
 test('default find_bun is used', () => {
 	const cwd = mkdtempSync(join(tmpdir(), 'alumna-add-def-'));
 	expect(() => add_packages(cwd, [ 'x' ], {
+		compiled: false,
 		spawn: () => ({ status: 1, stderr: 'no', stdout: '' })
 	})).toThrow(/no/);
+});
+
+test('compiled binary uses BUN_BE_BUN', () => {
+	const cwd = mkdtempSync(join(tmpdir(), 'alumna-add-compiled-'));
+	let env;
+	const result = add_packages(cwd, [ 'marked' ], {
+		compiled: true,
+		execPath: '/tmp/alumna-bin',
+		spawn: (bin, args, opts) => {
+			env = opts.env;
+			expect(bin).toBe('/tmp/alumna-bin');
+			expect(args).toEqual([ 'add', '--ignore-scripts', 'marked' ]);
+			return { status: 0 };
+		}
+	});
+	expect(result.installer).toBe('bun');
+	expect(env.BUN_BE_BUN).toBe('1');
+});
+
+test('compiled bun add failure', () => {
+	const cwd = mkdtempSync(join(tmpdir(), 'alumna-add-cfail-'));
+	expect(() => add_packages(cwd, [ 'x' ], {
+		compiled: true,
+		spawn: () => ({ status: 1, stderr: '', stdout: '' })
+	})).toThrow(/bun add failed/);
 });

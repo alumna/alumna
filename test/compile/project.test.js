@@ -98,7 +98,7 @@ test('serialize ssg and prerender on routes', async () => {
 		'app.js': `
 			app.areas = [ 'content' ];
 			app.route['/'] = { content: 'Home', ssg: false };
-			app.route['/blog/:slug'] = { content: 'Post', prerender: [ { slug: 'hello' } ] };
+			app.route['/blog/:slug'] = { content: 'Post', prerender: [ { slug: 'hello' } ], data: async () => ({ n: 1 }) };
 		`,
 		'components/Home.svelte': `<p>home</p>`,
 		'components/Post.svelte': `<p>post</p>`
@@ -108,6 +108,8 @@ test('serialize ssg and prerender on routes', async () => {
 	expect(compiled.config.routes['/'].ssg).toBe(false);
 	expect(compiled.config.routes['/blog/:slug'].prerender).toEqual([ { slug: 'hello' } ]);
 	expect(compiled.config.routes['/blog/:slug'].ssg).toBeUndefined();
+	expect(compiled.config.routes['/blog/:slug'].has_data).toBe(true);
+	expect(compiled.config.routes['/'].has_data).toBeUndefined();
 });
 
 test('global middleware file is copied', async () => {

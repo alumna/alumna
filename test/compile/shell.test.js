@@ -3,10 +3,11 @@ import { generate_shell_source } from '../../src/compile/shell.js';
 test('sequential areas use ident names', () => {
 	const source = generate_shell_source([ 'nav', 'content' ]);
 	expect(source).toContain("use_areas['nav']");
-	expect(source).toContain('<Nav />');
-	expect(source).toContain('<Content />');
+	expect(source).toContain('<Nav data={use_data} />');
+	expect(source).toContain('<Content data={use_data} />');
 	expect(source).toContain('export function show(next)');
-	expect(source).toContain('$derived');
+	expect(source).toContain('page_data');
+	expect(source).toContain('use_data');
 	expect(source).toContain('$props()');
 	expect(source).toContain('{:else}');
 });
@@ -35,8 +36,8 @@ test('null layouts skip snippets', () => {
 
 test('non-ident area names are cleaned', () => {
 	const source = generate_shell_source([ 'nav-bar', '2col', "a'b", 'a\\b' ]);
-	expect(source).toContain('<Nav_bar />');
-	expect(source).toContain('<C_2col />');
+	expect(source).toContain('<Nav_bar data={use_data} />');
+	expect(source).toContain('<C_2col data={use_data} />');
 	expect(source).toContain("use_areas['a\\'b']");
 	expect(source).toContain("use_areas['a\\\\b']");
 });

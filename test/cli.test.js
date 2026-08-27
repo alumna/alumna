@@ -6,7 +6,8 @@ import {
 	help_text,
 	run_cli,
 	boot_cli,
-	is_cli_entry
+	is_cli_entry,
+	user_argv
 } from '../src/cli/run.js';
 import '../src/cli.js';
 
@@ -30,6 +31,7 @@ function io () {
 			async preview () { return true; }
 			async rebuild () { return true; }
 			async listen_rebuild () { return true; }
+			async setup () { this.setup_called = true; }
 		}
 	};
 }
@@ -63,6 +65,7 @@ test('help_text includes the version', () => {
 	expect(help_text('1.2.3')).toMatch(/alumna add/);
 	expect(help_text('1.2.3')).toMatch(/--ssg/);
 	expect(help_text('1.2.3')).toMatch(/alumna rebuild/);
+	expect(help_text('1.2.3')).toMatch(/alumna setup/);
 });
 
 test('is_cli_entry', () => {
@@ -265,4 +268,44 @@ test('boot_cli runs when this file is the entry', async () => {
 	const href = pathToFileURL('/tmp/cli.js').href;
 	expect(await boot_cli(href, [ 'node', resolve('/tmp/cli.js'), '--help' ], mock)).toBe(true);
 	expect(mock.out.exit).toBe(0);
+});
+
+test('setup command', async () => {
+	const mock = io();
+	let called = false;
+	mock.Alumna = class {
+		constructor () {}
+		async setup () { called = true; }
+	};
+	await run_cli([ 'setup' ], mock);
+	expect(called).toBe(true);
+	expect(mock.out.exit).toBeNull();
+});
+
+test('boot_cli compiled uses argv after the binary', async () => {
+	const mock = io();
+	expect(await boot_cli('file:///$bunfs/root/cli.js', [ '/tmp/alumna', '--help' ], mock)).toBe(true);
+	expect(mock.out.exit).toBe(0);
+	const mock2 = io();
+	expect(await boot_cli('file:///src/cli.js', [ '/tmp/alumna', '--help' ], { ...mock2, compiled: true })).toBe(true);
+	expect(mock2.out.exit).toBe(0);
+	const mock3 = io();
+	let created;
+	mock3.Alumna = class {
+		constructor () {}
+		async new (name) { created = name; }
+	};
+	expect(await boot_cli('file:///$bunfs/root/cli.js', [
+		'/tmp/alumna',
+		'/$bunfs/root/alumna',
+		'new',
+		'demo'
+	], mock3)).toBe(true);
+	expect(created).toBe('demo');
+});
+
+test('user_argv drops the bunfs entry in a compiled binary', () => {
+	expect(user_argv([ 'node', '/tmp/cli.js', 'dev' ], false)).toEqual([ 'dev' ]);
+	expect(user_argv([ '/tmp/alumna', '--help' ], true)).toEqual([ '--help' ]);
+	expect(user_argv([ '/tmp/alumna', '/$bunfs/root/alumna', 'new', 'demo' ], true)).toEqual([ 'new', 'demo' ]);
 });

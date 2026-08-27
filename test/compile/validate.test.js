@@ -379,6 +379,33 @@ test('ssg and prerender are kept on the route', () => {
 	expect(routes['/none/:slug'].prerender).toEqual([]);
 });
 
+test('data must be a function and is kept', () => {
+	const bad = run(`
+		app.areas = [ 'content' ];
+		app.route['/'] = { content: 'Home', data: { n: 1 } };
+	`);
+	expect(bad.errors.some(message => /data must be a function/.test(message))).toBe(true);
+	const ok = run(`
+		app.areas = [ 'content' ];
+		app.route['/'] = { content: 'Home', data: async () => ({ n: 1 }) };
+		app.route['/blog/:slug'] = {
+			content: 'Post',
+			prerender: async () => [ { slug: 'hello' } ],
+			data: async () => ({ t: 1 })
+		};
+	`);
+	expect(ok.errors).toEqual([]);
+	expect(typeof ok.routes['/'].data).toBe('function');
+	expect(typeof ok.routes['/blog/:slug'].prerender_fn).toBe('function');
+	expect(ok.routes['/blog/:slug'].prerender).toBeNull();
+	const static_fn = run(`
+		app.areas = [ 'content' ];
+		app.route['/'] = { content: 'Home', prerender: async () => [] };
+	`);
+	expect(static_fn.errors.some(message => /prerender is for routes with :params/.test(message))).toBe(true);
+	expect(static_fn.routes['/'].prerender_fn).toBeNull();
+});
+
 test('ssg must be a boolean', () => {
 	const { errors } = run(`
 		app.areas = [ 'content' ];

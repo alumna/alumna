@@ -307,3 +307,56 @@ test('render_ssg paths rejects a bad path', async () => {
 	expect(ssg.ok).toBe(false);
 	expect(ssg.errors['ssg /missing']).toMatch(/No route matches/);
 });
+
+test('render_ssg calls data and async prerender', async () => {
+	const src_dir = make_dir({
+		'index.html': INDEX_HTML,
+		'app.js': `
+			app.areas = [ 'content' ];
+			app.route['/'] = {
+				content: 'Home',
+				data: async () => ({ title: 'Home title' })
+			};
+			app.route['/blog/:slug'] = {
+				content: 'Post',
+				prerender: async () => [ { slug: 'hello' } ],
+				data: async (ctx) => ({ slug: ctx.params.slug })
+			};
+		`,
+		'components/Home.svelte': `<script>let { data } = $props();</script><p>{data.title}</p>`,
+		'components/Post.svelte': `<script>let { data } = $props();</script><p>post {data.slug}</p>`
+	});
+	const compiled = await compile(src_dir);
+	expect(compiled.ok).toBe(true);
+	expect(compiled.config.routes['/'].has_data).toBe(true);
+	const ssg = await render_ssg({
+		compiled,
+		src_html: INDEX_HTML,
+		project_root: alumna_root
+	});
+	expect(ssg.ok).toBe(true);
+	expect(ssg.pages['index.html']).toMatch(/Home title/);
+	expect(ssg.pages['index.html']).toMatch(/alumna-data/);
+	expect(ssg.pages['blog/hello/index.html']).toMatch(/post hello/);
+	expect(ssg.data_map['/'].title).toBe('Home title');
+	expect(ssg.data_map['/blog/hello'].slug).toBe('hello');
+});
+
+test('render_ssg fails when async prerender throws', async () => {
+	const src_dir = make_dir({
+		'index.html': INDEX_HTML,
+		'app.js': `
+			app.areas = [ 'content' ];
+			app.route['/blog/:slug'] = {
+				content: 'Post',
+				prerender: async () => { throw new Error('list fail'); }
+			};
+			app.route['/'] = { content: 'Home' };
+		`,
+		'components/Home.svelte': `<p>home</p>`,
+		'components/Post.svelte': `<p>post</p>`
+	});
+	const compiled = await compile(src_dir);
+	const ssg = await render_ssg({ compiled, src_html: INDEX_HTML, project_root: alumna_root });
+	expect(ssg.ok).toBe(false);
+});

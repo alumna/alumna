@@ -136,3 +136,40 @@ test('SSG Q44 prerender, middleware skip, and rebuild in Chromium', async () => 
 		await a.close();
 	}
 }, 60000);
+
+test('SSG data() hydrates in Chromium', async () => {
+	const cwd = project({
+		'src/app.js': `
+			app.areas = [ 'content' ];
+			app.route['/'] = {
+				content: 'Home',
+				data: async () => ({ title: 'Home title' })
+			};
+			app.route['/about'] = {
+				content: 'About',
+				data: async () => ({ title: 'About title' })
+			};
+		`,
+		'src/index.html': INDEX_HTML,
+		'src/components/Home.svelte': `<script>let { data } = $props();</script><p>{data.title}</p><a href="/about">About</a>`,
+		'src/components/About.svelte': `<script>let { data } = $props();</script><p>{data.title}</p>`
+	});
+	const a = new Alumna({ cwd, ssg: true });
+	expect(await a.build()).toBe(true);
+	expect(await a.preview()).toBe(true);
+	const port = a.httpd.server.address().port;
+	try {
+		await with_browser(async browser => {
+			const page = await browser.newPage();
+			await page.goto('http://127.0.0.1:' + port + '/', { waitUntil: 'load' });
+			expect(await page.textContent('body')).toMatch(/Home title/);
+			await page.click('a[href="/about"]');
+			await page.waitForFunction(() => document.body.textContent.includes('About title'));
+			await page.goto('http://127.0.0.1:' + port + '/about', { waitUntil: 'load' });
+			expect(await page.textContent('body')).toMatch(/About title/);
+		});
+	}
+	finally {
+		await a.close();
+	}
+}, 60000);

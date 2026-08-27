@@ -402,3 +402,147 @@ test('load skips css fetch when a stylesheet link exists', async () => {
 	const hrefs = global.fetch.mock.calls.map(call => call[0]);
 	expect(hrefs).not.toContain('/components/Home.css');
 });
+
+test('data from #alumna-data on hydrate', async () => {
+	const runtime = await load_runtime();
+	const config = (await import('/_alumna/config.js')).default;
+	const script = document.createElement('script');
+	script.id = 'alumna-data';
+	script.type = 'application/json';
+	script.textContent = '{"title":"Hi"}';
+	document.body.appendChild(script);
+	config.routes['/'].has_data = true;
+	document.body.setAttribute('data-alumna-ssg', '');
+	window.history.replaceState(null, '', '/');
+	await runtime.start();
+	expect(shown.some(item => item.data && item.data.title === 'Hi')).toBe(true);
+	delete config.routes['/'].has_data;
+	document.body.removeAttribute('data-alumna-ssg');
+});
+
+test('data from ssg-data.js after the first page', async () => {
+	const runtime = await load_runtime();
+	const config = (await import('/_alumna/config.js')).default;
+	const ssg_data = (await import('/_alumna/ssg-data.js')).default;
+	ssg_data['/about'] = { title: 'About data' };
+	config.ssg = true;
+	config.routes['/about'].has_data = true;
+	window.history.replaceState(null, '', '/');
+	await runtime.start();
+	await runtime.goto('/about');
+	expect(shown.some(item => item.data && item.data.title === 'About data')).toBe(true);
+	delete config.ssg;
+	delete config.routes['/about'].has_data;
+	delete ssg_data['/about'];
+});
+
+test('data from the dev endpoint', async () => {
+	const runtime = await load_runtime();
+	const config = (await import('/_alumna/config.js')).default;
+	config.dev = true;
+	config.routes['/about'].has_data = true;
+	global.fetch = jest.fn(async href => {
+		if (String(href).includes('/_alumna/data'))
+			return { ok: true, json: async () => ({ title: 'Dev' }) };
+		return { ok: false };
+	});
+	window.history.replaceState(null, '', '/');
+	await runtime.start();
+	await runtime.goto('/about');
+	expect(shown.some(item => item.data && item.data.title === 'Dev')).toBe(true);
+	delete config.dev;
+	delete config.routes['/about'].has_data;
+});
+
+test('data endpoint miss, bad json, and import miss', async () => {
+	const runtime = await load_runtime();
+	const config = (await import('/_alumna/config.js')).default;
+	const script = document.createElement('script');
+	script.id = 'alumna-data';
+	script.type = 'application/json';
+	script.textContent = '{';
+	document.body.appendChild(script);
+	config.routes['/'].has_data = true;
+	config.dev = true;
+	global.fetch = jest.fn(async () => { throw new Error('offline'); });
+	window.history.replaceState(null, '', '/');
+	await runtime.start();
+	delete config.dev;
+	config.ssg = true;
+	config.routes['/about'].has_data = true;
+	await runtime.goto('/about');
+	delete config.ssg;
+	delete config.routes['/'].has_data;
+	delete config.routes['/about'].has_data;
+});
+
+test('data_for spa production with has_data', async () => {
+	const runtime = await load_runtime();
+	const config = (await import('/_alumna/config.js')).default;
+	config.routes['/about'].has_data = true;
+	window.history.replaceState(null, '', '/');
+	await runtime.start();
+	await runtime.goto('/about');
+	delete config.routes['/about'].has_data;
+});
+
+test('data_for reuses the ssg data module', async () => {
+	const runtime = await load_runtime();
+	const config = (await import('/_alumna/config.js')).default;
+	const ssg_data = (await import('/_alumna/ssg-data.js')).default;
+	ssg_data['/about'] = { title: 'A' };
+	ssg_data['/'] = { title: 'H' };
+	config.ssg = true;
+	config.routes['/'].has_data = true;
+	config.routes['/about'].has_data = true;
+	window.history.replaceState(null, '', '/');
+	await runtime.start();
+	await runtime.goto('/about');
+	expect(shown.some(item => item.data && item.data.title === 'A')).toBe(true);
+	delete config.ssg;
+	delete config.routes['/'].has_data;
+	delete config.routes['/about'].has_data;
+	delete ssg_data['/about'];
+	delete ssg_data['/'];
+});
+
+test('ssg data import miss and null default', async () => {
+	const runtime2 = await load_runtime();
+	const config2 = (await import('/_alumna/config.js')).default;
+	config2.ssg = true;
+	config2.base = '/no-ssg-mod';
+	config2.routes['/'].has_data = true;
+	config2.routes['/about'].has_data = true;
+	window.history.replaceState(null, '', '/');
+	await runtime2.start();
+	await runtime2.goto('/about');
+	delete config2.ssg;
+	delete config2.base;
+	delete config2.routes['/'].has_data;
+	delete config2.routes['/about'].has_data;
+
+	const runtime3 = await load_runtime();
+	const config3 = (await import('/_alumna/config.js')).default;
+	config3.ssg = true;
+	config3.base = '/null';
+	config3.routes['/about'].has_data = true;
+	window.history.replaceState(null, '', '/');
+	await runtime3.start();
+	await runtime3.goto('/about');
+	delete config3.ssg;
+	delete config3.base;
+	delete config3.routes['/about'].has_data;
+});
+
+test('dev data endpoint returns not ok', async () => {
+	const runtime = await load_runtime();
+	const config = (await import('/_alumna/config.js')).default;
+	config.dev = true;
+	config.routes['/about'].has_data = true;
+	global.fetch = jest.fn(async () => ({ ok: false }));
+	window.history.replaceState(null, '', '/');
+	await runtime.start();
+	await runtime.goto('/about');
+	delete config.dev;
+	delete config.routes['/about'].has_data;
+});

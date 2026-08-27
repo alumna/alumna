@@ -141,7 +141,7 @@ function request_path (pathname, base) {
 }
 
 // Memory first, then vendor, then disk/static, then SPA fallback to index.html.
-export function create_server ({ src_dir, disk_root, port, memory, vendor_dir, base }) {
+export function create_server ({ src_dir, disk_root, port, memory, vendor_dir, base, on_data }) {
 	const live_clients = new Set();
 
 	const server = http.createServer(async (req, res) => {
@@ -156,6 +156,26 @@ export function create_server ({ src_dir, disk_root, port, memory, vendor_dir, b
 
 			if (pathname === '/_alumna/live')
 				return sse(req, res, live_clients);
+
+			if (pathname === '/_alumna/data') {
+				if (!on_data) {
+					res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+					return res.end('Not found');
+				}
+				try {
+					const path = url.searchParams.get('path') || '/';
+					const value = await on_data(path);
+					if (value === undefined) {
+						res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+						return res.end('No data');
+					}
+					return send_bytes(res, JSON.stringify(value), 'application/json; charset=utf-8', req.method);
+				}
+				catch (error) {
+					res.writeHead(500, { 'content-type': 'text/plain; charset=utf-8' });
+					return res.end(String(error.message || error));
+				}
+			}
 
 			if (memory.has(pathname)) {
 				const entry = memory.get(pathname);

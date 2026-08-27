@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { render_ssg } from '../compile/ssg.js';
 import { ssg_targets } from '../compile/ssg-targets.js';
@@ -12,6 +12,7 @@ import {
 	alumna_version,
 	add_lookup
 } from './manifest.js';
+import { merge_ssg_data, parse_ssg_data_module, ssg_data_module } from '../compile/data.js';
 
 function fail (errors) {
 	return { ok: false, errors, warnings: [], paths: [] };
@@ -86,6 +87,10 @@ export async function run_rebuild (ctx, opts = {}) {
 
 	for (const file of Object.keys(ssg.pages))
 		write_if_changed(join(out, file), ssg.pages[file]);
+
+	const data_file = join(out, '_alumna/ssg-data.js');
+	const prev_data = existsSync(data_file) ? parse_ssg_data_module(readFileSync(data_file, 'utf8')) : {};
+	write_if_changed(data_file, ssg_data_module(merge_ssg_data(prev_data, ssg.data_map)));
 
 	const targets = ssg_targets(compiled.routes);
 	const next = merge_manifest(manifest, {

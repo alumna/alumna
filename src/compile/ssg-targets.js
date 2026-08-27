@@ -1,5 +1,7 @@
 import { match_path } from './match.js';
 import { fill_pattern, has_star, is_concrete_path, route_param_keys } from './pattern.js';
+import { read_prerender } from './validate.js';
+import { with_timeout } from './data.js';
 
 // Q44 table: which concrete URLs this route writes when --ssg is on.
 export function urls_for_route (pattern, route) {
@@ -14,7 +16,7 @@ export function urls_for_route (pattern, route) {
 	const skip_mw = route.middleware && route.middleware.length && route.ssg !== true;
 
 	if (keys.length) {
-		if (!route.prerender || skip_mw)
+		if (!Array.isArray(route.prerender) || skip_mw)
 			return [];
 		const urls = [];
 		const seen = new Set();
@@ -32,6 +34,26 @@ export function urls_for_route (pattern, route) {
 	if (skip_mw)
 		return [];
 	return [ { path: pattern, params: {} } ];
+}
+
+export async function resolve_prerender_lists (routes, { timeout = 30000 } = {}) {
+	const errors = [];
+	if (!routes)
+		return errors;
+	for (const pattern of Object.keys(routes)) {
+		const route = routes[pattern];
+		if (typeof route.prerender_fn !== 'function')
+			continue;
+		const label = 'In the route \'' + pattern + '\'';
+		try {
+			const raw = await with_timeout(Promise.resolve(route.prerender_fn()), timeout, label + ' prerender');
+			route.prerender = read_prerender(raw, errors, label, route_param_keys(pattern));
+		}
+		catch (error) {
+			errors.push(label + ' prerender failed: ' + (error.message || error));
+		}
+	}
+	return errors;
 }
 
 export function ssg_targets (routes) {

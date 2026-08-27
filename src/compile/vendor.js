@@ -1,10 +1,9 @@
-import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { rolldown } from 'rolldown';
-import { alumna_root } from '../utils/paths.js';
+import { ensure_svelte_root, runtime_source } from '../pack/assets.js';
 import { with_base } from '../utils/base.js';
 import { collect_import_uses, merge_svelte_uses } from './rewrite.js';
+import { load_rolldown } from './rolldown-load.js';
 
 const SVELTE_VIRTUAL = '\0alumna-svelte:';
 const INLINE_VIRTUAL = '\0alumna-inline:';
@@ -15,11 +14,8 @@ const INLINE_VIRTUAL = '\0alumna-inline:';
 let runtime_svelte_uses_cache = null;
 
 function runtime_svelte_uses () {
-	if (!runtime_svelte_uses_cache) {
-		runtime_svelte_uses_cache = collect_import_uses(
-			readFileSync(join(alumna_root, 'src/runtime/browser.js'), 'utf8')
-		).svelte;
-	}
+	if (!runtime_svelte_uses_cache)
+		runtime_svelte_uses_cache = collect_import_uses(runtime_source()).svelte;
 	return runtime_svelte_uses_cache;
 }
 
@@ -72,6 +68,7 @@ export function virtual_svelte_source (spec, rec) {
 }
 
 async function generate_bundle ({ input, cwd, minify, sourcemap, plugins, external }) {
+	const { rolldown } = await load_rolldown();
 	const bundle = await rolldown({
 		input,
 		cwd,
@@ -134,7 +131,7 @@ async function bundle_svelte ({ svelte_uses, base, minify, sourcemap }) {
 
 	const result = await generate_bundle({
 		input,
-		cwd: alumna_root,
+		cwd: ensure_svelte_root(),
 		minify,
 		sourcemap,
 		plugins: [ {
@@ -215,6 +212,7 @@ export async function bundle_vendor ({
 
 export async function minify_module (code, filename, { sourcemap = false } = {}) {
 	const id = INLINE_VIRTUAL + filename;
+	const { rolldown } = await load_rolldown();
 	const bundle = await rolldown({
 		input: id,
 		plugins: [ {

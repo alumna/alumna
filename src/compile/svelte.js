@@ -4,10 +4,12 @@ import { join, posix } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { rewrite_imports, is_svelte_specifier, is_bare_library } from './rewrite.js';
 import { resolve_component_import } from './graph.js';
-import { alumna_root } from '../utils/paths.js';
+import { ensure_svelte_root } from '../pack/assets.js';
 import { with_base } from '../utils/base.js';
 
-const alumna_require = createRequire(join(alumna_root, 'package.json'));
+function alumna_require () {
+	return createRequire(join(ensure_svelte_root(), 'package.json'));
+}
 
 function compile_options (filename, dev, css, generate) {
 	return {
@@ -90,7 +92,7 @@ export function file_url_from (root, spec) {
 
 export function file_url_from_alumna (spec) {
 	try {
-		return pathToFileURL(alumna_require.resolve(spec)).href;
+		return pathToFileURL(alumna_require().resolve(spec)).href;
 	}
 	catch {
 		throw new Error('Cannot resolve "' + spec + '" for SSG');
