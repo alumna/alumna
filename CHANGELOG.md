@@ -4,7 +4,7 @@
 
 - `alumna dev`: a change to `src/index.html` (title and other shell HTML) shows in the browser without a restart.
 - Vendor import map includes SRI (`integrity`) hashes. The runtime URL is hashed too.
-- GitHub Actions CI: Jest four-metric suite, JUnit for Codecov Test Analytics, and coverage upload on pull requests (`CODECOV_TOKEN`). Public binary URL still waits.
+- GitHub Actions CI **verified** on PRs: Node 24, Bun 1.4.0, Jest 100% four-metric (439 tests), Codecov coverage and JUnit Test Analytics.
 - SSG temp dir includes `"type":"module"` so Node 22–24 can load the server files (GitHub Actions Node 24).
 - Jest 100% four-metric (439 tests).
 

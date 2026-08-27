@@ -437,7 +437,7 @@ bun run build:binary    # writes dist/alumna
 
 Tests must stay at 100% statements, branches, functions, and lines on `src/**`. Cover both unit tests and integration / real-browser tests. `bun run build:binary` bundles Alumna with Rolldown, then `bun build --compile`. The binary does not embed Rolldown’s native binding.
 
-GitHub Actions runs `bun run test` on pull requests and uploads coverage to Codecov.
+Bun is used for development and binary build. GitHub Actions runs `bun run test` on pull requests and uploads coverage and JUnit to Codecov. `bun run test` internally calls `node` because of compatibility issues with Jest.
 
 ## License
 

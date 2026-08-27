@@ -1,10 +1,10 @@
 # Alumna 4.0 — Living Plan
 
-> **Status:** draft 1.19 — 2026-08-27. Decisions locked. **4.0.0-alpha.7** is the current slice. Next conversation: public GitHub binary download URL (CI + Codecov are in). Jest four-metric coverage stays **100%** on `src/**`. Tests cover unit, integration, and Chromium e2e. Contributors use **Bun only**. Docs rules are in §0.5. Coding and text rules are in §0.4.
+> **Status:** draft 1.20 — 2026-08-27. Decisions locked. **4.0.0-alpha.7** is the current slice. GitHub Actions CI + Codecov are **verified** (Node 24.19, coverage + JUnit). Next conversation: public GitHub binary download URL. Jest four-metric coverage stays **100%** on `src/**`. Tests cover unit, integration, and Chromium e2e. Contributors use **Bun only**. Docs rules are in §0.5. Coding and text rules are in §0.4.
 >
 > **Purpose of this file:** source of truth for Alumna 4.0. Implementation follows this file, not chat history. This file also coordinates work across phases until a contributor guide exists.
 >
-> **How to continue in a new conversation:** *“Read `ALUMNA-4.0-PLAN.md` draft 1.19. Start from §0 (delivery + tests + next work). Follow §0.2 (unit + integration + Chromium e2e), §0.4 coding rules, and §0.5 docs rules. Do not re-litigate the Decision Log unless I ask.”*
+> **How to continue in a new conversation:** *“Read `ALUMNA-4.0-PLAN.md` draft 1.20. Start from §0 (delivery + tests + next work). Follow §0.2 (unit + integration + Chromium e2e), §0.4 coding rules, and §0.5 docs rules. Do not re-litigate the Decision Log unless I ask.”*
 
 Legend used throughout:
 
@@ -25,7 +25,7 @@ Alumna 4.0 is a from-scratch rebuild, **inspired by** 2.0/3.0, not a port. Every
 
 **Repo layout `[SHIPPED Q39]`:** this directory **is** Alumna 4.0.0. There is no `alumna-4.0/` subfolder. The archaeology trees (`alumna-2.0/`, `alumna-3.0/`, `alumna-3.0-feature-build/`) were deleted on 2026-08-26. Historical detail lives in §2 of this file and on GitHub.
 
-**Environment this alpha was built on:** Ubuntu 26.04 LXC, Bun **1.4.0**, Node.js **26.7.0** (Jest). Alumna source is JS. `svelte@5.56.10`. Rolldown **1.2.5** vendors Svelte and app libraries (contributor **devDependency**; authors get a first-need download). Contributors use **Bun only** (`bun install`, `bunx`, `bun src/cli.js`). Commit `bun.lock`. Node is still required to run Jest. **The full suite also needs Playwright Chromium** (`bunx playwright install --with-deps chromium` after `bun install`). See §0.2.
+**Environment this alpha was built on:** Ubuntu 26.04 LXC, Bun **1.4.0**, Node.js **26.7.0** (Jest). GitHub Actions CI uses Node **24.19.0** and Bun **1.4.0** (`ubuntu-latest`). Alumna source is JS. `svelte@5.56.10`. Rolldown **1.2.5** vendors Svelte and app libraries (contributor **devDependency**; authors get a first-need download). Contributors use **Bun only** (`bun install`, `bunx`, `bun src/cli.js`). Commit `bun.lock`. Node is still required to run Jest. **The full suite also needs Playwright Chromium** (`bunx playwright install --with-deps chromium` after `bun install`). See §0.2.
 
 Any later change to product or process must edit this file and append the Decision Log or the revision log. At session end also follow §0.5.
 
@@ -33,7 +33,7 @@ Any later change to product or process must edit this file and append the Decisi
 
 Package: `@alumna/alumna@4.0.0-alpha.7`. CLI for contributors: `bun src/cli.js` (bin `alumna`). Authors will install a **single binary**; npm is not the author install channel (README). `bun run build:binary` writes `dist/alumna`.
 
-**Alpha.7:** `alumna dev` re-reads `src/index.html` on a `reload` watch (title and other shell HTML) and then SSE-reloads. Vendor import map includes SRI `integrity` (sha384) for mapped vendor URLs; the served runtime bytes are hashed too. GitHub Actions runs Jest, uploads coverage to Codecov, and uploads JUnit for Test Analytics (`CODECOV_TOKEN`). SSG writes `"type":"module"` in its temp dir so Node 22–24 can `import()` the server files. Public binary URL still waits.
+**Alpha.7:** `alumna dev` re-reads `src/index.html` on a `reload` watch (title and other shell HTML) and then SSE-reloads. Vendor import map includes SRI `integrity` (sha384) for mapped vendor URLs; the served runtime bytes are hashed too. GitHub Actions CI + Codecov **verified** on PRs (Node 24.19, Bun 1.4.0): Jest 100% four-metric, `lcov.info` coverage, and `junit.xml` Test Analytics (`CODECOV_TOKEN`). SSG writes `"type":"module"` in its temp dir so Node 22–24 can `import()` the server files. Public binary URL still waits.
 
 **Alpha.6 cache fix:** a compiled Bun binary cannot resolve npm package names (`@rolldown/pluginutils`, `@rolldown/binding-*`) from Rolldown files on disk. `ensure_rolldown` rewrites those pluginutils imports to relative paths and copies the native `.node` into `rolldown/dist` and `rolldown/dist/shared`. Cache marker `layout-2` in `.ok` so `alumna setup` rebuilds an alpha.5 cache that only had `dist/index.mjs`. The Svelte vendor pass stubs `esm-env`; `clsx` is written next to the cached Svelte files. Authors need a new `dist/alumna`; the alpha.5 binary cannot repair this.
 
@@ -133,7 +133,7 @@ scaffold/
 test/**/*.test.js             # Jest, 100% four-metric on src/**; Playwright Chromium e2e in test/e2e/
 ```
 
-**Verified in this session:** Jest **100%** statements/branches/functions/lines on `src/**` (439 tests; 2721 / 2032 / 369 / 2644). Chromium e2e: Hello via `alumna dev` (import-map `integrity` present); `src/index.html` title live reload; SSG hydrate then SPA click; Q44 param prerender (`/blog/hello`), middleware skip (`/dash`), rebuild of an extra path (`/blog/world`); `data()` hydrate then click. Used `.svelte` watch path recompiles that module only (`update_components`). `bun run build:binary` writes `dist/alumna`; `--help` / `--version` / `new` / `setup` smoke on that file. GitHub Actions workflow is in `.github/workflows/ci.yml`.
+**Verified in this session:** Jest **100%** statements/branches/functions/lines on `src/**` (439 tests; 2722 / 2032 / 369 / 2645). Same four-metric report on GitHub Actions (Node 24.19.0, Bun 1.4.0, 7.4 s). Chromium e2e: Hello via `alumna dev` (import-map `integrity` present); `src/index.html` title live reload; SSG hydrate then SPA click; Q44 param prerender (`/blog/hello`), middleware skip (`/dash`), rebuild of an extra path (`/blog/world`); `data()` hydrate then click. Used `.svelte` watch path recompiles that module only (`update_components`). `bun run build:binary` writes `dist/alumna`; `--help` / `--version` / `new` / `setup` smoke on that file. Codecov accepted `coverage/lcov.info` and `junit/junit.xml`. Codecov’s xcrun / gcov / coverage.py lines are noise; both uploads concluded success.
 
 **Explicitly not in this slice:**
 
@@ -150,13 +150,13 @@ test/**/*.test.js             # Jest, 100% four-metric on src/**; Playwright Chr
 | Error overlay in the browser | **Shipped** (`overlay_html` on compile fail) |
 | Selective `on_event` recompile | **Shipped** (`classify_watch` + per-module `update_components`) |
 | Import-map integrity | **Shipped** (sha384 SRI on vendor URLs + runtime) |
-| Public GitHub binary download | CI + Codecov **shipped**. Public URL not started. Next conversation. |
+| Public GitHub binary download | CI + Codecov **verified** on GitHub. Public URL not started. Next conversation. |
 | `src/index.html` live reload in `alumna dev` | **Shipped** |
 | SSG first slice (static paths, hydrate then SPA) | **Shipped** (`4.0.0-alpha.3`) |
 | Q44 route `ssg` / `prerender` (middleware skip, param lists) | **Shipped** (`4.0.0-alpha.4`) |
 | `alumna rebuild` + manifest `lookup` + atomic HTML writes | **Shipped** (`4.0.0-alpha.4`) |
 | `data()` | **Shipped** (Q25: server `data()`, JSON props, `#alumna-data`, `/_alumna/ssg-data.js`, dev `/_alumna/data`) |
-| bun compile binary / npm publish | **Shipped** (`bun run build:binary` → `dist/alumna`). Public GitHub download: next conversation (CI + Codecov are in). npm `@alumna/alumna` stays the contingency. |
+| bun compile binary / npm publish | **Shipped** (`bun run build:binary` → `dist/alumna`). Public GitHub download: next conversation (CI + Codecov are verified). npm `@alumna/alumna` stays the contingency. |
 | Jest + coverage | **Shipped** (100% four-metric gate on current `src/`) |
 | Chromium e2e | **Shipped** (Hello + SSG click-through + Q44 prerender + rebuild + `index.html` reload) |
 
@@ -246,7 +246,7 @@ Turn the 100% `coverageThreshold` **on once the Jest port covers the existing al
 
 Do **not** restart archaeology. Do **not** re-ask Q1–Q44. Do **not** re-do S0; the spike passed. Do **not** re-do Phase 3. Do **not** re-do used-`.svelte` incremental compile. Do **not** re-do SSG (first slice or Q44). Do **not** re-do Phase 5 rebuild. Do **not** re-do Phase 6 or `data()` (Q25). Do **not** re-do `src/index.html` live reload, import-map integrity, or GitHub Actions CI + Codecov. Do **not** start Architect or HMR unless asked.
 
-1. **Public GitHub binary download.** CI + Codecov are in. Publish a public download URL for `dist/alumna`. Do not treat npm as the author install channel.
+1. **Public GitHub binary download.** GitHub Actions CI + Codecov are verified on PRs. Publish a public download URL for `dist/alumna`. Do not treat npm as the author install channel.
 2. Keep Chromium e2e in the suite for every author-visible change (Hello, navigation, SSG, overlay, rebuild, `data()`, `index.html` reload).
 3. At the end of the session, follow §0.5 (plan + changelog always; README when authors or contributors need a change). Keep Jest 100%. Cover both test directions (§0.2). Do not commit or push unless the author asks.
 
@@ -1689,7 +1689,7 @@ Shipped 2026-08-26:
 - ~~Rolldown-bundle + `minify: true` (Oxc **inside Rolldown**) Alumna itself into one JS file, then **`bun build --compile`**. Required. See §3.5.1.~~ **Done** (`bun run build:binary` → `dist/alumna`)
 - ~~First-need download of **Rolldown** into a cache dir. **Not** a separate Oxc binary. Optional `alumna setup` to prefetch Rolldown. See Q6.~~ **Done** (`4.0.0-alpha.6` also rewrites pluginutils imports and copies the `.node` so a compiled binary can load the cache)
 - ~~`alumna add` uses **Bun’s installer inside the same binary** (`BUN_BE_BUN=1`, `--ignore-scripts`). No extra installer download. No Node/Bun on `PATH`. See §3.5.2 / Q42.~~ **Done**
-- **npm `@alumna/alumna`** only if bun compile cannot ship. Compile **can** ship; GitHub Actions CI + Codecov on PRs **shipped** (`CODECOV_TOKEN`). A public GitHub download URL is not out yet. **Next conversation.**
+- **npm `@alumna/alumna`** only if bun compile cannot ship. Compile **can** ship; GitHub Actions CI + Codecov on PRs **verified** (Node 24.19, `CODECOV_TOKEN`, coverage + JUnit). A public GitHub download URL is not out yet. **Next conversation.**
 - scriptc / AoT later as an optimization, not a gate.
 - Docs: README is the complete author documentation (index, binary install, no npm as the Alumna install channel; first-need Rolldown; `data()`).
 
@@ -1846,6 +1846,7 @@ All `[PROPOSED]` items in the body were accepted on 2026-08-26 unless listed as 
 | 2026-08-27 | — | Compiled binary could not load the Rolldown cache (`Cannot find package '@rolldown/pluginutils'`). **Fixed in `4.0.0-alpha.6`:** relative imports + `.node` copy + `layout-2` ready marker. |
 | 2026-08-27 | — | Next conversation: `src/index.html` live reload in `alumna dev`; import-map integrity; public GitHub binary. Public binary requires GitHub Actions CI + Codecov on PRs (`CODECOV_TOKEN`) first. Architect and HMR still wait. |
 | 2026-08-27 | — | `4.0.0-alpha.7`: `src/index.html` live reload in `alumna dev`; import-map SRI (`integrity` sha384); GitHub Actions CI + Codecov on PRs. Public binary URL still waits. Architect and HMR still wait. |
+| 2026-08-27 | — | GitHub Actions CI + Codecov **verified** on PR (Node 24.19.0, Bun 1.4.0): 439 tests, 100% four-metric, `lcov.info` and `junit.xml` uploaded. Public binary URL still waits. |
 
 ---
 
@@ -1877,6 +1878,7 @@ All `[PROPOSED]` items in the body were accepted on 2026-08-26 unless listed as 
 | 2026-08-27 | 1.17 | Compiled-Rolldown cache fix as `4.0.0-alpha.6`: rewrite `@rolldown/pluginutils` to relative paths, copy the `.node` next to the loader, `layout-2` ready marker so `alumna setup` rebuilds a broken alpha.5 cache. Jest 100% (432 tests). Next: leftovers only if asked. |
 | 2026-08-27 | 1.18 | Next conversation ordered: (1) `src/index.html` live reload in `alumna dev`; (2) import-map integrity; (3) public GitHub binary, after GitHub Actions CI + Codecov on PRs (`CODECOV_TOKEN`). Architect and HMR still wait unless asked. |
 | 2026-08-27 | 1.19 | `4.0.0-alpha.7`: `src/index.html` live reload; import-map SRI; GitHub Actions CI + Codecov (`CODECOV_TOKEN`). Jest 100% (439 tests). Next: public GitHub binary URL. Architect and HMR still wait unless asked. |
+| 2026-08-27 | 1.20 | GitHub Actions CI + Codecov **verified** on PR: Node 24.19.0, Bun 1.4.0, 439 tests, 100% four-metric (2722 / 2032 / 369 / 2645), coverage + JUnit uploads (xcrun/gcov/coverage.py lines are noise). Next: public GitHub binary URL. Architect and HMR still wait unless asked. |
 
 ---
 
@@ -1936,4 +1938,4 @@ In 4.0 English: validate map → compile graph → rewrite + bundle vendor → e
 
 ---
 
-*End of draft 1.19. Decisions locked. Phase 3–5, Phase 6 distribution, `data()` (Q25), the compiled-Rolldown cache fix, `src/index.html` live reload, import-map SRI, and GitHub Actions CI + Codecov are on disk (`4.0.0-alpha.7`). Contributors use Bun only, Node (Jest), and Playwright Chromium (`bunx`). Next conversation (§0.3): public GitHub binary download URL. Follow §0.2 both test directions and §0.5 at session end. Keep Jest 100%. Do not re-read archaeology. Do not re-do S0, Phase 3, SSG, Phase 5, Phase 6, `data()`, `index.html` reload, import-map integrity, or CI.*
+*End of draft 1.20. Decisions locked. Phase 3–5, Phase 6 distribution, `data()` (Q25), the compiled-Rolldown cache fix, `src/index.html` live reload, import-map SRI, and GitHub Actions CI + Codecov (verified on Node 24.19) are on disk (`4.0.0-alpha.7`). Contributors use Bun only, Node (Jest), and Playwright Chromium (`bunx`). Next conversation (§0.3): public GitHub binary download URL. Follow §0.2 both test directions and §0.5 at session end. Keep Jest 100%. Do not re-read archaeology. Do not re-do S0, Phase 3, SSG, Phase 5, Phase 6, `data()`, `index.html` reload, import-map integrity, or CI.*
