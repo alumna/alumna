@@ -1,4 +1,5 @@
 # Alumna
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/alumna/alumna/ci.yml) [![codecov](https://codecov.io/gh/alumna/alumna/graph/badge.svg?token=eXiY3W4jbg)](https://codecov.io/gh/alumna/alumna) ![GitHub package.json version](https://img.shields.io/github/package-json/v/alumna/alumna) ![GitHub License](https://img.shields.io/github/license/alumna/alumna)
 
 You write routes and components. Alumna does the rest, in **one executable**.
 
