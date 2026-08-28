@@ -1,8 +1,8 @@
 # Alumna
 
-Opinionated meta-framework for [Svelte](https://svelte.dev) 5. You write routes and components. Alumna handles routing, on-demand loading, and the bundler.
+Opinionated meta-framework for [Svelte](https://svelte.dev) 5. You write routes and components. Alumna is **one executable**: routing, on-demand loading, bundling, minify, live reload, SPA, and SSG. You do not collect a stack of tools.
 
-**4.0.0-alpha.7**
+**4.0.0-alpha.8**
 
 ## Index
 
@@ -29,18 +29,29 @@ Opinionated meta-framework for [Svelte](https://svelte.dev) 5. You write routes 
 - [Optional store](#optional-store)
 - [Embed](#embed)
 - [Not in this alpha](#not-in-this-alpha)
-- [Developers](#developers)
+- [Contributing](CONTRIBUTING.md)
+- [Also](#also)
 - [License](#license)
 
 ## Install
 
-Alumna is **one executable**. Put it on your `PATH`. Do not install Alumna with npm.
+Alumna is **one executable**. Do not install Alumna with npm. You do not need Node, Bun, or npm on your machine.
 
-You do not need Node, Bun, or npm on your machine.
+Linux and macOS:
+
+```
+curl -fsSL https://alumna.dev/install | bash
+```
+
+Windows:
+
+```
+powershell -c "irm alumna.dev/install.ps1|iex"
+```
+
+That puts `alumna` in `~/.alumna/bin` (Windows: `%USERPROFILE%\.alumna\bin`) and adds that folder to `PATH`. Pin a version on Unix with `curl -fsSL https://alumna.dev/install | bash -s -- v4.0.0-alpha.8`.
 
 The first `alumna dev` or `alumna build` download Rolldown once (cached). You can run `alumna setup` first if you want that download before you go offline. A newer Alumna binary uses a new cache folder, so the first run after an upgrade may download again. `alumna add` uses the installer already inside the Alumna binary.
-
-Public binaries for this alpha are not out yet. Until they are, run Alumna from this repository. See [Developers](#developers).
 
 ## Start
 
@@ -414,30 +425,15 @@ await start({ target: document.querySelector('#app') });
 
 ## Not in this alpha
 
-HMR that keeps component state, and a public binary download. Those come later. Nested layouts are not supported and are not planned.
+HMR that keeps component state. That comes later. Nested layouts are not supported and are not planned.
 
-## Developers
+## Contributing
 
-This section is for work on Alumna itself, not for installing Alumna as an author.
+To work on Alumna itself, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Need **Bun 1.4 or newer**. `bun install` and `bun src/cli.js` are the default. Do not use npm, yarn, or pnpm to install this repository. To run **all tests** you also need:
+## Also
 
-- **Node.js 22 or newer** (Jest). That split is temporary: Jest 30 does not run inside Bun 1.4 at 100% coverage.
-- **Playwright Chromium** (real-browser tests). After `bun install`, run once: `bunx playwright install --with-deps chromium`. That command needs apt/sudo for OS libraries. Headless is enough; no display. Firefox is optional.
-
-```
-git clone <this-repo>
-cd alumna
-bun install
-bunx playwright install --with-deps chromium
-bun run test
-bun src/cli.js new my-app
-bun run build:binary    # writes dist/alumna
-```
-
-Tests must stay at 100% statements, branches, functions, and lines on `src/**`. Cover both unit tests and integration / real-browser tests. `bun run build:binary` bundles Alumna with Rolldown, then `bun build --compile`. The binary does not embed Rolldown’s native binding.
-
-Bun is used for development and binary build. GitHub Actions runs `bun run test` on pull requests and uploads coverage and JUnit to Codecov. `bun run test` internally calls `node` because of compatibility issues with Jest.
+[Alumna Backend](https://github.com/alumna/backend) is a separate project with the same idea for the server. Independent, complementary.
 
 ## License
 

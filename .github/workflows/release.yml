@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+
+      - name: Check tag matches package.json
+        run: bun scripts/release-notes.js --check-tag "$GITHUB_REF_NAME"
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Build archives
+        run: bun run build:release
+
+      - name: Release notes
+        run: bun scripts/release-notes.js > release-notes.md
+
+      - name: Version title
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Draft GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          prerelease: false
+          name: ${{ env.VERSION }}
+          body_path: release-notes.md
+          files: dist/release/*
+          fail_on_unmatched_files: true
