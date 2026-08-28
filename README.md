@@ -187,7 +187,7 @@ alumna --help
 alumna --version
 ```
 
-`--port` is required: if that port is busy, Alumna stops. Without `--port`, Alumna uses `alumna.hjson` `port` if set, then picks the next free port if that one is busy.
+`--port` is not required, but when passed and it is busy, Alumna stops. Without `--port`, Alumna uses `alumna.hjson` `port` if set, then picks the next free port if that one is busy.
 
 `alumna add` accepts several names: `alumna add marked date-fns`.
 
