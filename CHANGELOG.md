@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Docs: [LIBRARIES.md](LIBRARIES.md) for `alumna add` beyond the npm registry (versions, aliases, git, tarballs, local folders). README links to it.
 - Linux install: choose glibc vs musl from the system libc (`getconf GNU_LIBC_VERSION`), not from whether a `musl` package is installed. Ubuntu/Debian with `musl` next to glibc now get the glibc binary.
 
 ## 4.0.0-alpha.8 — 2026-08-27
