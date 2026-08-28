@@ -1,5 +1,9 @@
 # Alumna changelog
 
+## Unreleased
+
+- Linux install: choose glibc vs musl from the system libc (`getconf GNU_LIBC_VERSION`), not from whether a `musl` package is installed. Ubuntu/Debian with `musl` next to glibc now get the glibc binary.
+
 ## 4.0.0-alpha.8 — 2026-08-27
 
 - Public GitHub compressed binaries for Linux (glibc and musl, x64 and arm64), macOS (x64 and arm64), and Windows (x64 and arm64).
