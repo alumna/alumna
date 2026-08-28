@@ -1,5 +1,12 @@
 # Alumna changelog
 
+## 4.0.0-alpha.8 — 2026-08-27
+
+- Public GitHub compressed binaries for Linux (glibc and musl, x64 and arm64), macOS (x64 and arm64), and Windows (x64 and arm64).
+- Install scripts.
+- A git tag `v*` starts a draft GitHub Release (eight archives + `SHA256SUMS`).
+- Jest 100% four-metric (456 tests).
+
 ## 4.0.0-alpha.7 — 2026-08-27
 
 - `alumna dev`: a change to `src/index.html` (title and other shell HTML) shows in the browser without a restart.
