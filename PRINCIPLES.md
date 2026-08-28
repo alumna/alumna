@@ -149,6 +149,7 @@ Extra notes:
 | File | Who it is for |
 | --- | --- |
 | [README.md](README.md) | Authors. Complete product docs. Index at the top. No internals. |
+| [LIBRARIES.md](LIBRARIES.md) | Authors. Extra on `alumna add` (versions, other origins). The README keeps the usual path. |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | People who work on this repository. |
 | [ROADMAP.md](ROADMAP.md) | What is not done yet. |
 | This file | Why we still do it this way. |
