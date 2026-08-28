@@ -71,14 +71,19 @@ is_musl() {
 		[[ $ALUMNA_INTERNAL_MUSL = 1 ]]
 		return
 	fi
-	if [[ -f /etc/alpine-release ]]; then
-		return 0
+	# System libc, not "is a musl loader present". Debian/Ubuntu can install
+	# the musl package next to glibc; those hosts need the glibc binary.
+	if command -v getconf >/dev/null 2>&1 && getconf GNU_LIBC_VERSION >/dev/null 2>&1; then
+		return 1
 	fi
-	if [[ -e /lib/ld-musl-x86_64.so.1 || -e /lib/ld-musl-aarch64.so.1 ]]; then
+	if [[ -f /etc/alpine-release ]]; then
 		return 0
 	fi
 	if command -v ldd >/dev/null 2>&1; then
 		if ldd --version 2>&1 | grep -qi musl; then
+			return 0
+		fi
+		if ldd /bin/sh 2>&1 | grep -qi musl; then
 			return 0
 		fi
 	fi

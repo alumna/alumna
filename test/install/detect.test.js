@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { parse_build_args } from '../../scripts/build-binary.js';
@@ -20,6 +21,23 @@ function print_target (extra = {}) {
 			...extra
 		}
 	});
+}
+
+function fake_bin (dir, name, script) {
+	writeFileSync(join(dir, name), '#!/bin/sh\n' + script);
+	chmodSync(join(dir, name), 0o755);
+}
+
+function detect_linux_target (uname, bin_dir) {
+	const env = {
+		...process.env,
+		ALUMNA_INTERNAL_PRINT_TARGET: '1',
+		ALUMNA_INTERNAL_UNAME: uname,
+		ALUMNA_INTERNAL_ROSETTA: '0',
+		PATH: bin_dir + ':' + process.env.PATH
+	};
+	delete env.ALUMNA_INTERNAL_MUSL;
+	return spawnSync('bash', [ install_sh ], { encoding: 'utf8', env });
 }
 
 test('parse_build_args', () => {
@@ -49,6 +67,37 @@ test('install.sh prints unix targets', () => {
 	}
 });
 
+test('install.sh uses system glibc even when musl tools are on PATH', () => {
+	const dir = mkdtempSync(join(tmpdir(), 'alumna-libc-gnu-'));
+	try {
+		fake_bin(dir, 'getconf', 'if [ "$1" = GNU_LIBC_VERSION ]; then echo \'glibc 2.35\'; exit 0; fi\nexit 1\n');
+		fake_bin(dir, 'ldd', 'echo \'musl libc (x86_64)\'\nexit 0\n');
+		const x64 = detect_linux_target('Linux x86_64', dir);
+		expect(x64.status).toBe(0);
+		expect(x64.stdout.trim()).toBe('linux-x64');
+		const arm = detect_linux_target('Linux aarch64', dir);
+		expect(arm.status).toBe(0);
+		expect(arm.stdout.trim()).toBe('linux-arm64');
+	}
+	finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+test('install.sh selects musl when the system libc is musl', () => {
+	const dir = mkdtempSync(join(tmpdir(), 'alumna-libc-musl-'));
+	try {
+		fake_bin(dir, 'getconf', 'exit 1\n');
+		fake_bin(dir, 'ldd', 'if [ "$1" = --version ]; then echo \'musl libc (x86_64)\'; exit 0; fi\necho \'libc.musl-x86_64.so.1\'\nexit 0\n');
+		const out = detect_linux_target('Linux x86_64', dir);
+		expect(out.status).toBe(0);
+		expect(out.stdout.trim()).toBe('linux-x64-musl');
+	}
+	finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+});
+
 test('install.sh rejects unknown platforms and extra args', () => {
 	const bad = print_target({ ALUMNA_INTERNAL_UNAME: 'Linux riscv64' });
 	expect(bad.status).not.toBe(0);
@@ -72,6 +121,9 @@ test('install scripts name every release asset', () => {
 	expect(sh).toMatch('target=darwin-x64');
 	expect(sh).toMatch('target=darwin-arm64');
 	expect(sh).toMatch('target="$target-musl"');
+	expect(sh).toMatch('GNU_LIBC_VERSION');
+	expect(sh).toMatch('/etc/alpine-release');
+	expect(sh).not.toMatch('ld-musl-x86_64.so.1');
 	expect(ps1).toMatch('windows-x64');
 	expect(ps1).toMatch('windows-arm64');
 	expect(nginx).toMatch('location = /install');
