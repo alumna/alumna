@@ -1,4 +1,5 @@
 import { mount, hydrate } from 'svelte';
+import { createSubscriber } from 'svelte/reactivity';
 import App from '/_alumna/app.js';
 import config from '/_alumna/config.js';
 import { match_path, parse_query } from '/_alumna/match.js';
@@ -10,9 +11,38 @@ let ssg_data_mod;
 let used_embedded_data = false;
 let app;
 let started = false;
-const current = { path: '', pattern: '', params: {}, query: {}, layout: null };
 
-export const route = current;
+const data = { path: '', pattern: '', params: {}, query: {}, layout: null };
+let invalidate;
+const subscribe = createSubscriber(update => {
+	invalidate = update;
+	return () => {
+		invalidate = undefined;
+	};
+});
+
+export const route = {
+	get path () {
+		subscribe();
+		return data.path;
+	},
+	get pattern () {
+		subscribe();
+		return data.pattern;
+	},
+	get params () {
+		subscribe();
+		return data.params;
+	},
+	get query () {
+		subscribe();
+		return data.query;
+	},
+	get layout () {
+		subscribe();
+		return data.layout;
+	}
+};
 
 export function should_auto_start (meta_url) {
 	return typeof meta_url === 'string' && /\/_alumna\/runtime\.js(\?|#|$)/.test(meta_url);
@@ -164,7 +194,7 @@ async function run_middleware (hit, url) {
 		query: parse_query(url.search),
 		layout: hit.route.layout
 	};
-	const current_snap = clone_route(current);
+	const current_snap = clone_route(data);
 	let redirect_to = null;
 	let cursor = 0;
 	let finished = false;
@@ -367,11 +397,12 @@ async function data_for (path, hit) {
 }
 
 function apply_route (path, hit, url) {
-	current.path = path;
-	current.pattern = hit.pattern;
-	current.params = hit.params;
-	current.query = parse_query(url.search);
-	current.layout = hit.route.layout;
+	data.path = path;
+	data.pattern = hit.pattern;
+	data.params = hit.params;
+	data.query = parse_query(url.search);
+	data.layout = hit.route.layout;
+	invalidate?.();
 }
 
 function ssg_target (target) {
