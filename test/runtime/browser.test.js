@@ -7,8 +7,11 @@ import { jest } from '@jest/globals';
 const shown = [];
 let navigate_fn;
 
+let route_stop;
+
 async function load_runtime () {
 	shown.length = 0;
+	route_stop = undefined;
 	jest.resetModules();
 	jest.unstable_mockModule('svelte', () => ({
 		mount: (_App, opts) => ({
@@ -20,6 +23,12 @@ async function load_runtime () {
 			props: opts.props,
 			show (map) { shown.push({ ...map, hydrated: true }); }
 		})
+	}));
+	jest.unstable_mockModule('svelte/reactivity', () => ({
+		createSubscriber (start) {
+			route_stop = start(() => {});
+			return () => {};
+		}
 	}));
 	return import('../../src/runtime/browser.js');
 }
@@ -545,4 +554,18 @@ test('dev data endpoint returns not ok', async () => {
 	await runtime.goto('/about');
 	delete config.dev;
 	delete config.routes['/about'].has_data;
+});
+
+test('route subscriber teardown', async () => {
+	const runtime = await load_runtime();
+	window.history.replaceState(null, '', '/');
+	await runtime.start();
+	await runtime.goto('/about');
+	expect(runtime.route.path).toBe('/about');
+	expect(runtime.route.pattern).toBe('/about');
+	expect(runtime.route.layout).toBe(null);
+	expect(runtime.route.query).toEqual({});
+	route_stop();
+	await runtime.goto('/');
+	expect(runtime.route.path).toBe('/');
 });

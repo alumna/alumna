@@ -419,7 +419,7 @@ route.query     // { tab: 'info' } from ?tab=info
 route.layout    // 'dash' or null
 ```
 
-`goto` pushes a history entry. `redirect` replaces the current one (same as a route-level `redirect`). `prefetch` loads that route's components without moving. `route` is live: it always describes the screen that is showing.
+`goto` pushes a history entry. `redirect` replaces the current one (same as a route-level `redirect`). `prefetch` loads that route's components without moving. `route` is live: it always describes the screen that is showing. Reading `route.path` (or the other fields) in a Svelte template or `$derived` is reactive, so a layout that stays mounted still updates when the path changes.
 
 Alumna uses the Navigation API when the browser has it, and the History API if not. Automatically and you don't need to worry about it.
 

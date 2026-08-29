@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- `route` is reactive in Svelte: reading `route.path` (and the other fields) in a template or `$derived` updates after navigation, so a layout nav that stays mounted can highlight the current page.
 - Docs: [LIBRARIES.md](LIBRARIES.md) for `alumna add` beyond the npm registry (versions, aliases, git, tarballs, local folders). README links to it.
 - Linux install: choose glibc vs musl from the system libc (`getconf GNU_LIBC_VERSION`), not from whether a `musl` package is installed. Ubuntu/Debian with `musl` next to glibc now get the glibc binary.
 
