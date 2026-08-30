@@ -1,6 +1,6 @@
 {
 	"name": "@alumna/alumna",
-	"version": "4.0.0-alpha.10",
+	"version": "4.0.0-alpha.11",
 	"description": "Alumna: an opinionated meta-framework for Svelte 5 apps",
 	"type": "module",
 	"license": "MIT",
