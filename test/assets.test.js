@@ -64,6 +64,25 @@ test('rolldown_version fallbacks', () => {
 	expect(rolldown_version(dir)).toBe('1.2.6');
 });
 
+test('ensure_svelte_root extracts when svelte cannot SSG', () => {
+	const dir = mkdtempSync(join(tmpdir(), 'alumna-partial-svelte-'));
+	mkdirSync(join(dir, 'node_modules/svelte'), { recursive: true });
+	writeFileSync(join(dir, 'node_modules/svelte/package.json'), '{"name":"svelte"}\n');
+	const prev = process.env.ALUMNA_CACHE;
+	process.env.ALUMNA_CACHE = mkdtempSync(join(tmpdir(), 'alumna-sv-ssg-'));
+	try {
+		const root = ensure_svelte_root(dir);
+		expect(root).not.toBe(dir);
+		expect(existsSync(join(root, 'node_modules/svelte/src/internal/server/index.js'))).toBe(true);
+	}
+	finally {
+		if (prev === undefined)
+			delete process.env.ALUMNA_CACHE;
+		else
+			process.env.ALUMNA_CACHE = prev;
+	}
+});
+
 test('ensure_svelte_root extracts when svelte is not installed', () => {
 	const dir = mkdtempSync(join(tmpdir(), 'alumna-nosvelte-'));
 	const prev = process.env.ALUMNA_CACHE;

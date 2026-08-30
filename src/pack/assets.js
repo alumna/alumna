@@ -127,9 +127,14 @@ function write_svelte_deps (dest) {
 	}
 }
 
+function svelte_ssg_ok (root) {
+	return existsSync(join(root, 'node_modules/svelte/src/internal/server/index.js'));
+}
+
 // Contributor: Alumna's own node_modules. Author binary: files from the bundle, written once.
+// The compiled binary may see svelte/package.json (compiler) without the server files SSG needs.
 export function ensure_svelte_root (root = alumna_root) {
-	if (existsSync(join(root, 'node_modules/svelte/package.json')))
+	if (svelte_ssg_ok(root))
 		return root;
 
 	const files = svelte_file_map();
@@ -138,7 +143,7 @@ export function ensure_svelte_root (root = alumna_root) {
 
 	const dest = cache_dir(package_version(), 'svelte-root');
 	const pkg = join(dest, 'node_modules/svelte/package.json');
-	if (!existsSync(pkg)) {
+	if (!existsSync(pkg) || !svelte_ssg_ok(dest)) {
 		write_file_map(join(dest, 'node_modules/svelte'), files);
 		writeFileSync(join(dest, 'package.json'), '{"type":"module"}\n');
 	}

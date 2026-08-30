@@ -1,5 +1,9 @@
 # Alumna changelog
 
+## Unreleased
+
+- SSG: `ensure_svelte_root` now correctly extracts the full Svelte tree into the cache, so `alumna build --ssg` doesn't fail with `Cannot resolve "svelte/internal/server"`. 
+
 ## 4.0.0-alpha.9 — 2026-08-29
 
 - `route` is reactive in Svelte: reading `route.path` (and the other fields) in a template or `$derived` updates after navigation, so a layout nav that stays mounted can highlight the current page.
