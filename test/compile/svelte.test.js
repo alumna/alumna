@@ -1,3 +1,6 @@
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
 	compile_component,
 	compile_shell,
@@ -5,6 +8,7 @@ import {
 	resolve_server_specifier,
 	file_url_from,
 	file_url_from_alumna,
+	svelte_file_from_exports,
 	server_relative_import
 } from '../../src/compile/svelte.js';
 import { alumna_root } from '../../src/utils/paths.js';
@@ -153,6 +157,41 @@ test('resolve_server_specifier rejects unknown and missing libraries', () => {
 	expect(() => resolve_server_specifier('no-such-pkg', 'Home', { project_root: alumna_root })).toThrow(/during SSG/);
 	expect(() => file_url_from_alumna('svelte/does-not-exist-xyz')).toThrow(/for SSG/);
 	expect(() => file_url_from(alumna_root, 'no-such-pkg')).toThrow(/during SSG/);
+});
+
+test('file_url_from_alumna uses svelte package exports', () => {
+	const href = file_url_from_alumna('svelte/internal/server');
+	expect(href).toMatch(/^file:/);
+	expect(href).toMatch(/internal\/server\/index\.js$/);
+	expect(file_url_from_alumna('svelte')).toMatch(/index-server\.js$/);
+});
+
+test('svelte_file_from_exports reads package exports', () => {
+	const dir = mkdtempSync(join(tmpdir(), 'alumna-sv-exp-'));
+	mkdirSync(join(dir, 'node_modules/svelte/src/internal/server'), { recursive: true });
+	writeFileSync(join(dir, 'node_modules/svelte/package.json'), JSON.stringify({
+		exports: {
+			'.': './src/index-server.js',
+			'./internal/server': { default: './src/internal/server/index.js' },
+			'./missing': { default: './nope.js' },
+			'./empty': {}
+		}
+	}));
+	writeFileSync(join(dir, 'node_modules/svelte/src/index-server.js'), 'ok');
+	writeFileSync(join(dir, 'node_modules/svelte/src/internal/server/index.js'), 'ok');
+	expect(svelte_file_from_exports(dir, 'svelte')).toMatch(/index-server\.js$/);
+	expect(svelte_file_from_exports(dir, 'svelte/internal/server')).toMatch(/internal\/server\/index\.js$/);
+	expect(svelte_file_from_exports(dir, 'svelte/missing')).toBeNull();
+	expect(svelte_file_from_exports(dir, 'svelte/empty')).toBeNull();
+	expect(svelte_file_from_exports(dir, 'svelte/nope')).toBeNull();
+	expect(svelte_file_from_exports('/no/such-root', 'svelte/internal/server')).toBeNull();
+});
+
+test('svelte_file_from_exports ignores broken package json', () => {
+	const dir = mkdtempSync(join(tmpdir(), 'alumna-sv-bad-'));
+	mkdirSync(join(dir, 'node_modules/svelte'), { recursive: true });
+	writeFileSync(join(dir, 'node_modules/svelte/package.json'), '{');
+	expect(svelte_file_from_exports(dir, 'svelte')).toBeNull();
 });
 
 test('server_relative_import prefixes a bare relative path', () => {
