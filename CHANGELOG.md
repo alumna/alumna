@@ -1,8 +1,11 @@
 # Alumna changelog
 
-## 4.0.0-alpha.10/11 — 2026-08-29
+## 4.0.0-alpha.11 — 2026-08-29
 
 - SSG: map `svelte/*` to files from `svelte/package.json` `exports` instead of `require.resolve`, to be able to run the Svelte server for prerender.
+
+## 4.0.0-alpha.10 — 2026-08-31
+
 - SSG: `ensure_svelte_root` now correctly extracts the full Svelte tree into the cache, so `alumna build --ssg` doesn't fail with `Cannot resolve "svelte/internal/server"`. 
 
 ## 4.0.0-alpha.9 — 2026-08-29
