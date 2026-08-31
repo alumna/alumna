@@ -113,9 +113,13 @@ export function link_svelte_ssg (root, force) {
 		return;
 
 	writeFileSync(join(root, 'ssg-esm-env.js'), SSG_ESM_ENV);
+	// Copied .js files are ESM. Node 22–24 treat a folder of .js as CJS unless this is set.
+	writeFileSync(join(root, 'package.json'), '{"type":"module"}\n');
 
 	const svelte_dir = join(root, 'node_modules/svelte');
 	const out_dir = join(root, SSG_RUNTIME);
+	mkdirSync(out_dir, { recursive: true });
+	writeFileSync(join(out_dir, 'package.json'), '{"type":"module"}\n');
 	const files = collect_ssg_files(root, svelte_dir);
 
 	for (let i = 0; i < files.length; i++) {

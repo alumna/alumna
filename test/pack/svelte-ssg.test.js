@@ -165,6 +165,8 @@ test('link_svelte_ssg copies the server graph with file URLs', async () => {
 	link_svelte_ssg(root);
 
 	expect(readFileSync(join(root, 'ssg-esm-env.js'), 'utf8')).toBe(SSG_ESM_ENV);
+	expect(readFileSync(join(root, 'package.json'), 'utf8')).toMatch(/"type":"module"/);
+	expect(readFileSync(join(root, SSG_RUNTIME, 'package.json'), 'utf8')).toMatch(/"type":"module"/);
 	expect(existsSync(join(root, SSG_LINK_MARKER))).toBe(true);
 
 	const orig = readFileSync(join(root, 'node_modules/svelte/src/internal/shared/attributes.js'), 'utf8');
@@ -221,6 +223,8 @@ test('link_svelte_ssg with no svelte tree still writes the stub', () => {
 	const root = tmp('alumna-ssg-empty-');
 	link_svelte_ssg(root);
 	expect(readFileSync(join(root, 'ssg-esm-env.js'), 'utf8')).toBe(SSG_ESM_ENV);
+	expect(readFileSync(join(root, 'package.json'), 'utf8')).toMatch(/"type":"module"/);
+	expect(readFileSync(join(root, SSG_RUNTIME, 'package.json'), 'utf8')).toMatch(/"type":"module"/);
 	expect(existsSync(join(root, SSG_LINK_MARKER))).toBe(true);
 });
 
