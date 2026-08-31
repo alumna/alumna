@@ -1,5 +1,9 @@
 # Alumna changelog
 
+## 4.0.0-alpha.13 — 2026-08-31
+
+- SSG HTML: put the import map before `modulepreload` and the boot script. Chromium ignores an import map after a module load has started, so `import from 'svelte'` failed and hydration never ran.
+
 ## 4.0.0-alpha.12 — 2026-08-31
 
 - SSG: copy the Svelte server graph to `ssg-runtime` with `file:` URLs for `clsx`, `devalue`, `esm-env`, and `#client/constants`, so compiled `alumna build --ssg` can load it. `bun --compile` cannot resolve those package names from files on disk. Include `devalue` in the extracted svelte-root. Put the `esm-env` stub and `"type":"module"` inside `ssg-runtime` so Node 22–24 can import the copies (a folder of `.js` is CJS otherwise). Leave `node_modules/svelte` unchanged so Rolldown vendor still bundles.

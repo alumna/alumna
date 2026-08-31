@@ -63,6 +63,9 @@ test('render_ssg writes html for static paths only', async () => {
 	expect(ssg.pages['index.html']).toMatch(/Welcome home/);
 	expect(ssg.pages['index.html']).toMatch(/data-alumna-ssg/);
 	expect(ssg.pages['index.html']).toMatch(/modulepreload/);
+	const home = ssg.pages['index.html'];
+	expect(home.indexOf('type="importmap"')).toBeLessThan(home.indexOf('rel="modulepreload"'));
+	expect(home.indexOf('type="importmap"')).toBeLessThan(home.search(/type="module"/));
 	expect(ssg.pages['about/index.html']).toMatch(/About page/);
 	expect(ssg.pages['about/index.html']).toMatch(/name="ssg"/);
 	expect(ssg.pages['users/9/index.html']).toBeUndefined();

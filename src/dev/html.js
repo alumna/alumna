@@ -29,6 +29,31 @@ export function data_script_tag (data) {
 	return '<script type="application/json" id="alumna-data">' + json + '</script>';
 }
 
+// Chromium rejects an import map after any module load or modulepreload has
+// started. Bare specifiers such as `svelte` then fail and SSG never hydrates.
+function module_graph_index (html) {
+	const preload = html.search(/<link\b[^>]*\brel=(["']?)modulepreload\1/i);
+	const module_script = html.search(/<script\b[^>]*\btype=(["']?)module\1/i);
+	if (preload === -1)
+		return module_script;
+	if (module_script === -1)
+		return preload;
+	return preload < module_script ? preload : module_script;
+}
+
+function insert_import_map (html, map) {
+	if (html.includes('type="importmap"'))
+		return html;
+	const at = module_graph_index(html);
+	if (at !== -1)
+		return html.slice(0, at) + map + html.slice(at);
+	if (html.includes('</head>'))
+		return html.replace('</head>', map + '</head>');
+	if (html.includes('</body>'))
+		return html.replace('</body>', map + '</body>');
+	return html + map;
+}
+
 export function inject_html (source, opts = {}) {
 	let html = source;
 	if (opts.ssg)
@@ -58,10 +83,11 @@ export function inject_html (source, opts = {}) {
 	let title = '';
 	if (opts.title && !/<title[\s>]/i.test(html))
 		title = '<title>' + escape_attr(opts.title) + '</title>\n';
-	const inject = title + css + preload + extra_head + map + boot;
+	html = insert_import_map(html, map);
+	const inject = title + css + extra_head + preload + boot;
 
 	if (html.includes('src="' + runtime + '"') || html.includes("src='" + runtime + "'"))
-		return html.includes('type="importmap"') ? html : html.replace('</head>', map + '</head>');
+		return html;
 
 	if (html.includes('</head>'))
 		return html.replace('</head>', inject + '</head>');

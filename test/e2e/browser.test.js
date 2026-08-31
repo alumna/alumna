@@ -26,6 +26,26 @@ async function with_browser (run) {
 	}
 }
 
+function listen_page_errors (page) {
+	const errors = [];
+	page.on('pageerror', error => errors.push(String(error)));
+	page.on('console', msg => {
+		if (msg.type() !== 'error')
+			return;
+		const text = msg.text();
+		// Component CSS probe and missing favicon are 404s, not boot failures.
+		if (/status of 404/.test(text))
+			return;
+		errors.push(text);
+	});
+	return errors;
+}
+
+async function goto_and_mark (page, url) {
+	await page.goto(url, { waitUntil: 'networkidle' });
+	await page.evaluate(() => { window.__alumna_spa = true; });
+}
+
 test('Hello in Chromium via alumna dev', async () => {
 	const cwd = mkdtempSync(join(tmpdir(), 'alumna-hello-'));
 	cpSync(join(alumna_root, 'scaffold'), cwd, { recursive: true });
@@ -112,13 +132,17 @@ test('SSG hydrate then SPA click in Chromium', async () => {
 	try {
 		await with_browser(async browser => {
 			const page = await browser.newPage();
-			await page.goto('http://127.0.0.1:' + port + '/', { waitUntil: 'load' });
+			const errors = listen_page_errors(page);
+			await goto_and_mark(page, 'http://127.0.0.1:' + port + '/');
+			expect(errors.join('\n')).not.toMatch(/Import maps are not allowed|bare specifier/);
 			expect(await page.getAttribute('body', 'data-alumna-ssg')).not.toBeNull();
 			expect(await page.textContent('body')).toMatch(/Welcome home/);
 			await page.click('a[href="/about"]');
 			await page.waitForFunction(() => document.body.textContent.includes('About page'));
+			expect(await page.evaluate(() => window.__alumna_spa)).toBe(true);
 			expect(await page.textContent('body')).toMatch(/About page/);
-			await page.goto('http://127.0.0.1:' + port + '/about', { waitUntil: 'load' });
+			expect(errors).toEqual([]);
+			await page.goto('http://127.0.0.1:' + port + '/about', { waitUntil: 'networkidle' });
 			expect(await page.getAttribute('body', 'data-alumna-ssg')).not.toBeNull();
 			expect(await page.textContent('body')).toMatch(/About page/);
 		});
@@ -153,17 +177,20 @@ test('SSG Q44 prerender, middleware skip, and rebuild in Chromium', async () => 
 	try {
 		await with_browser(async browser => {
 			const page = await browser.newPage();
-			await page.goto('http://127.0.0.1:' + port + '/', { waitUntil: 'load' });
+			const errors = listen_page_errors(page);
+			await goto_and_mark(page, 'http://127.0.0.1:' + port + '/');
 			expect(await page.getAttribute('body', 'data-alumna-ssg')).not.toBeNull();
 			await page.click('a[href="/blog/hello"]');
 			await page.waitForFunction(() => document.body.textContent.includes('post hello'));
-			await page.goto('http://127.0.0.1:' + port + '/blog/hello', { waitUntil: 'load' });
+			expect(await page.evaluate(() => window.__alumna_spa)).toBe(true);
+			expect(errors).toEqual([]);
+			await page.goto('http://127.0.0.1:' + port + '/blog/hello', { waitUntil: 'networkidle' });
 			expect(await page.getAttribute('body', 'data-alumna-ssg')).not.toBeNull();
 			expect(await page.textContent('body')).toMatch(/post hello/);
-			await page.goto('http://127.0.0.1:' + port + '/blog/world', { waitUntil: 'load' });
+			await page.goto('http://127.0.0.1:' + port + '/blog/world', { waitUntil: 'networkidle' });
 			expect(await page.getAttribute('body', 'data-alumna-ssg')).not.toBeNull();
 			expect(await page.textContent('body')).toMatch(/post world/);
-			await page.goto('http://127.0.0.1:' + port + '/dash', { waitUntil: 'load' });
+			await page.goto('http://127.0.0.1:' + port + '/dash', { waitUntil: 'networkidle' });
 			expect(await page.getAttribute('body', 'data-alumna-ssg')).toBeNull();
 		});
 	}
@@ -196,11 +223,14 @@ test('SSG data() hydrates in Chromium', async () => {
 	try {
 		await with_browser(async browser => {
 			const page = await browser.newPage();
-			await page.goto('http://127.0.0.1:' + port + '/', { waitUntil: 'load' });
+			const errors = listen_page_errors(page);
+			await goto_and_mark(page, 'http://127.0.0.1:' + port + '/');
 			expect(await page.textContent('body')).toMatch(/Home title/);
 			await page.click('a[href="/about"]');
 			await page.waitForFunction(() => document.body.textContent.includes('About title'));
-			await page.goto('http://127.0.0.1:' + port + '/about', { waitUntil: 'load' });
+			expect(await page.evaluate(() => window.__alumna_spa)).toBe(true);
+			expect(errors).toEqual([]);
+			await page.goto('http://127.0.0.1:' + port + '/about', { waitUntil: 'networkidle' });
 			expect(await page.textContent('body')).toMatch(/About title/);
 		});
 	}
