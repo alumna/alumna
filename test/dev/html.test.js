@@ -48,6 +48,7 @@ test('keeps an existing boot script and adds the import map', () => {
 	const out = inject_html(src);
 	expect(out).toContain('src="/_alumna/runtime.js"');
 	expect(out).toMatch(/type="importmap"/);
+	expect(out.indexOf('type="importmap"')).toBeLessThan(out.indexOf('src="/_alumna/runtime.js"'));
 });
 
 test('keeps an existing boot script with single quotes', () => {
@@ -66,8 +67,31 @@ test('ssg marker, body, preload, and extra head', () => {
 	expect(out).toMatch(/<p>hi<\/p>/);
 	expect(out).toMatch(/modulepreload/);
 	expect(out).toMatch(/<!--head-->/);
+	expect(out.indexOf('type="importmap"')).toBeLessThan(out.indexOf('rel="modulepreload"'));
+	expect(out.indexOf('type="importmap"')).toBeLessThan(out.indexOf('<!--head-->'));
+	expect(out.indexOf('<!--head-->')).toBeLessThan(out.indexOf('rel="modulepreload"'));
 	const with_class = inject_html('<head></head><body class="app"></body>', { ssg: true });
 	expect(with_class).toMatch(/<body class="app" data-alumna-ssg>/);
+});
+
+test('import map precedes an existing modulepreload and a later boot script', () => {
+	const preload_first = inject_html(
+		'<head><link rel="modulepreload" href="/x.js"></head>'
+	);
+	expect(preload_first.indexOf('type="importmap"')).toBeLessThan(preload_first.indexOf('rel="modulepreload"'));
+	expect(preload_first.indexOf('type="importmap"')).toBeLessThan(preload_first.indexOf('src="/_alumna/runtime.js"'));
+
+	const both_preload_first = inject_html(
+		'<head><link rel=\'modulepreload\' href="/x.js"><script type="module" src="/_alumna/runtime.js"></script></head>'
+	);
+	expect(both_preload_first.indexOf('type="importmap"')).toBeLessThan(both_preload_first.indexOf('modulepreload'));
+	expect(both_preload_first.indexOf('type="importmap"')).toBeLessThan(both_preload_first.indexOf('src="/_alumna/runtime.js"'));
+
+	const both_boot_first = inject_html(
+		'<head><script type="module" src="/_alumna/runtime.js"></script><link rel="modulepreload" href="/x.js"></head>'
+	);
+	expect(both_boot_first.indexOf('type="importmap"')).toBeLessThan(both_boot_first.indexOf('src="/_alumna/runtime.js"'));
+	expect(both_boot_first.indexOf('type="importmap"')).toBeLessThan(both_boot_first.indexOf('rel="modulepreload"'));
 });
 
 test('ssg marker is not duplicated and insert_body no-ops', () => {
