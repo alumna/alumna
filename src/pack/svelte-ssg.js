@@ -96,7 +96,7 @@ function resolve_ssg_spec (root, svelte_dir, out_dir, spec) {
 		return orig ? pathToFileURL(out_file(out_dir, svelte_dir, orig)).href : spec;
 	}
 	if (spec === 'esm-env' || spec.startsWith('esm-env/'))
-		return pathToFileURL(join(root, 'ssg-esm-env.js')).href;
+		return pathToFileURL(join(out_dir, 'ssg-esm-env.js')).href;
 	if (spec === 'svelte' || spec.startsWith('svelte/')) {
 		const orig = svelte_file_from_exports(root, spec);
 		return orig ? pathToFileURL(out_file(out_dir, svelte_dir, orig)).href : spec;
@@ -112,7 +112,6 @@ export function link_svelte_ssg (root, force) {
 	if (!force && existsSync(marker))
 		return;
 
-	writeFileSync(join(root, 'ssg-esm-env.js'), SSG_ESM_ENV);
 	// Copied .js files are ESM. Node 22–24 treat a folder of .js as CJS unless this is set.
 	writeFileSync(join(root, 'package.json'), '{"type":"module"}\n');
 
@@ -120,6 +119,7 @@ export function link_svelte_ssg (root, force) {
 	const out_dir = join(root, SSG_RUNTIME);
 	mkdirSync(out_dir, { recursive: true });
 	writeFileSync(join(out_dir, 'package.json'), '{"type":"module"}\n');
+	writeFileSync(join(out_dir, 'ssg-esm-env.js'), SSG_ESM_ENV);
 	const files = collect_ssg_files(root, svelte_dir);
 
 	for (let i = 0; i < files.length; i++) {

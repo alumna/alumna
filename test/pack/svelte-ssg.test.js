@@ -159,12 +159,13 @@ function write_ssg_fixture (root) {
 	mkdirSync(join(root, 'node_modules/svelte/src/reactivity/empty'));
 }
 
-test('link_svelte_ssg copies the server graph with file URLs', async () => {
+test('link_svelte_ssg copies the server graph with file URLs', () => {
 	const root = tmp('alumna-ssg-link-');
 	write_ssg_fixture(root);
 	link_svelte_ssg(root);
 
-	expect(readFileSync(join(root, 'ssg-esm-env.js'), 'utf8')).toBe(SSG_ESM_ENV);
+	const env = join(root, SSG_RUNTIME, 'ssg-esm-env.js');
+	expect(readFileSync(env, 'utf8')).toBe(SSG_ESM_ENV);
 	expect(readFileSync(join(root, 'package.json'), 'utf8')).toMatch(/"type":"module"/);
 	expect(readFileSync(join(root, SSG_RUNTIME, 'package.json'), 'utf8')).toMatch(/"type":"module"/);
 	expect(existsSync(join(root, SSG_LINK_MARKER))).toBe(true);
@@ -185,6 +186,13 @@ test('link_svelte_ssg copies the server graph with file URLs', async () => {
 	);
 	expect(linked_server).toContain('ssg-esm-env.js');
 	expect(linked_server).toContain('devalue');
+	expect(linked_server).toContain('file:');
+
+	const linked_constants = readFileSync(
+		join(root, SSG_RUNTIME, 'src/internal/client/constants.js'),
+		'utf8'
+	);
+	expect(linked_constants).toContain('STALE_REACTION');
 
 	const linked_edges = readFileSync(join(root, SSG_RUNTIME, 'src/reactivity/edges.js'), 'utf8');
 	expect(linked_edges).toContain('ssg-esm-env.js');
@@ -200,29 +208,29 @@ test('link_svelte_ssg copies the server graph with file URLs', async () => {
 	expect(existsSync(join(root, SSG_RUNTIME, 'src/reactivity/bad.js'))).toBe(true);
 	expect(readFileSync(join(root, SSG_RUNTIME, 'src/reactivity/bad.js'), 'utf8')).toBe('{{{\n');
 
+	// Jest's VM loader parses .js under os.tmpdir() as CJS (cjs-module-lexer)
+	// even when package.json says "type":"module". Do not import() those copies here.
 	const href = ssg_file_url(root, 'svelte/internal/server');
+	expect(href).toMatch(/^file:/);
 	expect(href).toContain(SSG_RUNTIME);
-	const mod = await import(href);
-	expect(mod.clsx()).toBe('ok');
-	expect(mod.DEV).toBe(false);
-	expect(mod.STALE_REACTION).toBe(1);
+	expect(href).toMatch(/internal\/server\/index\.js$/);
 
 	expect(ssg_file_url(root, 'svelte/missing')).toBeNull();
 	expect(ssg_file_url(alumna_root, 'svelte/internal/server')).toMatch(/internal\/server\/index\.js$/);
 	expect(ssg_file_url(alumna_root, 'svelte/internal/server')).not.toContain(SSG_RUNTIME);
 
-	writeFileSync(join(root, 'ssg-esm-env.js'), 'changed\n');
+	writeFileSync(env, 'changed\n');
 	link_svelte_ssg(root);
-	expect(readFileSync(join(root, 'ssg-esm-env.js'), 'utf8')).toBe('changed\n');
+	expect(readFileSync(env, 'utf8')).toBe('changed\n');
 
 	link_svelte_ssg(root, true);
-	expect(readFileSync(join(root, 'ssg-esm-env.js'), 'utf8')).toBe(SSG_ESM_ENV);
+	expect(readFileSync(env, 'utf8')).toBe(SSG_ESM_ENV);
 });
 
 test('link_svelte_ssg with no svelte tree still writes the stub', () => {
 	const root = tmp('alumna-ssg-empty-');
 	link_svelte_ssg(root);
-	expect(readFileSync(join(root, 'ssg-esm-env.js'), 'utf8')).toBe(SSG_ESM_ENV);
+	expect(readFileSync(join(root, SSG_RUNTIME, 'ssg-esm-env.js'), 'utf8')).toBe(SSG_ESM_ENV);
 	expect(readFileSync(join(root, 'package.json'), 'utf8')).toMatch(/"type":"module"/);
 	expect(readFileSync(join(root, SSG_RUNTIME, 'package.json'), 'utf8')).toMatch(/"type":"module"/);
 	expect(existsSync(join(root, SSG_LINK_MARKER))).toBe(true);
