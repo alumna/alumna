@@ -34,6 +34,7 @@ test('collect_release_assets', () => {
 	expect(assets.scaffold['src/app.js']).toMatch(/Hello/);
 	expect(assets.svelte_files['package.json']).toMatch(/svelte/);
 	expect(assets.svelte_deps.clsx['package.json']).toMatch(/clsx/);
+	expect(assets.svelte_deps.devalue['package.json']).toMatch(/devalue/);
 	expect(assets.svelte_deps['esm-env']['package.json']).toMatch(/esm-env/);
 	const defaults = collect_release_assets();
 	expect(defaults.version).toMatch(/^4\.0\.0/);

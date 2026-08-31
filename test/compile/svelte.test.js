@@ -174,13 +174,16 @@ test('svelte_file_from_exports reads package exports', () => {
 			'.': './src/index-server.js',
 			'./internal/server': { default: './src/internal/server/index.js' },
 			'./missing': { default: './nope.js' },
-			'./empty': {}
+			'./empty': {},
+			'./nested': { import: { default: './src/nested.js' } }
 		}
 	}));
 	writeFileSync(join(dir, 'node_modules/svelte/src/index-server.js'), 'ok');
 	writeFileSync(join(dir, 'node_modules/svelte/src/internal/server/index.js'), 'ok');
+	writeFileSync(join(dir, 'node_modules/svelte/src/nested.js'), 'ok');
 	expect(svelte_file_from_exports(dir, 'svelte')).toMatch(/index-server\.js$/);
 	expect(svelte_file_from_exports(dir, 'svelte/internal/server')).toMatch(/internal\/server\/index\.js$/);
+	expect(svelte_file_from_exports(dir, 'svelte/nested')).toMatch(/nested\.js$/);
 	expect(svelte_file_from_exports(dir, 'svelte/missing')).toBeNull();
 	expect(svelte_file_from_exports(dir, 'svelte/empty')).toBeNull();
 	expect(svelte_file_from_exports(dir, 'svelte/nope')).toBeNull();

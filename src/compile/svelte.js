@@ -1,4 +1,3 @@
-import { existsSync, readFileSync } from 'node:fs';
 import { compile as svelte_compile } from 'svelte/compiler';
 import { createRequire } from 'node:module';
 import { join, posix } from 'node:path';
@@ -6,7 +5,10 @@ import { pathToFileURL } from 'node:url';
 import { rewrite_imports, is_svelte_specifier, is_bare_library } from './rewrite.js';
 import { resolve_component_import } from './graph.js';
 import { ensure_svelte_root } from '../pack/assets.js';
+import { ssg_file_url } from '../pack/svelte-ssg.js';
 import { with_base } from '../utils/base.js';
+
+export { svelte_file_from_exports } from '../pack/svelte-exports.js';
 
 function compile_options (filename, dev, css, generate) {
 	return {
@@ -87,33 +89,11 @@ export function file_url_from (root, spec) {
 	}
 }
 
-// bun --compile cannot require.resolve package "exports" (even when the files
-// are on disk). Read svelte/package.json yourself.
-export function svelte_file_from_exports (root, spec) {
-	const pkg_dir = join(root, 'node_modules/svelte');
-	const pkg_path = join(pkg_dir, 'package.json');
-	if (!existsSync(pkg_path))
-		return null;
-	try {
-		const pkg = JSON.parse(readFileSync(pkg_path, 'utf8'));
-		const key = spec === 'svelte' ? '.' : './' + spec.slice(7);
-		const exp = pkg.exports && pkg.exports[key];
-		const rel = typeof exp === 'string' ? exp : exp && exp.default;
-		if (typeof rel !== 'string')
-			return null;
-		const file = join(pkg_dir, rel);
-		return existsSync(file) ? file : null;
-	}
-	catch {
-		return null;
-	}
-}
-
 export function file_url_from_alumna (spec) {
-	const file = svelte_file_from_exports(ensure_svelte_root(), spec);
-	if (!file)
+	const href = ssg_file_url(ensure_svelte_root(), spec);
+	if (!href)
 		throw new Error('Cannot resolve "' + spec + '" for SSG');
-	return pathToFileURL(file).href;
+	return href;
 }
 
 function server_from_file (id) {
