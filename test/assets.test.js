@@ -35,8 +35,9 @@ test('disk sources', () => {
 	expect(skipped['index.d.ts']).toBeUndefined();
 	expect(skipped['README.md']).toBeUndefined();
 	expect(skipped['types/extra.js']).toBeUndefined();
-	expect(Object.keys(svelte_dep_maps()).sort()).toEqual([ 'clsx', 'esm-env' ]);
+	expect(Object.keys(svelte_dep_maps()).sort()).toEqual([ 'clsx', 'devalue', 'esm-env' ]);
 	expect(svelte_dep_maps()['clsx']['package.json']).toMatch(/clsx/);
+	expect(svelte_dep_maps()['devalue']['package.json']).toMatch(/devalue/);
 	expect(ensure_svelte_root()).toBe(alumna_root);
 });
 
@@ -92,6 +93,12 @@ test('ensure_svelte_root extracts when svelte is not installed', () => {
 		expect(existsSync(join(root, 'node_modules/svelte/package.json'))).toBe(true);
 		expect(existsSync(join(root, 'node_modules/clsx/package.json'))).toBe(true);
 		expect(existsSync(join(root, 'node_modules/esm-env/package.json'))).toBe(true);
+		expect(existsSync(join(root, 'node_modules/devalue/package.json'))).toBe(true);
+		expect(existsSync(join(root, 'ssg-runtime/src/internal/server/index.js'))).toBe(true);
+		expect(readFileSync(join(root, 'node_modules/svelte/src/internal/shared/attributes.js'), 'utf8'))
+			.toContain("from 'clsx'");
+		expect(readFileSync(join(root, 'ssg-runtime/src/internal/shared/attributes.js'), 'utf8'))
+			.toContain('file:');
 		expect(ensure_svelte_root(dir)).toBe(root);
 	}
 	finally {

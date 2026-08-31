@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { alumna_root } from '../utils/paths.js';
 import { cache_dir } from '../utils/cache.js';
 import { live_data } from './data.js';
+import { link_svelte_ssg } from './svelte-ssg.js';
 
 function read_pkg (root = alumna_root) {
 	return JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
@@ -102,7 +103,7 @@ export function svelte_file_map (dir) {
 	return out;
 }
 
-const SVELTE_VENDOR_DEPS = [ 'esm-env', 'clsx' ];
+const SVELTE_VENDOR_DEPS = [ 'esm-env', 'clsx', 'devalue' ];
 
 export function svelte_dep_maps (root = alumna_root) {
 	const live = live_data();
@@ -133,6 +134,9 @@ function svelte_ssg_ok (root) {
 
 // Contributor: Alumna's own node_modules. Author binary: files from the bundle, written once.
 // The compiled binary may see svelte/package.json (compiler) without the server files SSG needs.
+// After extract, copy the server graph to ssg-runtime with file: URLs (compiled bun cannot
+// resolve clsx / devalue / esm-env from files on disk). Leave node_modules/svelte untouched
+// so Rolldown vendor still sees the original specifiers.
 export function ensure_svelte_root (root = alumna_root) {
 	if (svelte_ssg_ok(root))
 		return root;
@@ -143,10 +147,13 @@ export function ensure_svelte_root (root = alumna_root) {
 
 	const dest = cache_dir(package_version(), 'svelte-root');
 	const pkg = join(dest, 'node_modules/svelte/package.json');
+	let extracted = false;
 	if (!existsSync(pkg) || !svelte_ssg_ok(dest)) {
 		write_file_map(join(dest, 'node_modules/svelte'), files);
 		writeFileSync(join(dest, 'package.json'), '{"type":"module"}\n');
+		extracted = true;
 	}
 	write_svelte_deps(dest);
+	link_svelte_ssg(dest, extracted);
 	return dest;
 }

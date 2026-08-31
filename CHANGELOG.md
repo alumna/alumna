@@ -1,5 +1,9 @@
 # Alumna changelog
 
+## Unreleased
+
+- SSG: copy the Svelte server graph to `ssg-runtime` with `file:` URLs for `clsx`, `devalue`, `esm-env`, and `#client/constants`, so compiled `alumna build --ssg` can load it. `bun --compile` cannot resolve those package names from files on disk. Include `devalue` in the extracted svelte-root. Put the `esm-env` stub and `"type":"module"` inside `ssg-runtime` so Node 22–24 can import the copies (a folder of `.js` is CJS otherwise). Leave `node_modules/svelte` unchanged so Rolldown vendor still bundles.
+
 ## 4.0.0-alpha.11 — 2026-08-29
 
 - SSG: map `svelte/*` to files from `svelte/package.json` `exports` instead of `require.resolve`, to be able to run the Svelte server for prerender.
