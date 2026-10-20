@@ -1,7 +1,5 @@
 import { compile as svelte_compile } from 'svelte/compiler';
-import { createRequire } from 'node:module';
-import { join, posix } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { posix } from 'node:path';
 import { rewrite_imports, is_svelte_specifier, is_bare_library } from './rewrite.js';
 import { resolve_component_import } from './graph.js';
 import { ensure_svelte_root } from '../pack/assets.js';
@@ -80,13 +78,12 @@ export function resolve_browser_specifier (spec, id, base) {
 	throw new Error('Cannot import "' + spec + '" from ' + id + '.svelte');
 }
 
-export function file_url_from (root, spec) {
-	try {
-		return pathToFileURL(createRequire(join(root, 'package.json')).resolve(spec)).href;
-	}
-	catch {
+// library_urls comes from the SSG server bundle. A missing entry is the same failure as a missing package.
+export function file_url_from (spec, library_urls) {
+	const href = library_urls && library_urls.get(spec);
+	if (!href)
 		throw new Error('Cannot import "' + spec + '" during SSG');
-	}
+	return href;
 }
 
 export function file_url_from_alumna (spec) {
@@ -107,7 +104,7 @@ export function server_relative_import (from_id, to_file) {
 	return rel;
 }
 
-export function resolve_server_specifier (spec, id, { project_root } = {}) {
+export function resolve_server_specifier (spec, id, { project_root, library_urls } = {}) {
 	if (is_svelte_specifier(spec))
 		return file_url_from_alumna(spec);
 
@@ -124,7 +121,7 @@ export function resolve_server_specifier (spec, id, { project_root } = {}) {
 	if (is_bare_library(spec)) {
 		if (!project_root)
 			throw new Error('Cannot import "' + spec + '" during SSG');
-		return file_url_from(project_root, spec);
+		return file_url_from(spec, library_urls);
 	}
 
 	if (spec.startsWith('.') || spec.startsWith('/'))

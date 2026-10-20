@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { compile_project } from '../../src/compile/project.js';
@@ -363,4 +363,42 @@ test('render_ssg fails when async prerender throws', async () => {
 	const compiled = await compile(src_dir);
 	const ssg = await render_ssg({ compiled, src_html: INDEX_HTML, project_root: alumna_root });
 	expect(ssg.ok).toBe(false);
+});
+
+test('render_ssg bundles a library that imports another library', async () => {
+	const root = mkdtempSync(join(tmpdir(), 'alumna-ssg-lib-'));
+	mkdirSync(join(root, 'node_modules/leaf'), { recursive: true });
+	mkdirSync(join(root, 'node_modules/wrap'), { recursive: true });
+	mkdirSync(join(root, 'components'), { recursive: true });
+	writeFileSync(join(root, 'node_modules/leaf/package.json'), '{"type":"module","main":"./index.js"}\n');
+	writeFileSync(join(root, 'node_modules/leaf/index.js'), 'export const n = 2;\n');
+	writeFileSync(join(root, 'node_modules/wrap/package.json'), '{"type":"module","main":"./index.js"}\n');
+	writeFileSync(join(root, 'node_modules/wrap/index.js'), "import { n } from 'leaf';\nexport const value = n + 1;\n");
+	writeFileSync(join(root, 'index.html'), INDEX_HTML);
+	writeFileSync(join(root, 'app.js'), `app.areas = [ 'content' ]; app.route['/'] = { content: 'Home' };`);
+	writeFileSync(join(root, 'components/Home.svelte'), `<script>import { value } from 'wrap';</script><p>{value}</p>`);
+	const compiled = await compile(root, { project_root: root });
+	expect(compiled.ok).toBe(true);
+	const tmp = mkdtempSync(join(tmpdir(), 'alumna-ssg-out-'));
+	try {
+		const ssg = await render_ssg({
+			compiled,
+			src_html: INDEX_HTML,
+			project_root: root,
+			tmp_dir: tmp
+		});
+		expect(ssg.ok).toBe(true);
+		expect(ssg.pages['index.html']).toMatch(/>3</);
+		const names = readdirSync(join(tmp, 'server-vendor'));
+		expect(names.length).toBeGreaterThan(0);
+		for (let i = 0; i < names.length; i++) {
+			const code = readFileSync(join(tmp, 'server-vendor', names[i]), 'utf8');
+			expect(code).not.toMatch(/from ['"]leaf['"]/);
+			expect(code).not.toMatch(/from ['"]wrap['"]/);
+		}
+	}
+	finally {
+		rmSync(root, { recursive: true, force: true });
+		rmSync(tmp, { recursive: true, force: true });
+	}
 });

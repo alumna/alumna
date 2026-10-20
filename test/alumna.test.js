@@ -15,6 +15,7 @@ jest.unstable_mockModule('../src/compile/vendor.js', () => ({
 		}
 	}),
 	is_package_installed: () => false,
+	vendor_entry_name: spec => String(spec || 'mod').replace(/[^a-zA-Z0-9._-]/g, '_'),
 	minify_module: async (code, filename, opts = {}) => ({
 		code: 'min:' + code.slice(0, 8),
 		map: opts.sourcemap ? '{}' : null
