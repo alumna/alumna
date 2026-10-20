@@ -1,5 +1,10 @@
 # Alumna changelog
 
+## 4.0.0-alpha.14 — 2026-10-20
+
+- The author binary treats a package as installed when `node_modules/<name>/package.json` exists. `@scope/name` is two path segments. `createRequire` is not used for that check. A compiled Bun binary cannot resolve npm names from disk.
+- SSG bundles each imported library with Rolldown into the server temp directory. The bundle has no bare package specifiers. `svelte`, `svelte/*`, and `alumna` stay external and are rewritten to file URLs. `node:` stays external.
+
 ## 4.0.0-alpha.13 — 2026-08-31
 
 - SSG HTML: put the import map before `modulepreload` and the boot script. Chromium ignores an import map after a module load has started, so `import from 'svelte'` failed and hydration never ran.

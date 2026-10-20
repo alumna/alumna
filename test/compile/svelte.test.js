@@ -147,7 +147,10 @@ test('resolve_server_specifier maps known kinds', () => {
 	expect(resolve_server_specifier('../../Evil.svelte', 'Home')).toBe('../../Evil.svelte');
 	expect(resolve_server_specifier('./x.js', 'Home')).toBe('./x.js');
 	expect(resolve_server_specifier('/abs.js', 'Home')).toBe('/abs.js');
-	expect(resolve_server_specifier('acorn', 'Home', { project_root: alumna_root })).toMatch(/^file:/);
+	expect(resolve_server_specifier('acorn', 'Home', {
+		project_root: alumna_root,
+		library_urls: new Map([ [ 'acorn', 'file:///pkg/acorn.js' ] ])
+	})).toBe('file:///pkg/acorn.js');
 });
 
 test('resolve_server_specifier rejects unknown and missing libraries', () => {
@@ -156,7 +159,9 @@ test('resolve_server_specifier rejects unknown and missing libraries', () => {
 	expect(() => resolve_server_specifier('marked', 'Home')).toThrow(/during SSG/);
 	expect(() => resolve_server_specifier('no-such-pkg', 'Home', { project_root: alumna_root })).toThrow(/during SSG/);
 	expect(() => file_url_from_alumna('svelte/does-not-exist-xyz')).toThrow(/for SSG/);
-	expect(() => file_url_from(alumna_root, 'no-such-pkg')).toThrow(/during SSG/);
+	expect(() => file_url_from('no-such-pkg')).toThrow(/during SSG/);
+	expect(() => file_url_from('no-such-pkg', new Map())).toThrow(/during SSG/);
+	expect(() => file_url_from('pkg', new Map([ [ 'pkg', '' ] ]))).toThrow(/during SSG/);
 });
 
 test('file_url_from_alumna uses svelte package exports', () => {

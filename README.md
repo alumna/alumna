@@ -5,7 +5,7 @@ You write routes and components. Alumna does the rest, in **one executable**.
 
 An opinionated meta-framework for [Svelte](https://svelte.dev) 5.
 
-**4.0.0-alpha.13**
+**4.0.0-alpha.14**
 
 ## Contents
 

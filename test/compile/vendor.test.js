@@ -71,7 +71,12 @@ test('virtual_svelte_source branches', () => {
 
 test('is_package_installed', () => {
 	expect(is_package_installed(process.cwd(), 'svelte')).toBe(true);
+	expect(is_package_installed(process.cwd(), 'svelte/compiler')).toBe(true);
 	expect(is_package_installed(process.cwd(), 'definitely-not-a-pkg-xyz')).toBe(false);
+	expect(is_package_installed(process.cwd(), '')).toBe(false);
+	expect(is_package_installed(process.cwd(), null)).toBe(false);
+	expect(is_package_installed(process.cwd(), '@scope')).toBe(false);
+	expect(is_package_installed(process.cwd(), '@scope/')).toBe(false);
 });
 
 test('bundle_vendor empty maps only alumna when svelte emit is empty', async () => {
@@ -274,5 +279,11 @@ test('is_package_installed with a fake package.json path', () => {
 	writeFileSync(join(dir, 'package.json'), '{"type":"module"}\n');
 	writeFileSync(join(dir, 'node_modules/fake-lib/package.json'), '{"name":"fake-lib","main":"index.js"}\n');
 	writeFileSync(join(dir, 'node_modules/fake-lib/index.js'), 'export const n = 1;\n');
+	mkdirSync(join(dir, 'node_modules/@demo/ui'), { recursive: true });
+	writeFileSync(join(dir, 'node_modules/@demo/ui/package.json'), '{"name":"@demo/ui"}\n');
 	expect(is_package_installed(dir, 'fake-lib')).toBe(true);
+	expect(is_package_installed(dir, 'fake-lib/sub')).toBe(true);
+	expect(is_package_installed(dir, '@demo/ui')).toBe(true);
+	expect(is_package_installed(dir, '@demo/ui/button')).toBe(true);
+	expect(is_package_installed(dir, '@missing/ui')).toBe(false);
 });

@@ -1,4 +1,4 @@
-import { createRequire } from 'node:module';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { ensure_svelte_root, runtime_source } from '../pack/assets.js';
 import { with_base } from '../utils/base.js';
@@ -28,14 +28,30 @@ function svelte_uses_for_bundle (svelte_uses) {
 	return uses;
 }
 
+// The author binary is bun --compile. createRequire cannot see node_modules there.
+// Installed means this app has node_modules/<name>/package.json. @scope/name is two segments.
+export function installed_package_name (spec) {
+	if (typeof spec !== 'string' || !spec)
+		return '';
+	if (spec.charCodeAt(0) === 64) {
+		const slash = spec.indexOf('/');
+		if (slash < 1)
+			return '';
+		const next = spec.indexOf('/', slash + 1);
+		const name = next === -1 ? spec : spec.slice(0, next);
+		if (name.length === slash + 1)
+			return '';
+		return name;
+	}
+	const slash = spec.indexOf('/');
+	return slash === -1 ? spec : spec.slice(0, slash);
+}
+
 export function is_package_installed (project_root, spec) {
-	try {
-		createRequire(join(project_root, 'package.json')).resolve(spec);
-		return true;
-	}
-	catch {
+	const name = installed_package_name(spec);
+	if (!name)
 		return false;
-	}
+	return existsSync(join(project_root, 'node_modules', name, 'package.json'));
 }
 
 export function vendor_entry_name (spec) {

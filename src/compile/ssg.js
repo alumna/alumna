@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
 import { render } from 'svelte/server';
 import { compile_component, compile_shell, resolve_server_specifier } from './svelte.js';
+import { bundle_server_libraries, server_library_specs } from './server-libraries.js';
 import { generate_shell_source } from './shell.js';
 import { css_hrefs_for } from './project.js';
 import { with_base } from '../utils/base.js';
@@ -49,8 +50,8 @@ function component_js_file (dir, id) {
 	return join(dir, 'components', ...id.split('/')) + '.js';
 }
 
-function server_resolve (id, project_root) {
-	return spec => resolve_server_specifier(spec, id, { project_root });
+function server_resolve (id, project_root, library_urls) {
+	return spec => resolve_server_specifier(spec, id, { project_root, library_urls });
 }
 
 function note_warnings (warnings, prefix, list) {
@@ -58,7 +59,7 @@ function note_warnings (warnings, prefix, list) {
 		warnings.push(prefix + list[i].message);
 }
 
-function compile_server_graph (dir, compiled, project_root, warnings) {
+function compile_server_graph (dir, compiled, project_root, warnings, library_urls) {
 	// Temp .js files are ESM. Node 22–24 treat a folder of .js as CJS unless this is set.
 	writeFileSync(join(dir, 'package.json'), '{"type":"module"}\n');
 	const components = compiled.graph.components;
@@ -75,7 +76,7 @@ function compile_server_graph (dir, compiled, project_root, warnings) {
 				css: 'external',
 				sourcemap: false,
 				generate: 'server',
-				resolve: server_resolve(id, project_root)
+				resolve: server_resolve(id, project_root, library_urls)
 			});
 			write_js(component_js_file(dir, id), out.js);
 			note_warnings(warnings, id + '.svelte: ', out.warnings);
@@ -92,7 +93,7 @@ function compile_server_graph (dir, compiled, project_root, warnings) {
 			css: 'external',
 			sourcemap: false,
 			generate: 'server',
-			resolve: server_resolve('', project_root)
+			resolve: server_resolve('', project_root, library_urls)
 		});
 		write_js(join(dir, 'App.js'), shell.js);
 		note_warnings(warnings, 'App.svelte: ', shell.warnings);
@@ -225,7 +226,9 @@ export async function render_ssg ({
 	const own_tmp = !tmp_dir;
 
 	try {
-		const compile_fail = compile_server_graph(dir, compiled, project_root, warnings);
+		const specs = server_library_specs(compiled.graph && compiled.graph.components);
+		const library_urls = await bundle_server_libraries({ project_root, specs, dir });
+		const compile_fail = compile_server_graph(dir, compiled, project_root, warnings, library_urls);
 		if (compile_fail)
 			return compile_fail;
 		const prerender_errors = await resolve_prerender_lists(compiled.routes);
